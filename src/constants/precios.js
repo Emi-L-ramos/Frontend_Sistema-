@@ -1,0 +1,1 @@
+export const PRECIO_MATRICULA = 6500;
