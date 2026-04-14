@@ -3,7 +3,7 @@
 function Calendario(){
     return(
         <>  
-         <h1>Calendario Escolar</h1>
+         <h1>Calendario</h1>
         </>
     )
     ;

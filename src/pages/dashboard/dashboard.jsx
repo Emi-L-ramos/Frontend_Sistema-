@@ -23,7 +23,7 @@ import { FaUsers } from "react-icons/fa";
 function Dashboard() {
     const { user } = useAuth();  // ✅ Obtener usuario
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    const [activeTab, setActiveTab] = useState('dashboard', 'recibos');
+    const [activeTab, setActiveTab] = useState('dashboard');
 
     // ✅ Verificar en consola
     console.log("Usuario logueado:", user);
@@ -83,7 +83,27 @@ function Dashboard() {
                         <span>Dashboard</span>
                     </button>
                             
-                    
+                    <button
+                        onClick={() => { setActiveTab('matricula'); setIsSidebarOpen(false) }}
+                        className={`w-full flex items-center p-3 space-x-3 rounded-xl transition ${activeTab === 'matricula'
+                            ? 'bg-blue-100 text-blue-500 font-bold'
+                            : 'text-gray-600 hover:bg-blue-50'
+                        }`}
+                    >
+                        <FiUserPlus size={'1.5rem'} />
+                        <span>Matrículas</span>
+                    </button>
+
+                    <button
+                        onClick={() => { setActiveTab('recibos'); setIsSidebarOpen(false) }}
+                        className={`w-full flex items-center p-3 space-x-3 rounded-xl transition ${activeTab === 'recibos'
+                            ? 'bg-blue-100 text-blue-500 font-bold'
+                            : 'text-gray-600 hover:bg-blue-50'
+                        }`}
+                    >
+                        <HiOutlineDocumentCurrencyDollar size={'1.5rem'} />
+                        <span>Recibos</span>
+                    </button>   
 
 
                     {/* ✅ SOLO ADMIN VE EL MENÚ DE USUARIOS */}
@@ -120,7 +140,7 @@ function Dashboard() {
                         }`}
                     >
                         <TbCalendarTime size={'1.5rem'} />
-                        <span>Calendario instructor</span>
+                        <span>Calendario</span>
                     </button>
 
                     <button
@@ -202,5 +222,6 @@ function Dashboard() {
         </div>
     );
 }
+
 
 export default Dashboard;
