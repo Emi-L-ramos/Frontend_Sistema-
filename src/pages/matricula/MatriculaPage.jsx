@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { FiUserPlus, FiSearch, FiX } from "react-icons/fi";
 import MatriculaForm from "../../components/matriculaForm";
+import { AiOutlinePrinter } from "react-icons/ai";
 import { RiDeleteBinLine } from "react-icons/ri";
 import { CiEdit } from "react-icons/ci";
 
@@ -175,6 +176,21 @@ function MatriculaPage() {
                                                 >
                                                     <CiEdit className="text-blue-500 text-xl hover:text-blue-700" />
                                                 </button>
+                                                
+                                                <Button 
+                                                    onClick={() => {
+                                                        setEditData(item);
+                                                        setShowModal(True);
+                                                        console.log("Datos que paso al modal kjhhgsdihkjszd", item);
+                                                    }}
+                                                    className="p-2 rounded-lg hover:bg-blue-100 transcition hover:cursor-pointer"
+                                                    title="imprimir"
+                                                >
+                                                    <AiOutlinePrinter className="text-blue-500 text-xl hover:text-blue-700"/>
+
+
+                                                </Button>
+
                                             </div>
                                         </td>
                                     </tr>

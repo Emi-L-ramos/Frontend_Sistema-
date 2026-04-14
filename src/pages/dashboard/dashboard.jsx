@@ -107,7 +107,7 @@ function Dashboard() {
 
 
                     {/* ✅ SOLO ADMIN VE EL MENÚ DE USUARIOS */}
-                    {user?.rol === 'admin' && (
+                    {user?.rol === 'cajero' && (
                         <>
                                 <p className="text-xs text-gray-400 px-3 mb-2">ADMINISTRACIÓN</p>
                           
