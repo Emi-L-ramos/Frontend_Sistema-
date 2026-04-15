@@ -3,13 +3,20 @@ import { createContext, useContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext();
 
-export function AuthProvider({ children }) {
+export const useAuth = () => {
+    const context = useContext(AuthContext);
+    if (!context) {
+        throw new Error('useAuth debe usarse dentro de un AuthProvider');
+    }
+    return context;
+};
+
+export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [token, setToken] = useState(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // ✅ CAMBIADO: localStorage en lugar de sessionStorage
         const savedToken = localStorage.getItem('token');
         const savedUser = localStorage.getItem('user');
         
@@ -25,7 +32,6 @@ export function AuthProvider({ children }) {
     const login = (userData, token) => {
         console.log("🔍 LOGIN - Datos recibidos:", userData);
         
-        // ✅ CAMBIADO: localStorage en lugar de sessionStorage
         localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify(userData));
         
@@ -38,7 +44,6 @@ export function AuthProvider({ children }) {
     };
 
     const logout = () => {
-        // ✅ Limpiar localStorage
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         setToken(null);
@@ -55,7 +60,7 @@ export function AuthProvider({ children }) {
             'instructor': ['']
         };
         
-        const userRol = user?.rol || 'consulta';
+        const userRol = user?.rol || 'admin';
         return permisos[userRol]?.includes('*') || permisos[userRol]?.includes(permiso);
     };
 
@@ -64,12 +69,6 @@ export function AuthProvider({ children }) {
             {children}
         </AuthContext.Provider>
     );
-}
-
-export const useAuth = () => {
-    const context = useContext(AuthContext);
-    if (!context) {
-        throw new Error('useAuth debe usarse dentro de un AuthProvider');
-    }
-    return context;
 };
+
+export default AuthContext;

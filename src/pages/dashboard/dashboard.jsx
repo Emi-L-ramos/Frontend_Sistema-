@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { useAuth } from "../../context/AuthContext";  // ✅ IMPORTANTE
+import { useAuth } from "../../context/AuthContext";
 import DashboardHome from "./dashboardhome";
-import Matricula from "../matricula/MatriculaPage";
+import MatriculaPage from "../matricula/matriculaPage";
 import RecibosPage from "../recibos/RecibosPage";
 import Calendario from "../calendario/calendario";
 import Notas from "../nota/notas";
@@ -21,23 +21,21 @@ import { IoSchoolOutline } from "react-icons/io5";
 import { FaUsers } from "react-icons/fa";
 
 function Dashboard() {
-    const { user } = useAuth();  // ✅ Obtener usuario
+    const { user } = useAuth();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('dashboard');
 
-    // ✅ Verificar en consola
+    // Depuración
     console.log("Usuario logueado:", user);
     console.log("Rol del usuario:", user?.rol);
-     console.log("Dashboard - user:", user);
-    console.log("Dashboard - user.rol:", user?.rol);
-    console.log("Dashboard - ¿Es admin?", user?.rol === 'admin');
+    console.log("¿Es admin?", user?.rol === 'admin');
 
     function renderContent() {
         switch (activeTab) {
             case 'dashboard':
                 return <DashboardHome />;
             case 'matricula':
-                return <Matricula />;
+                return <MatriculaPage />;
             case 'recibos':
                 return <RecibosPage />;
             case 'calendario':
@@ -59,13 +57,18 @@ function Dashboard() {
 
     return (
         <div className="flex h-screen bg-gray-100 font-sans">
-            {/* Overlay */}
+            {/* Overlay para móvil */}
             {isSidebarOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 z-40" onClick={() => setIsSidebarOpen(false)}></div>
+                <div 
+                    className="fixed inset-0 bg-black bg-opacity-50 z-40" 
+                    onClick={() => setIsSidebarOpen(false)}
+                />
             )}
             
             {/* Sidebar */}
-            <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-white text-white transform transition-transform md:relative md:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : "-translate-x-full"}`}>
+            <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-white transform transition-transform md:relative md:translate-x-0 ${
+                isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+            }`}>
                 
                 <div className="p-6 text-xl font-bold text-indigo-400 border-b border-gray-200">
                     Escuela de Manejo
@@ -73,10 +76,11 @@ function Dashboard() {
 
                 <nav className="mt-4 px-4 space-y-2 overflow-y-auto h-[calc(100vh-80px)]">
                     <button
-                        onClick={() => { setActiveTab('dashboard'); setIsSidebarOpen(false) }}
-                        className={`w-full flex items-center p-3 space-x-3 rounded-xl transition ${activeTab === 'dashboard'
-                            ? 'bg-blue-100 text-blue-500 font-bold'
-                            : 'text-gray-600 hover:bg-blue-50'
+                        onClick={() => { setActiveTab('dashboard'); setIsSidebarOpen(false); }}
+                        className={`w-full flex items-center p-3 space-x-3 rounded-xl transition ${
+                            activeTab === 'dashboard'
+                                ? 'bg-blue-100 text-blue-500 font-bold'
+                                : 'text-gray-600 hover:bg-blue-50'
                         }`}
                     >
                         <LuLayoutDashboard size={'1.5rem'} />
@@ -84,10 +88,11 @@ function Dashboard() {
                     </button>
                             
                     <button
-                        onClick={() => { setActiveTab('matricula'); setIsSidebarOpen(false) }}
-                        className={`w-full flex items-center p-3 space-x-3 rounded-xl transition ${activeTab === 'matricula'
-                            ? 'bg-blue-100 text-blue-500 font-bold'
-                            : 'text-gray-600 hover:bg-blue-50'
+                        onClick={() => { setActiveTab('matricula'); setIsSidebarOpen(false); }}
+                        className={`w-full flex items-center p-3 space-x-3 rounded-xl transition ${
+                            activeTab === 'matricula'
+                                ? 'bg-blue-100 text-blue-500 font-bold'
+                                : 'text-gray-600 hover:bg-blue-50'
                         }`}
                     >
                         <FiUserPlus size={'1.5rem'} />
@@ -95,28 +100,30 @@ function Dashboard() {
                     </button>
 
                     <button
-                        onClick={() => { setActiveTab('recibos'); setIsSidebarOpen(false) }}
-                        className={`w-full flex items-center p-3 space-x-3 rounded-xl transition ${activeTab === 'recibos'
-                            ? 'bg-blue-100 text-blue-500 font-bold'
-                            : 'text-gray-600 hover:bg-blue-50'
+                        onClick={() => { setActiveTab('recibos'); setIsSidebarOpen(false); }}
+                        className={`w-full flex items-center p-3 space-x-3 rounded-xl transition ${
+                            activeTab === 'recibos'
+                                ? 'bg-blue-100 text-blue-500 font-bold'
+                                : 'text-gray-600 hover:bg-blue-50'
                         }`}
                     >
                         <HiOutlineDocumentCurrencyDollar size={'1.5rem'} />
                         <span>Recibos</span>
-                    </button>   
+                    </button>
 
-
-                    {/* ✅ SOLO ADMIN VE EL MENÚ DE USUARIOS */}
-                    {user?.rol === 'cajero' && (
+                    {/* Solo admin puede ver usuarios */}
+                    {user?.rol === 'admin' && (
                         <>
+                            <div className="pt-4 mt-4 border-t border-gray-200">
                                 <p className="text-xs text-gray-400 px-3 mb-2">ADMINISTRACIÓN</p>
-                          
+                            </div>
                             
                             <button
-                                onClick={() => { setActiveTab('usuarios'); setIsSidebarOpen(false) }}
-                                className={`w-full flex items-center p-3 space-x-3 rounded-xl transition  ${activeTab === 'usuarios'
-                                    ? 'bg-blue-100 text-blue-500 font-bold'
-                                    : 'text-gray-600 hover:bg-blue-50'
+                                onClick={() => { setActiveTab('usuarios'); setIsSidebarOpen(false); }}
+                                className={`w-full flex items-center p-3 space-x-3 rounded-xl transition ${
+                                    activeTab === 'usuarios'
+                                        ? 'bg-blue-100 text-blue-500 font-bold'
+                                        : 'text-gray-600 hover:bg-blue-50'
                                 }`}
                             >
                                 <FaUsers size={'1.5rem'} />
@@ -125,18 +132,17 @@ function Dashboard() {
                         </>
                     )}
 
-                
-
-                    {/* SECCIÓN INSTRUCTORES */}
+                    {/* Gestión Académica */}
                     <div className="pt-4 mt-4 border-t border-gray-200">
                         <p className="text-xs text-gray-400 px-3 mb-2">GESTIÓN ACADÉMICA</p>
                     </div>
 
                     <button
-                        onClick={() => { setActiveTab('calendario'); setIsSidebarOpen(false) }}
-                        className={`w-full flex items-center p-3 space-x-3 rounded-xl transition ${activeTab === 'calendario'
-                            ? 'bg-blue-100 text-blue-500 font-bold'
-                            : 'text-gray-600 hover:bg-blue-50'
+                        onClick={() => { setActiveTab('calendario'); setIsSidebarOpen(false); }}
+                        className={`w-full flex items-center p-3 space-x-3 rounded-xl transition ${
+                            activeTab === 'calendario'
+                                ? 'bg-blue-100 text-blue-500 font-bold'
+                                : 'text-gray-600 hover:bg-blue-50'
                         }`}
                     >
                         <TbCalendarTime size={'1.5rem'} />
@@ -144,10 +150,11 @@ function Dashboard() {
                     </button>
 
                     <button
-                        onClick={() => { setActiveTab('notas'); setIsSidebarOpen(false) }}
-                        className={`w-full flex items-center p-3 space-x-3 rounded-xl transition ${activeTab === 'notas'
-                            ? 'bg-blue-100 text-blue-500 font-bold'
-                            : 'text-gray-600 hover:bg-blue-50'
+                        onClick={() => { setActiveTab('notas'); setIsSidebarOpen(false); }}
+                        className={`w-full flex items-center p-3 space-x-3 rounded-xl transition ${
+                            activeTab === 'notas'
+                                ? 'bg-blue-100 text-blue-500 font-bold'
+                                : 'text-gray-600 hover:bg-blue-50'
                         }`}
                     >
                         <IoSchoolOutline size={'1.5rem'} />
@@ -155,10 +162,11 @@ function Dashboard() {
                     </button>
 
                     <button
-                        onClick={() => { setActiveTab('plan_studio'); setIsSidebarOpen(false) }}
-                        className={`w-full flex items-center p-3 space-x-3 rounded-xl transition ${activeTab === 'plan_studio'
-                            ? 'bg-blue-100 text-blue-500 font-bold'
-                            : 'text-gray-600 hover:bg-blue-50'
+                        onClick={() => { setActiveTab('plan_studio'); setIsSidebarOpen(false); }}
+                        className={`w-full flex items-center p-3 space-x-3 rounded-xl transition ${
+                            activeTab === 'plan_studio'
+                                ? 'bg-blue-100 text-blue-500 font-bold'
+                                : 'text-gray-600 hover:bg-blue-50'
                         }`}
                     >
                         <IoMdBook size={'1.5rem'} />
@@ -166,10 +174,11 @@ function Dashboard() {
                     </button>
 
                     <button
-                        onClick={() => { setActiveTab('asistencia'); setIsSidebarOpen(false) }}
-                        className={`w-full flex items-center p-3 space-x-3 rounded-xl transition ${activeTab === 'asistencia'
-                            ? 'bg-blue-100 text-blue-500 font-bold'
-                            : 'text-gray-600 hover:bg-blue-50'
+                        onClick={() => { setActiveTab('asistencia'); setIsSidebarOpen(false); }}
+                        className={`w-full flex items-center p-3 space-x-3 rounded-xl transition ${
+                            activeTab === 'asistencia'
+                                ? 'bg-blue-100 text-blue-500 font-bold'
+                                : 'text-gray-600 hover:bg-blue-50'
                         }`}
                     >
                         <LuClipboardCheck size={'1.5rem'} />
@@ -177,10 +186,11 @@ function Dashboard() {
                     </button>
 
                     <button
-                        onClick={() => { setActiveTab('perfil_estudiante'); setIsSidebarOpen(false) }}
-                        className={`w-full flex items-center p-3 space-x-3 rounded-xl transition ${activeTab === 'perfil_estudiante'
-                            ? 'bg-blue-100 text-blue-500 font-bold'
-                            : 'text-gray-600 hover:bg-blue-50'
+                        onClick={() => { setActiveTab('perfil_estudiante'); setIsSidebarOpen(false); }}
+                        className={`w-full flex items-center p-3 space-x-3 rounded-xl transition ${
+                            activeTab === 'perfil_estudiante'
+                                ? 'bg-blue-100 text-blue-500 font-bold'
+                                : 'text-gray-600 hover:bg-blue-50'
                         }`}
                     >
                         <MdPersonOutline size={'1.5rem'} />
@@ -202,7 +212,7 @@ function Dashboard() {
                 </div>
             </aside>
 
-            {/* Main */}
+            {/* Main content */}
             <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
                 {!isSidebarOpen && (
                     <div className="md:hidden">
@@ -222,6 +232,5 @@ function Dashboard() {
         </div>
     );
 }
-
 
 export default Dashboard;
