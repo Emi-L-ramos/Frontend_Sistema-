@@ -14,12 +14,15 @@ function MatriculaPage() {
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [editData, setEditData] = useState(null);
+    const [fechaDesde, setFechaDesde] = useState("");
+    const [fechaHasta, setFechaHasta] = useState("");
+
 
     const closeModal = () => {
         setEditData(null);
         setShowModal(false);
     };
-
+ 
     // Traer datos desde Django
     const fetchMatriculas = async () => {
         try {
