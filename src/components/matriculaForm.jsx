@@ -114,7 +114,6 @@ function MatriculaForm({ onSave, initialData }) {
                     <input name="edad" type="number" placeholder="Edad" value={form.edad || ""} onChange={handleChange} className="w-full p-2 border rounded" required />
                     <input name="correo_electronico" placeholder="Correo Electrónico" value={form.correo_electronico || ""} onChange={handleChange} className="w-full p-2 border rounded" required />
                     <input name="direccion" placeholder="Dirección" value={form.direccion || ""} onChange={handleChange} className="w-full p-2 border rounded" required />
-                    <input name="nivel_educativo" placeholder="Nivel Educativo" value={form.nivel_educativo || ""} onChange={handleChange} className="w-full p-2 border rounded" required />
 
                      <select name="nivel_educativo" value={form.nivel_educativo || ""} onChange={handleChange} className="w-full p-2 border rounded" required>
                         <option value="">Nivel educativo</option>
