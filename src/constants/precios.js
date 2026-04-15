@@ -1,1 +1,1 @@
-export const PRECIO_MATRICULA = 6500;
+//Subiendo el archivo

@@ -5,6 +5,7 @@ import { AiOutlinePrinter } from "react-icons/ai";
 import { RiDeleteBinLine } from "react-icons/ri";
 import { CiEdit } from "react-icons/ci";
 import MatriculaForm from "../../components/matriculaForm";
+import { IoLogoWhatsapp } from "react-icons/io5";
 
 function MatriculaPage() {
     const [showModal, setShowModal] = useState(false);
@@ -51,6 +52,102 @@ function MatriculaPage() {
         }
     };
 
+    // Función para imprimir matrícula individual
+    const imprimirMatriculaIndividual = (matricula) => {
+    const ventanaImpresion = window.open('', '_blank');
+    ventanaImpresion.document.write(`
+        <html>
+            <head>
+                <style>
+                    @page { size: A4; margin: 15mm; }
+                    body { font-family: 'Arial', sans-serif; font-size: 13px; line-height: 1.4; color: #000; }
+                    .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
+                    .titulo { font-weight: bold; text-decoration: underline; margin-bottom: 15px; }
+                    .form-row { margin-bottom: 10px; border-bottom: 1px solid #000; width: 100%; display: inline-block; }
+                    .label { font-weight: bold; }
+                    
+                    /* Tabla Inferior */
+                    table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                    th, td { border: 1px solid #000; padding: 5px; height: 30px; text-align: left; }
+                    .th-col { width: 100px; }
+                    
+                    .footer-nota { font-size: 11px; margin-top: 20px; }
+                    .pie-pagina { margin-top: 40px; text-align: center; border-top: 2px solid #333; padding-top: 10px; font-size: 11px; }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <strong>Instituto de Formación y Capacitación "Adiact"</strong><br>
+                    <em>Somos expertos en Formación y Capacitación del Talento Humano</em><br>
+                    <em>Ética, Integridad, Dedicación y Solidaridad</em>
+                </div>
+
+                <div class="titulo">HOJA DE MATRICULA DE ADULTOS A CURSO DE: EDUCACION VIAL Y MANEJO RESPONSABLE... Fecha: ${matricula.f_matricula}</div>
+
+                <div class="form-row"><span class="label">Nombres y apellidos:</span> ${matricula.nombre || ''} ${matricula.apellido || ''}</div>
+                <div style="display: flex; gap: 20px;">
+                    <div class="form-row" style="width: 30%"> <span class="label">Sexo:</span> ${matricula.sexo || ''}</div>
+                    <div class="form-row"> <span class="label">Nacionalidad/fecha de nacimiento:</span> __________________________</div>
+                </div>
+                <div style="display: flex; gap: 20px;">
+                    <div class="form-row" style="width: 30%"> <span class="label">Edad:</span> ${matricula.edad || ''}</div>
+                    <div class="form-row"> <span class="label">Número de cédula:</span> ${matricula.cedula || ''}</div>
+                </div>
+                <div class="form-row"> <span class="label">Dirección:</span> ${matricula.direccion}</div>
+                <div class="form-row"> <span class="label">Correo electrónico:</span>${matricula.correo_electronico}</div>
+                <div style="display: flex; gap: 20px;">
+                    <div class="form-row"> <span class="label">Teléfono convencional:</span> ${matricula.telefono_movil}</div>
+                    <div class="form-row"> <span class="label">Teléfono móvil:</span> ${matricula.telefono_movil || ''}</div>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <div class="form-row"> <span class="label">Nivel Academico:</span>${matricula.nivel_educativo}</div>
+                    <div class="form-row"> <span class="label">Profesión u oficio:</span> ${matricula.profesion_u_oficio}</div>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <div class="form-row"> <span class="label">Modalidad:</span> ${matricula.modalidad}</div>
+                    <div class="form-row"> <span class="label">Horario:</span> ${matricula.horario}</div>
+                    <div class="form-row"> <span class="label">Tipo de curso:</span> ${matricula.tipo_curso || ''}</div>
+                </div>
+
+                <div style="text-align: center; margin: 30px 0; font-weight: bold;">FIRMA DEL SOLICITANTE</div>
+
+                <table>
+                    <tr><td class="th-col">DE:</td><td>Escuela de Manejo</td><td class="th-col">FECHA:</td><td></td></tr>
+                    <tr><td class="th-col">ASUNTO:</td><td colspan="3" style="height: 60px;"></td></tr>
+                    <tr><td class="th-col">CANTIDAD:</td><td colspan="3"></td></tr>
+                </table>
+
+                <div class="footer-nota">
+                    <strong>NOTA:</strong><br>
+                    1-NO SE ACEPTA DEVOLUCIONES.<br>
+                    2-TIENE 60 DIAS PARA GESTION DE LICENCIA.<br>
+                    3-CLASE INJUSTIFICADA ES CLASE DADA.
+                </div>
+
+                <div class="pie-pagina">
+                    <strong>ESCUELA DE MANEJO EL CACIQUE ADIACT</strong><br>
+                    Gasolinera UNO Sutiava 1 cuadra al norte y ½ c. oeste. Teléfono: 2315 - 2568
+                </div>
+            </body>
+        </html>
+    `);
+    ventanaImpresion.document.close();
+    ventanaImpresion.print();
+};
+
+    // Función para enviar WhatsApp
+    const enviarWhatsApp = (matricula) => {
+        const telefono = matricula.telefono_movil;
+        if (!telefono) {
+            alert("El estudiante no tiene número de teléfono registrado");
+            return;
+        }
+
+        const mensaje = `Hola ${matricula.nombre} ${matricula.apellido || ''}, te confirmamos tu matrícula en el curso ${matricula.tipo_curso || ''}. Monto: C$${parseFloat(matricula.monto_total || 0).toFixed(2)}. ¡Bienvenido!`;
+        const url = `https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`;
+        window.open(url, '_blank');
+    };
+
     // Función para imprimir por edades
     const imprimirPorEdades = () => {
         let datosAImprimir = [];
@@ -64,7 +161,7 @@ function MatriculaPage() {
         } else if (filtroEdad === "mayores50") {
             datosAImprimir = data.filter(item => parseInt(item.edad) > 50);
         } else {
-            datosAImprimir = displayData;
+            datosAImprimir = filteredByAge; // Usar filteredByAge en lugar de displayData
         }
 
         const ventanaImpresion = window.open('', '_blank');
@@ -79,6 +176,9 @@ function MatriculaPage() {
                         th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
                         th { background-color: #4CAF50; color: white; }
                         .total { margin-top: 20px; font-weight: bold; text-align: right; }
+                        @media print {
+                            button { display: none; }
+                        }
                     </style>
                 </head>
                 <body>
@@ -87,6 +187,7 @@ function MatriculaPage() {
                         filtroEdad === "18a30" ? "18 a 30 años" :
                         filtroEdad === "31a50" ? "31 a 50 años" :
                         filtroEdad === "mayores50" ? "Mayores de 50 años" : "Todos los registros"}</p>
+                    <p><strong>Fecha de generación:</strong> ${new Date().toLocaleString()}</p>
                     <p><strong>Total de registros:</strong> ${datosAImprimir.length}</p>
                     <table>
                         <thead>
@@ -102,7 +203,7 @@ function MatriculaPage() {
                                     <td>${item.telefono_movil || ''}</td>
                                     <td>${item.categoria || ''}</td>
                                     <td>${item.tipo_curso || ''}</td>
-                                    <td>C$${item.monto_total || 0}</td>
+                                    <td>C$${parseFloat(item.monto_total || 0).toFixed(2)}</td>
                                 </tr>
                             `).join('')}
                         </tbody>
@@ -132,6 +233,7 @@ function MatriculaPage() {
         
         return filteredData.filter(item => {
             const edad = parseInt(item.edad);
+            if (isNaN(edad)) return false;
             if (filtroEdad === "menores18") return edad < 18;
             if (filtroEdad === "18a30") return edad >= 18 && edad <= 30;
             if (filtroEdad === "31a50") return edad >= 31 && edad <= 50;
@@ -214,7 +316,6 @@ function MatriculaPage() {
                                 <th className="p-3">Sexo</th>
                                 <th className="p-3">Teléfono</th>
                                 <th className="p-3">Categoría</th>
-                                <th className="p-3">Pago</th>
                                 <th className="p-3">Curso</th>
                                 <th className="p-3">Monto</th>
                                 <th className="p-3">Opciones</th>
@@ -222,7 +323,7 @@ function MatriculaPage() {
                         </thead>
                         <tbody>
                             {loading ? (
-                                <tr><td colSpan="10" className="p-6 text-center">Cargando...</td></tr>
+                                <tr><td colSpan="9" className="p-6 text-center">Cargando...</td></tr>
                             ) : displayData.length > 0 ? (
                                 displayData.map(item => (
                                     <tr key={item.id} className="hover:bg-blue-200 transition">
@@ -232,26 +333,44 @@ function MatriculaPage() {
                                         <td className="p-2">{item.sexo}</td>
                                         <td className="p-2">{item.telefono_movil}</td>
                                         <td className="p-2">{item.categoria}</td>
-                                        <td className="p-2">{item.tipo_pago}</td>
                                         <td className="p-2">{item.tipo_curso}</td>
-                                        <td className="p-2 font-bold text-blue-600">C$ {item.monto_total}</td>
+                                        <td className="p-2 font-bold text-blue-600">C$ {parseFloat(item.monto_total || 0).toFixed(2)}</td>
                                         <td className="p-2">
                                             <div className="flex items-center gap-3">
-                                                <button onClick={() => eliminarMatricula(item.id)} className="p-2 rounded-lg hover:bg-red-100" title="Eliminar">
-                                                    <RiDeleteBinLine className="text-red-500 text-xl hover:text-red-700" />
+                                                <button 
+                                                    onClick={() => eliminarMatricula(item.id)} 
+                                                    className="p-2 rounded-lg hover:bg-red-100" 
+                                                    title="Eliminar"
+                                                >
+                                                    <RiDeleteBinLine className="text-red-500 text-xl hover:text-red-700 hover:cursor-pointer" />
                                                 </button>
-                                                <button onClick={() => { setEditData(item); setShowModal(true); }} className="p-2 rounded-lg hover:bg-blue-100" title="Editar">
-                                                    <CiEdit className="text-blue-500 text-xl hover:text-blue-700" />
+                                                <button 
+                                                    onClick={() => { setEditData(item); setShowModal(true); }} 
+                                                    className="p-2 rounded-lg hover:bg-blue-100" 
+                                                    title="Editar"
+                                                >
+                                                    <CiEdit className="text-blue-500 text-xl hover:text-blue-700 hover:cursor-pointer" />
                                                 </button>
-                                                <button onClick={() => { console.log("Imprimir matrícula:", item); }} className="p-2 rounded-lg hover:bg-green-100" title="Imprimir">
-                                                    <AiOutlinePrinter className="text-green-500 text-xl hover:text-green-700" />
+                                                <button 
+                                                    onClick={() => imprimirMatriculaIndividual(item)} 
+                                                    className="p-2 rounded-lg hover:bg-green-100" 
+                                                    title="Imprimir Matrícula"
+                                                >
+                                                    <AiOutlinePrinter className="text-green-500 text-xl hover:text-green-700 hover:cursor-pointer" />
+                                                </button>
+                                                <button 
+                                                    onClick={() => enviarWhatsApp(item)}
+                                                    className="p-2 rounded-lg hover:bg-green-100"
+                                                    title="Enviar por WhatsApp"
+                                                >
+                                                    <IoLogoWhatsapp className="text-green-600 text-xl hover:text-green-700 hover:cursor-pointer" />
                                                 </button>
                                             </div>
                                         </td>
                                     </tr>
                                 ))
                             ) : (
-                                <tr><td colSpan="10" className="p-6 text-center text-gray-400">No hay registros</td></tr>
+                                <tr><td colSpan="9" className="p-6 text-center text-gray-400">No hay registros</td></tr>
                             )}
                         </tbody>
                     </table>

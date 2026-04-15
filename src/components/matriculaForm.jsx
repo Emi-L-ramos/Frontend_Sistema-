@@ -1,225 +1,593 @@
 // src/components/MatriculaForm.jsx
 import { useState, useEffect } from "react";
-import Swal from "sweetalert2";
-import { useNavigate } from "react-router-dom";
 
-const PRECIO_BASE = 1000;
+function MatriculaForm({ initialData, onSave, onError }) {
+    const [formData, setFormData] = useState({
+        f_matricula: '',
+        nombre: '',
+        apellido: '',
+        edad: '',
+        sexo: '',
+        nacionalidad: '',
+        fecha_nacimiento: '',
+        cedula: '',
+        direccion: '',
+        correo_electronico: '',
+        telefono_movil: '',
+        nivel_educativo: '',
+        profesion_u_oficio: '',
+        en_caso_de_emrgencia: '',
+        telefono_emergencia: '',
+        modalidad: '',
+        horario: '',
+        tipo_pago: '',
+        tipo_curso: '',
+        categoria: '',
+        apariconia: '',
+    });
+    
+    const [loading, setLoading] = useState(false);
+    const [errors, setErrors] = useState({});
+    const [serverErrors, setServerErrors] = useState({});
 
-function MatriculaForm({ onSave, initialData }) {
-    const navigate = useNavigate();
+    // Opciones para los selects
+    const SEXO_OPTIONS = [
+        { value: 'M', label: 'Masculino' },
+        { value: 'F', label: 'Femenino' }
+    ];
 
-    const initialState = {
-        f_matricula: "", nombre: "", apellido: "", edad: "", sexo: "", nacionalidad: "", fecha_nacimiento: "",
-        cedula: "", direccion: "", correo_electronico: "",
-        telefono_movil: "", nivel_educativo: "", profesion_u_oficio: "",
-        en_caso_de_emrgencia: "", telefono_emergencia: "", modalidad: "", horario: "",
-        tipo_pago: "", tipo_curso: "", categoria: "", apariconia: "",
-        monto_total: PRECIO_BASE
-    };
+    const MODALIDAD_OPTIONS = [
+        { value: 'Regular', label: 'Regular' },
+        { value: 'Extraordinario', label: 'Extraordinario' }
+    ];
 
-    const [form, setForm] = useState(initialData || initialState);
+    const HORARIO_OPTIONS = [
+        { value: '6AM A 8AM', label: '6:00 AM - 8:00 AM' },
+        { value: '8AM A 10AM', label: '8:00 AM - 10:00 AM' },
+        { value: '10AM A 12PM', label: '10:00 AM - 12:00 PM' },
+        { value: '12PM A 2PM', label: '12:00 PM - 2:00 PM' },
+        { value: '4PM A 6PM', label: '4:00 PM - 6:00 PM' }
+    ];
+
+    const TIPO_PAGO_OPTIONS = [
+        { value: 'Pago_completo', label: 'Pago Completo' },
+        { value: 'Anticipo', label: 'Anticipo' },
+        { value: 'Beneficio', label: 'Beneficio' }
+    ];
+
+    const TIPO_CURSO_OPTIONS = [
+        { value: 'Curso_avanzado', label: 'Curso Avanzado' },
+        { value: 'Reforzamiento', label: 'Reforzamiento' }
+    ];
+
+    const CATEGORIA_OPTIONS = [
+        { value: '1', label: 'Categoría 1' },
+        { value: '2', label: 'Categoría 2' },
+        { value: '3', label: 'Categoría 3' }
+    ];
+
+    const NIVEL_EDUCATIVO_OPTIONS = [
+        { value: 'Primaria', label: 'Primaria' },
+        { value: 'Secundaria', label: 'Secundaria' },
+        { value: 'Universidad', label: 'Universidad' },
+        { value: 'Profesional', label: 'Profesional' }
+    ];
+
+    const APARICIONIA_OPTIONS = [
+        { value: 'Redes_Sociales', label: 'Redes Sociales' },
+        { value: 'Referido', label: 'Referido' },
+        { value: 'Sitio_Web', label: 'Sitio Web' },
+        { value: 'otro', label: 'Otro' }
+    ];
 
     useEffect(() => {
-        if (initialData && initialData.id) {
-            setForm({
-                ...initialState,
-                ...initialData,
-                monto_total: initialData.monto_total !== undefined && initialData.monto_total !== null 
-                    ? initialData.monto_total 
-                    : PRECIO_BASE
+        if (initialData) {
+            // Formatear fecha para el input date (YYYY-MM-DD)
+            let fechaNacimiento = '';
+            if (initialData.fecha_nacimiento) {
+                const date = new Date(initialData.fecha_nacimiento);
+                fechaNacimiento = date.toISOString().split('T')[0];
+            }
+            
+            setFormData({
+                f_matricula: initialData.f_matricula || '',
+                nombre: initialData.nombre || '',
+                apellido: initialData.apellido || '',
+                edad: initialData.edad || '',
+                sexo: initialData.sexo || '',
+                nacionalidad: initialData.nacionalidad || '',
+                fecha_nacimiento: fechaNacimiento,
+                cedula: initialData.cedula || '',
+                direccion: initialData.direccion || '',
+                correo_electronico: initialData.correo_electronico || '',
+                telefono_movil: initialData.telefono_movil || '',
+                nivel_educativo: initialData.nivel_educativo || '',
+                profesion_u_oficio: initialData.profesion_u_oficio || '',
+                en_caso_de_emrgencia: initialData.en_caso_de_emrgencia || '',
+                telefono_emergencia: initialData.telefono_emergencia || '',
+                modalidad: initialData.modalidad || '',
+                horario: initialData.horario || '',
+                tipo_pago: initialData.tipo_pago || '',
+                tipo_curso: initialData.tipo_curso || '',
+                categoria: initialData.categoria || '',
+                apariconia: initialData.apariconia || '',
             });
-        } else if (!initialData) {
-            setForm(initialState);
         }
     }, [initialData]);
 
-    function handleChange(e) {
+    const handleChange = (e) => {
         const { name, value } = e.target;
-        setForm(prev => ({
+        setFormData(prev => ({
             ...prev,
-            [name]: name === "monto_total" ? (value === "" ? "" : parseFloat(value)) : value
+            [name]: value
         }));
-    }
+        
+        // Limpiar errores cuando el usuario escribe
+        if (errors[name]) {
+            setErrors(prev => ({ ...prev, [name]: '' }));
+        }
+        if (serverErrors[name]) {
+            setServerErrors(prev => ({ ...prev, [name]: '' }));
+        }
+    };
 
-    async function handleSubmit(e) {
+    const validateForm = () => {
+        const newErrors = {};
+        
+        if (!formData.nombre.trim()) newErrors.nombre = 'El nombre es requerido';
+        if (!formData.apellido.trim()) newErrors.apellido = 'El apellido es requerido';
+        if (!formData.cedula.trim()) newErrors.cedula = 'La cédula es requerida';
+        if (!formData.correo_electronico.trim()) {
+            newErrors.correo_electronico = 'El correo es requerido';
+        } else if (!/\S+@\S+\.\S+/.test(formData.correo_electronico)) {
+            newErrors.correo_electronico = 'Correo electrónico inválido';
+        }
+        if (!formData.horario) newErrors.horario = 'El horario es requerido';
+        if (!formData.modalidad) newErrors.modalidad = 'La modalidad es requerida';
+        if (!formData.tipo_curso) newErrors.tipo_curso = 'El tipo de curso es requerido';
+        if (!formData.fecha_nacimiento) newErrors.fecha_nacimiento = 'La fecha de nacimiento es requerida';
+        
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
-
-        const token = localStorage.getItem("token");
-        const isEditing = !!initialData?.id;
         
-        const url = isEditing 
-            ? `http://127.0.0.1:8000/api/matricula/${initialData.id}/` 
-            : "http://127.0.0.1:8000/api/matricula/";
+        if (!validateForm()) {
+            if (onError) onError(new Error('Por favor complete todos los campos requeridos'));
+            return;
+        }
         
-        const method = isEditing ? "PUT" : "POST";
-
-        const datosEnvio = {
-            ...form,
-            monto_pagado: initialData?.monto_pagado || 0,
-            estado_pagado: initialData?.estado_pagado || 'pendiente'
+        setLoading(true);
+        setServerErrors({});
+        
+        // Preparar datos para enviar
+        const dataToSend = {
+            ...formData,
+            // Asegurar que los campos numéricos sean números
+            edad: formData.edad ? parseInt(formData.edad) : null,
         };
-
+        
+        console.log("Enviando datos:", dataToSend);
+        
         try {
+            const token = localStorage.getItem("token");
+            const url = initialData 
+                ? `http://localhost:8000/api/matricula/${initialData.id}/`
+                : "http://localhost:8000/api/matricula/";
+            
+            const method = initialData ? "PUT" : "POST";
+            
             const response = await fetch(url, {
                 method: method,
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Token ${token}`
                 },
-                body: JSON.stringify(datosEnvio)
+                body: JSON.stringify(dataToSend)
             });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                if (onSave) onSave(data);
-                if (!isEditing) setForm(initialState);
-
-                Swal.fire({
-                    title: isEditing ? '¡Matrícula actualizada!' : '¡Matrícula guardada!',
-                    text: 'Exitosamente 🚀',
-                    icon: 'success',
-                    confirmButtonText: 'Aceptar'
-                }).then(() => {
-                    navigate("/dashboard");
-                });
-
-            } else {
-                Swal.fire({
-                    title: 'Error',
-                    text: typeof data === 'object' ? JSON.stringify(data) : data,
-                    icon: 'error'
-                });
+            
+            const responseData = await response.json();
+            console.log("Respuesta del servidor:", responseData);
+            
+            if (!response.ok) {
+                // Mostrar errores específicos del servidor
+                if (responseData) {
+                    setServerErrors(responseData);
+                    
+                    // Formatear mensaje de error
+                    let errorMessage = "Error al guardar:\n";
+                    for (const [field, errors] of Object.entries(responseData)) {
+                        errorMessage += `- ${field}: ${errors.join(', ')}\n`;
+                    }
+                    throw new Error(errorMessage);
+                } else {
+                    throw new Error(`Error ${response.status}: ${response.statusText}`);
+                }
             }
+            
+            console.log("Matrícula guardada:", responseData);
+            
+            if (onSave) onSave(responseData);
+            
         } catch (error) {
             console.error("Error:", error);
-            Swal.fire({
-                title: 'Error de conexión',
-                text: 'No se pudo conectar con el servidor',
-                icon: 'error'
-            });
+            if (onError) onError(error);
+            alert(error.message);
+        } finally {
+            setLoading(false);
         }
-    }
+    };
 
     return (
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2 bg-amber-500 p-4 rounded-lg">
-                <div className="p-4 rounded-lg bg-emerald-100 space-y-2">
-                    <label className="block text-gray-700 text-2xl font-bold">Datos Personales</label>
-                    <div className="flex gap-2">
-                        <label htmlFor="Fecha de Inscripcion">Fecha de Nacimiento:</label>
-                        <input type="date" name="fecha_nacimiento" value={form.fecha_nacimiento || ""} onChange={handleChange} className="w-full p-2 border rounded" required />
-                        <label htmlFor="Nombre">Nombre:</label>
-                        <input name="nombre" placeholder="Nombre" value={form.nombre || ""} onChange={handleChange} className="w-full p-2 border rounded" required />
-                    </div>
-                    <label htmlFor="Apellido">Apellido:</label>
-                    <input name="apellido" placeholder="Apellido" value={form.apellido || ""} onChange={handleChange} className="w-full p-2 border rounded" required />
-                    <label htmlFor="Edad">Edad:</label>
-                    <input name="edad" type="number" placeholder="Edad" value={form.edad || ""} onChange={handleChange} className="w-full p-2 border rounded" required />
-                    <label htmlFor="Correo Electrónico">Correo Electrónico:</label>
-                    <input name="correo_electronico" placeholder="Correo Electrónico" value={form.correo_electronico || ""} onChange={handleChange} className="w-full p-2 border rounded" required />
-                    <label htmlFor="Dirección">Dirección:</label>
-                    <input name="direccion" placeholder="Dirección" value={form.direccion || ""} onChange={handleChange} className="w-full p-2 border rounded" required />
-
-                    <label htmlFor="Nivel Educativo">Nivel educativo:</label>
-                     <select name="nivel_educativo" value={form.nivel_educativo || ""} onChange={handleChange} className="w-full p-2 border rounded" required>
-                        <option value="">Nivel educativo</option>
-                        <option value="Primaria">Primaria</option>
-                        <option value="Secundaria">Secundaria</option>
-                        <option value="Universidad">Universidad</option>
-                        <option value="Profecional">Profecional</option>
-                    </select>
-
-                    <label htmlFor="Profesión u Oficio">Profesión u Oficio:</label>
-                    <input name="profesion_u_oficio" placeholder="Profesión u Oficio" value={form.profesion_u_oficio || ""} onChange={handleChange} className="w-full p-2 border rounded" required />
-                    <label htmlFor="Teléfono Móvil">Teléfono Móvil:</label>
-                    <input name="telefono_movil" placeholder="Teléfono Móvil" value={form.telefono_movil || ""} onChange={handleChange} className="w-full p-2 border rounded" required />
-                    <label htmlFor="Género">Género:</label>
-                    <select name="sexo" value={form.sexo || ""} onChange={handleChange} className="w-full p-2 border rounded" required>
-                        <option value="">Género</option>
-                        <option value="M">Masculino</option>
-                        <option value="F">Femenino</option>
-                    </select>
-                    
-                    <label htmlFor="Nacionalidad">Nacionalidad:</label>
-                    <input name="nacionalidad" placeholder="Nacionalidad" value={form.nacionalidad || ""} onChange={handleChange} className="w-full p-2 border rounded" />
-                    <label htmlFor="Cédula">Cédula:</label>
-                    <input name="cedula" placeholder="Cédula" value={form.cedula || ""} onChange={handleChange} className="w-full p-2 border rounded" />
+        <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Mostrar errores del servidor */}
+            {Object.keys(serverErrors).length > 0 && (
+                <div className="bg-red-50 border border-red-500 text-red-700 px-4 py-3 rounded-lg">
+                    <h4 className="font-bold mb-2">Errores de validación:</h4>
+                    <ul className="list-disc list-inside">
+                        {Object.entries(serverErrors).map(([field, errors]) => (
+                            <li key={field}>
+                                <strong>{field}:</strong> {Array.isArray(errors) ? errors.join(', ') : errors}
+                            </li>
+                        ))}
+                    </ul>
                 </div>
-            </div>
-
-            <div className="space-y-3">
-                <label className="block text-gray-700 text-4xl font-semibold">Detalles Académicos</label>
-                <label htmlFor="Fecha de Nacimiento">Fecha de Inscripción:</label>
-                <input type="date" name="f_matricula" value={form.f_matricula || ""} onChange={handleChange} className="w-full p-2 border rounded" />
-                
-                
-                <label htmlFor="Modalidad">Modalidad:</label>
-                <select name="modalidad" value={form.modalidad || ""} onChange={handleChange} className="w-full p-2 border rounded" required>
-                    <option value="">Modalidad</option>
-                    <option value="Regular">Regular</option>
-                    <option value="Extraordinario">Extraordinario</option>
-                </select>
-                
-                <label htmlFor="Horario">Horario:</label>
-                <select name="horario" value={form.horario || ""} onChange={handleChange} className="w-full p-2 border rounded" required>
-                    <option value="">Horario</option>
-                    <option value="06AM A 08AM">06AM A 08AM</option>
-                    <option value="08AM A 10AM">08AM A 10AM</option>
-                    <option value="10AM A 12PM">10AM A 12PM</option>
-                    <option value="12PM A 02PM">12PM A 02PM</option>
-                    <option value="04PM A 06PM">04PM A 06PM</option>
-                </select>
-        
-                <label htmlFor="Contacto de Emergencia">Contacto de Emergencia:</label>
-                <input name="en_caso_de_emrgencia" placeholder="Contacto Emergencia" value={form.en_caso_de_emrgencia || ""} onChange={handleChange} className="w-full p-2 border rounded" />
-                <label htmlFor="Teléfono de Emergencia">Teléfono de Emergencia:</label>
-                <input name="telefono_emergencia" placeholder="Teléfono Emergencia" value={form.telefono_emergencia || ""} onChange={handleChange} className="w-full p-2 border rounded" />
-                
-                
-                <label htmlFor="Aparición">¿Dónde se enteró?</label>
-                <select name="apariconia" value={form.apariconia || ""} onChange={handleChange} className="w-full p-2 border rounded">
-                    <option value="">¿Dónde se enteró?</option>
-                    <option value="Sitio_web _oficial">Sitio web oficial</option>
-                    <option value="Redes_sociales">Redes sociales</option>
-                    <option value="Referido">Referido</option>
-                    <option value="Volante/Promoción impresa">Volante/Promoción impresa</option>
-                    <option value="otro">Otro</option>
-                </select>
-                
-                <label htmlFor="Categoria">Categoría:</label>
-                <select name="categoria" value={form.categoria || ""} onChange={handleChange} className="w-full p-2 border rounded">
-                    <option value="">Categoría</option>
-                    <option value="1">1</option>
-                    <option value="2">2</option>
-                    <option value="3">3</option>
-                </select>
-                
-                <label htmlFor="Tipo de Pago">Tipo de Pago:</label>
-                <select name="tipo_pago" value={form.tipo_pago || ""} onChange={handleChange} className="w-full p-2 border rounded">
-                    <option value="">Tipo de Pago</option>
-                    <option value="Completo">Completo</option>
-                    <option value="Anticipo">Anticipo</option>
-                    <option value="Beneficio">Beneficio</option>
-                </select>
-                
-                <label htmlFor="Tipo de Curso">Tipo de Curso:</label>
-                <select name="tipo_curso" value={form.tipo_curso || ""} onChange={handleChange} className="w-full p-2 border rounded">
-                    <option value="">Tipo de Curso</option>
-                    <option value="Curso_avanzado">Curso avanzado</option>
-                    <option value="Reforzamiento">Reforzamiento</option>
-                </select>
+            )}
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Datos Personales */}
+                <div className="md:col-span-2">
+                    <h3 className="text-lg font-semibold text-gray-700 mb-3">Datos Personales</h3>
+                </div>
                 
                 <div>
-                    <label className="block text-gray-700 text-sm font-medium mb-1">Monto Total (C$)</label>
-                    <input type="number" name="monto_total" placeholder="Monto Total" value={form.monto_total || ""} onChange={handleChange} className="w-full p-2 border rounded font-bold text-blue-600" step="0.01" min="0" required />
-                    <p className="text-xs text-gray-500 mt-1">Precio base sugerido: C$ {PRECIO_BASE.toFixed(2)}</p>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Nombre *
+                    </label>
+                    <input
+                        type="text"
+                        name="nombre"
+                        value={formData.nombre}
+                        onChange={handleChange}
+                        className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                            errors.nombre || serverErrors.nombre ? 'border-red-500' : 'border-gray-300'
+                        }`}
+                    />
+                    {errors.nombre && <p className="text-red-500 text-xs mt-1">{errors.nombre}</p>}
+                    {serverErrors.nombre && <p className="text-red-500 text-xs mt-1">{serverErrors.nombre}</p>}
+                </div>
+                
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Apellido *
+                    </label>
+                    <input
+                        type="text"
+                        name="apellido"
+                        value={formData.apellido}
+                        onChange={handleChange}
+                        className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                            errors.apellido || serverErrors.apellido ? 'border-red-500' : 'border-gray-300'
+                        }`}
+                    />
+                    {errors.apellido && <p className="text-red-500 text-xs mt-1">{errors.apellido}</p>}
+                    {serverErrors.apellido && <p className="text-red-500 text-xs mt-1">{serverErrors.apellido}</p>}
+                </div>
+                
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Cédula *
+                    </label>
+                    <input
+                        type="text"
+                        name="cedula"
+                        value={formData.cedula}
+                        onChange={handleChange}
+                        className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                            errors.cedula || serverErrors.cedula ? 'border-red-500' : 'border-gray-300'
+                        }`}
+                    />
+                    {errors.cedula && <p className="text-red-500 text-xs mt-1">{errors.cedula}</p>}
+                    {serverErrors.cedula && <p className="text-red-500 text-xs mt-1">{serverErrors.cedula}</p>}
+                </div>
+                
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Edad
+                    </label>
+                    <input
+                        type="number"
+                        name="edad"
+                        value={formData.edad}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                </div>
+                
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Sexo
+                    </label>
+                    <select
+                        name="sexo"
+                        value={formData.sexo}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                        <option value="">Seleccionar</option>
+                        {SEXO_OPTIONS.map(option => (
+                            <option key={option.value} value={option.value}>{option.label}</option>
+                        ))}
+                    </select>
+                </div>
+                
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Nacionalidad
+                    </label>
+                    <input
+                        type="text"
+                        name="nacionalidad"
+                        value={formData.nacionalidad}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                </div>
+                
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Fecha de Nacimiento *
+                    </label>
+                    <input
+                        type="date"
+                        name="fecha_nacimiento"
+                        value={formData.fecha_nacimiento}
+                        onChange={handleChange}
+                        className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                            errors.fecha_nacimiento || serverErrors.fecha_nacimiento ? 'border-red-500' : 'border-gray-300'
+                        }`}
+                    />
+                    {errors.fecha_nacimiento && <p className="text-red-500 text-xs mt-1">{errors.fecha_nacimiento}</p>}
+                    {serverErrors.fecha_nacimiento && <p className="text-red-500 text-xs mt-1">{serverErrors.fecha_nacimiento}</p>}
+                </div>
+                
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Correo Electrónico *
+                    </label>
+                    <input
+                        type="email"
+                        name="correo_electronico"
+                        value={formData.correo_electronico}
+                        onChange={handleChange}
+                        className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                            errors.correo_electronico || serverErrors.correo_electronico ? 'border-red-500' : 'border-gray-300'
+                        }`}
+                    />
+                    {errors.correo_electronico && <p className="text-red-500 text-xs mt-1">{errors.correo_electronico}</p>}
+                    {serverErrors.correo_electronico && <p className="text-red-500 text-xs mt-1">{serverErrors.correo_electronico}</p>}
+                </div>
+                
+                <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Dirección
+                    </label>
+                    <input
+                        type="text"
+                        name="direccion"
+                        value={formData.direccion}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                </div>
+                
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Teléfono Móvil
+                    </label>
+                    <input
+                        type="tel"
+                        name="telefono_movil"
+                        value={formData.telefono_movil}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                </div>
+                
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Nivel Educativo
+                    </label>
+                    <select
+                        name="nivel_educativo"
+                        value={formData.nivel_educativo}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                        <option value="">Seleccionar</option>
+                        {NIVEL_EDUCATIVO_OPTIONS.map(option => (
+                            <option key={option.value} value={option.value}>{option.label}</option>
+                        ))}
+                    </select>
+                </div>
+                
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Profesión u Oficio
+                    </label>
+                    <input
+                        type="text"
+                        name="profesion_u_oficio"
+                        value={formData.profesion_u_oficio}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                </div>
+                
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Contacto de Emergencia
+                    </label>
+                    <input
+                        type="text"
+                        name="en_caso_de_emrgencia"
+                        value={formData.en_caso_de_emrgencia}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                </div>
+                
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Teléfono de Emergencia
+                    </label>
+                    <input
+                        type="tel"
+                        name="telefono_emergencia"
+                        value={formData.telefono_emergencia}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                </div>
+                
+                {/* Datos Académicos */}
+                <div className="md:col-span-2">
+                    <h3 className="text-lg font-semibold text-gray-700 mb-3">Datos Académicos</h3>
+                </div>
+                
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Modalidad *
+                    </label>
+                    <select
+                        name="modalidad"
+                        value={formData.modalidad}
+                        onChange={handleChange}
+                        className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                            errors.modalidad || serverErrors.modalidad ? 'border-red-500' : 'border-gray-300'
+                        }`}
+                    >
+                        <option value="">Seleccionar</option>
+                        {MODALIDAD_OPTIONS.map(option => (
+                            <option key={option.value} value={option.value}>{option.label}</option>
+                        ))}
+                    </select>
+                    {errors.modalidad && <p className="text-red-500 text-xs mt-1">{errors.modalidad}</p>}
+                    {serverErrors.modalidad && <p className="text-red-500 text-xs mt-1">{serverErrors.modalidad}</p>}
+                </div>
+                
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Horario *
+                    </label>
+                    <select
+                        name="horario"
+                        value={formData.horario}
+                        onChange={handleChange}
+                        className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                            errors.horario || serverErrors.horario ? 'border-red-500' : 'border-gray-300'
+                        }`}
+                    >
+                        <option value="">Seleccionar horario</option>
+                        {HORARIO_OPTIONS.map(option => (
+                            <option key={option.value} value={option.value}>{option.label}</option>
+                        ))}
+                    </select>
+                    {errors.horario && <p className="text-red-500 text-xs mt-1">{errors.horario}</p>}
+                    {serverErrors.horario && <p className="text-red-500 text-xs mt-1">{serverErrors.horario}</p>}
+                </div>
+                
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Tipo de Curso *
+                    </label>
+                    <select
+                        name="tipo_curso"
+                        value={formData.tipo_curso}
+                        onChange={handleChange}
+                        className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                            errors.tipo_curso || serverErrors.tipo_curso ? 'border-red-500' : 'border-gray-300'
+                        }`}
+                    >
+                        <option value="">Seleccionar</option>
+                        {TIPO_CURSO_OPTIONS.map(option => (
+                            <option key={option.value} value={option.value}>{option.label}</option>
+                        ))}
+                    </select>
+                    {errors.tipo_curso && <p className="text-red-500 text-xs mt-1">{errors.tipo_curso}</p>}
+                    {serverErrors.tipo_curso && <p className="text-red-500 text-xs mt-1">{serverErrors.tipo_curso}</p>}
+                </div>
+                
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Categoría
+                    </label>
+                    <select
+                        name="categoria"
+                        value={formData.categoria}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                        <option value="">Seleccionar</option>
+                        {CATEGORIA_OPTIONS.map(option => (
+                            <option key={option.value} value={option.value}>{option.label}</option>
+                        ))}
+                    </select>
+                </div>
+                
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Tipo de Pago
+                    </label>
+                    <select
+                        name="tipo_pago"
+                        value={formData.tipo_pago}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                        <option value="">Seleccionar</option>
+                        {TIPO_PAGO_OPTIONS.map(option => (
+                            <option key={option.value} value={option.value}>{option.label}</option>
+                        ))}
+                    </select>
+                </div>
+                
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                        ¿Cómo se enteró?
+                    </label>
+                    <select
+                        name="apariconia"
+                        value={formData.apariconia}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                        <option value="">Seleccionar</option>
+                        {APARICIONIA_OPTIONS.map(option => (
+                            <option key={option.value} value={option.value}>{option.label}</option>
+                        ))}
+                    </select>
                 </div>
             </div>
+            
+            <div className="flex justify-end gap-3 pt-4 border-t">
+                <button
+                    type="button"
+                    onClick={() => onSave && onSave(null)}
+                    className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition"
+                >
+                    Cancelar
+                </button>
 
-            <div className="md:col-span-2 flex justify-end">
-                <button type="submit" className="px-6 py-3 rounded-lg font-semibold bg-green-500 text-white hover:bg-green-600 transition">
-                    Guardar Matrícula
+
+                <button
+                    type="submit"
+                    disabled={loading}
+                    className="px-6 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+                >
+                    {loading ? 'Guardando...' : (initialData ? 'Actualizar' : 'Guardar')}
                 </button>
             </div>
         </form>

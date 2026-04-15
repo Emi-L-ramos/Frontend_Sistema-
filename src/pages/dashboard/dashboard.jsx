@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import DashboardHome from "./dashboardhome";
-import MatriculaPage from "../matricula/matriculaPage";
+import MatriculaPage from "../matricula/MatriculaPage";
 import RecibosPage from "../recibos/RecibosPage";
 import Calendario from "../calendario/calendario";
 import Notas from "../nota/notas";
