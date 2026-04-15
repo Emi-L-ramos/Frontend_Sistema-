@@ -283,10 +283,10 @@ function MatriculaPage() {
                         {/* BOTÓN IMPRIMIR POR EDADES */}
                         <button
                             onClick={imprimirPorEdades}
-                            className="flex items-center gap-2 bg-gray-600 text-white px-5 py-2 rounded-lg hover:bg-gray-700 transition"
+                            className="flex items-center gap-2 bg-white text-white px-5 py-2 rounded-lg hover:bg-yellow-400 transition hover:cursor-pointer"
                         >
-                            <FiPrinter />
-                            Imprimir Reporte
+                            <FiPrinter className="text-black" />
+                            
                         </button>
                     </div>
 
@@ -296,7 +296,7 @@ function MatriculaPage() {
                             setEditData(null);
                             setShowModal(true);
                         }}
-                        className="flex items-center gap-2 text-blue-600 px-5 py-2 cursor-pointer rounded-lg outline-2 outline-offset-2 outline-dashed hover:outline-emerald-500 hover:bg-green-400 hover:text-white transition"
+                        className="flex items-center gap-2 text-black px-5 py-2 cursor-pointer rounded-lg outline-2 outline-offset-2 outline-dashed hover:outline-yellow-400 hover:bg-yellow-400 hover:text-white transition"
                     >
                         <FiUserPlus />
                         Nueva Matrícula
