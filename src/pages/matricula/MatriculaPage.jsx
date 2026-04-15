@@ -87,25 +87,25 @@ function MatriculaPage() {
                 <div class="form-row"><span class="label">Nombres y apellidos:</span> ${matricula.nombre || ''} ${matricula.apellido || ''}</div>
                 <div style="display: flex; gap: 20px;">
                     <div class="form-row" style="width: 30%"> <span class="label">Sexo:</span> ${matricula.sexo || ''}</div>
-                    <div class="form-row"> <span class="label">Nacionalidad/fecha de nacimiento:</span> __________________________</div>
+                    <div class="form-row"> <span class="label">Nacionalidad/fecha de nacimiento:</span> ${matricula.fecha_nacimiento}</div>
                 </div>
                 <div style="display: flex; gap: 20px;">
                     <div class="form-row" style="width: 30%"> <span class="label">Edad:</span> ${matricula.edad || ''}</div>
                     <div class="form-row"> <span class="label">Número de cédula:</span> ${matricula.cedula || ''}</div>
                 </div>
-                <div class="form-row"> <span class="label">Dirección:</span> ${matricula.direccion}</div>
-                <div class="form-row"> <span class="label">Correo electrónico:</span>${matricula.correo_electronico}</div>
+                <div class="form-row"> <span class="label">Dirección:</span> ${matricula.direccion || '' }</div>
+                <div class="form-row"> <span class="label">Correo electrónico:</span>${matricula.correo_electronico || '' }</div>
                 <div style="display: flex; gap: 20px;">
                     <div class="form-row"> <span class="label">Teléfono convencional:</span> ${matricula.telefono_movil}</div>
                     <div class="form-row"> <span class="label">Teléfono móvil:</span> ${matricula.telefono_movil || ''}</div>
                 </div>
                 <div style="display: flex; gap: 10px;">
-                    <div class="form-row"> <span class="label">Nivel Academico:</span>${matricula.nivel_educativo}</div>
-                    <div class="form-row"> <span class="label">Profesión u oficio:</span> ${matricula.profesion_u_oficio}</div>
+                    <div class="form-row"> <span class="label">Nivel Academico:</span>${matricula.nivel_educativo || '' }</div>
+                    <div class="form-row"> <span class="label">Profesión u oficio:</span> ${matricula.profesion_u_oficio || '' }</div>
                 </div>
                 <div style="display: flex; gap: 10px;">
-                    <div class="form-row"> <span class="label">Modalidad:</span> ${matricula.modalidad}</div>
-                    <div class="form-row"> <span class="label">Horario:</span> ${matricula.horario}</div>
+                    <div class="form-row"> <span class="label">Modalidad:</span> ${matricula.modalidad  || '' }</div>
+                    <div class="form-row"> <span class="label">Horario:</span> ${matricula.horario || '' }</div>
                     <div class="form-row"> <span class="label">Tipo de curso:</span> ${matricula.tipo_curso || ''}</div>
                 </div>
 
@@ -121,7 +121,7 @@ function MatriculaPage() {
                     <strong>NOTA:</strong><br>
                     1-NO SE ACEPTA DEVOLUCIONES.<br>
                     2-TIENE 60 DIAS PARA GESTION DE LICENCIA.<br>
-                    3-CLASE INJUSTIFICADA ES CLASE DADA.
+                    3-AUSENCIA INJUSTIFICADA ES CLASE DADA
                 </div>
 
                 <div class="pie-pagina">
