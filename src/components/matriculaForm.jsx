@@ -180,25 +180,25 @@ function MatriculaForm({ onSave, initialData }) {
                 <label htmlFor="Aparición">¿Dónde se enteró?</label>
                 <select name="apariconia" value={form.apariconia || ""} onChange={handleChange} className="w-full p-2 border rounded">
                     <option value="">¿Dónde se enteró?</option>
-                    <option value="Facebook">Sitio web oficial</option>
-                    <option value="TikTok">Redes sociales</option>
+                    <option value="Sitio_web _oficial">Sitio web oficial</option>
+                    <option value="Redes_sociales">Redes sociales</option>
                     <option value="Referido">Referido</option>
-                    <option value="Boletas">Volante/Promoción impresa</option>
+                    <option value="Volante/Promoción impresa">Volante/Promoción impresa</option>
                     <option value="otro">Otro</option>
                 </select>
                 
                 <label htmlFor="Categoria">Categoría:</label>
                 <select name="categoria" value={form.categoria || ""} onChange={handleChange} className="w-full p-2 border rounded">
                     <option value="">Categoría</option>
-                    <option value="A1">1</option>
-                    <option value="A2">2</option>
-                    <option value="A3">3</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
                 </select>
                 
                 <label htmlFor="Tipo de Pago">Tipo de Pago:</label>
                 <select name="tipo_pago" value={form.tipo_pago || ""} onChange={handleChange} className="w-full p-2 border rounded">
                     <option value="">Tipo de Pago</option>
-                    <option value="pago_completo">Completo</option>
+                    <option value="Completo">Completo</option>
                     <option value="Anticipo">Anticipo</option>
                     <option value="Beneficio">Beneficio</option>
                 </select>
@@ -206,7 +206,7 @@ function MatriculaForm({ onSave, initialData }) {
                 <label htmlFor="Tipo de Curso">Tipo de Curso:</label>
                 <select name="tipo_curso" value={form.tipo_curso || ""} onChange={handleChange} className="w-full p-2 border rounded">
                     <option value="">Tipo de Curso</option>
-                    <option value="curso_completo">Curso Completo</option>
+                    <option value="Curso_avanzado">Curso avanzado</option>
                     <option value="Reforzamiento">Reforzamiento</option>
                 </select>
                 
