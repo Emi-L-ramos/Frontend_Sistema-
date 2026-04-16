@@ -466,12 +466,33 @@ function MatriculaForm({ initialData, onSave, onError }) {
                         className="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
                     />
                 </div>
+
+
+
+                
+                
                 
                 {/* Datos Académicos */}
                 <div className="col-span-1 sm:col-span-2 lg:col-span-3">
                     <h3 className="text-base sm:text-lg lg:text-xl font-semibold text-gray-800 mb-2 sm:mb-3 pb-2 border-b-2 border-green-500 inline-block mt-4">
                         🎓 Datos Académicos
                     </h3>
+                </div>
+
+
+                <div>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
+                        Fecha de Matricula
+                    </label>
+                    <input
+                        type="date"
+                        name="f_matricula"
+                        value={formData.f_matricula}
+                         onChange={handleChange}
+                        className={`w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition ${
+                            errors.f_matricula || serverErrors.f_matricula ? 'border-red-500' : 'border-gray-300'
+                        }`}
+                    />
                 </div>
                 
                 <div>

@@ -326,7 +326,7 @@ function MatriculaPage() {
                             placeholder="Buscar por nombre o cédula..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 border rounded-3xl focus:outline-none bg-white border-blue-500 hover:outline-2 hover:outline-offset-2 hover:outline-dashed hover:border-blue-900 transition"
+                            className="w-full pl-10 pr-4 py-2 border rounded-3xl focus:outline-none bg-white border-blue-500 hover:outline-2 hover:outline-offset-2 hover:outline-dashed hover:border-blue-900 transition h-11"
                         />
                     </div>
 
@@ -335,10 +335,10 @@ function MatriculaPage() {
                         <select
                             value={filtroEdad}
                             onChange={(e) => setFiltroEdad(e.target.value)}
-                            className="px-4 py-2 border rounded-lg focus:outline-none bg-white border-blue-500"
+                            className="border rounded-lg focus:outline-none bg-white border-blue-500 h-11 px-3"
                         >
-                            <option value="" className="hover:bg-amber-400 hover:cursor-pointer ">Todas las edades</option>
-                            <option value="menores18" className="hover:bg-amber-400 hover:cursor-pointer">Menor a 18 Año</option>
+                            <option value="">Todas las edades</option>
+                            <option value="menores18">Menor a 18 Año</option>
                             <option value="18a30">18 a 30 años</option>
                             <option value="31a50">31 a 50 años</option>
                             <option value="mayores50">Mayores de 50 años</option>
@@ -347,9 +347,54 @@ function MatriculaPage() {
                         {/* BOTÓN IMPRIMIR POR EDADES */}
                         <button
                             onClick={imprimirPorEdades}
-                            className="flex items-center gap-2 bg-white text-white px-5 py-2 rounded-lg hover:bg-yellow-400 transition hover:cursor-pointer"
+                            className="flex items-center gap-2 bg-white text-black px-5 py-0 rounded-lg hover:bg-yellow-400 transition hover:cursor-pointer h-11 border border-gray-300 hover:border-yellow-400"
                         >
                             <FiPrinter className="text-black" />
+                            
+                        </button>
+                    </div>
+
+                    {/* FILTRO DE FECHAS Y BOTÓN IMPRIMIR */}
+                    <div className="flex flex-col sm:flex-row items-center gap-2 w-full md:w-auto">
+                        <div className="flex items-center gap-2 w-full sm:w-auto">
+                            <input
+                                type="date"
+                                value={fechaDesde}
+                                onChange={(e) => setFechaDesde(e.target.value)}
+                                className="w-full sm:w-auto h-11 px-3 border rounded-lg border-blue-500 bg-white text-sm"
+                            />
+                            <input
+                                type="date"
+                                value={fechaHasta}
+                                onChange={(e) => setFechaHasta(e.target.value)}
+                                className="w-full sm:w-auto h-11 px-3 border rounded-lg border-blue-500 bg-white text-sm"
+                            />
+                        </div>
+
+                        {/* BOTÓN IMPRIMIR FECHAS */}
+                        <button
+                            onClick={() => {
+                                let filtrados = data.filter(item => {
+                                    const fechaItem = new Date(item.f_matricula);
+                                    const desde = fechaDesde ? new Date(fechaDesde) : null;
+                                    const hasta = fechaHasta ? new Date(fechaHasta) : null;
+                                    
+                                    if (desde && fechaItem < desde) return false;
+                                    if (hasta && fechaItem > hasta) return false;
+                                    return true;
+                                });
+
+                                if (filtrados.length === 0) return alert("No hay registros en este rango.");
+                                
+                                const v = window.open('', '_blank');
+                                v.document.write(`<html><body><h1>Reporte por Fechas</h1><table>${filtrados.map(i => `<tr><td>${i.nombre} ${i.apellido}</td></tr>`).join('')}</table></body></html>`);
+                                v.document.close();
+                                v.print();
+                            }}
+                            className="h-11 w-full sm:w-auto px-4 flex items-center justify-center gap-2 bg-green-500 text-white rounded-b-full hover:bg-green-600 transition cursor-pointer "
+                            title="Imprimir rango de fechas"
+                        >
+                            <FiPrinter className="text-lg" />
                             
                         </button>
                     </div>
@@ -360,12 +405,13 @@ function MatriculaPage() {
                             setEditData(null);
                             setShowModal(true);
                         }}
-                        className="flex items-center gap-2 text-black px-5 py-2 cursor-pointer rounded-lg outline-2 outline-offset-2 outline-dashed hover:outline-yellow-400 hover:bg-yellow-400 hover:text-white transition"
+                        className="flex items-center gap-2 text-black px-5 py-0 cursor-pointer rounded-lg border border-gray-300 hover:bg-yellow-400 hover:text-white hover:border-yellow-400 transition h-11"
                     >
-                        <FiUserPlus />
-                        Nueva Matrícula
+                        <FiUserPlus className="size-7"/>
+                        <span>Nueva Matrícula</span>
                     </button>
                 </div>
+
             </div>
 
             {/* TABLA */}
