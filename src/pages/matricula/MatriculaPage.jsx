@@ -336,6 +336,7 @@ function MatriculaPage() {
                             value={filtroEdad}
                             onChange={(e) => setFiltroEdad(e.target.value)}
                             className="border rounded-3xl focus:outline-none bg-white border-blue-500 h-11 px-3"
+                            className="border rounded-lg focus:outline-none bg-white border-blue-500 h-11 px-3"
                         >
                             <option value="">Todas las edades</option>
                             <option value="menores18">Menor a 18 Año</option>

@@ -466,6 +466,11 @@ function MatriculaForm({ initialData, onSave, onError }) {
                         className="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
                     />
                 </div>
+
+
+
+                
+                
                 
                 {/* Datos Académicos */}
                 <div className="col-span-1 sm:col-span-2 lg:col-span-3">
