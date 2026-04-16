@@ -56,11 +56,13 @@ function Dashboard() {
     }
 
     return (
-        <div className="flex h-screen bg-gray-100 font-sans">
+        <div className="flex h-screen bg-white font-sans">
             {/* Overlay para móvil */}
             {isSidebarOpen && (
                 <div 
-                    className="fixed inset-0 bg-black bg-opacity-50 z-40" 
+                    
+                 
+                    className="fixed inset-0  bg-opacity-200 z-40" 
                     onClick={() => setIsSidebarOpen(false)}
                 />
             )}
@@ -70,31 +72,26 @@ function Dashboard() {
                 isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
             }`}>
                 
-        <div className="p-4 border-b border-gray-200">
-            <div className="flex items-center gap-3 flex-nowrap">
-                
-                {/* LOGO */}
-                <img 
-                    src="/Logo.png" 
-                    alt="Logo" 
-                    className="w-12 h-12 object-contain flex-shrink-0"
-                />
+                <div className="p-4 border-b border-gray-200">
+                    <div className="flex items-center gap-3 flex-nowrap">
+                        {/* LOGO */}
+                        <img 
+                            src="/Logo.png" 
+                            alt="Logo" 
+                            className="w-12 h-12 object-contain flex-shrink-0"
+                        />
 
-                {/* TEXTO */}
-                <div className="flex flex-col justify-center">
-                    <span className="text-indigo-500 font-bold text-sm whitespace-nowrap">
-                        Escuela de Manejo
-                    </span>
-                    <span className="text-indigo-400 font-bold text-sm whitespace-nowrap">
-                        Cacique ADIACT
-                    </span>
+                        {/* TEXTO */}
+                        <div className="flex flex-col justify-center">
+                            <span className="text-indigo-500 font-bold text-sm whitespace-nowrap">
+                                Escuela de Manejo
+                            </span>
+                            <span className="text-indigo-400 font-bold text-sm whitespace-nowrap">
+                                Cacique ADIACT
+                            </span>
+                        </div>
+                    </div>
                 </div>
-            </div>
-
-
-
-
-            </div>
 
                 <nav className="mt-4 px-4 space-y-2 overflow-y-auto h-[calc(100vh-80px)]">
                     <button
@@ -239,25 +236,30 @@ function Dashboard() {
                 </div>
             </aside>
 
-            {/* Main content */}
-            <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-                {!isSidebarOpen && (
-                    <div className="md:hidden">
-                        <button
-                            onClick={() => setIsSidebarOpen(true)}
-                            className="fixed top-4 left-4 z-50 p-2 bg-white rounded-lg shadow-md active:scale-95 transition-all duration-200"
-                        >
-                            <TbMenu2 className="text-black text-xl" />
-                        </button>
-                    </div>
-                )}
-                
-                <main className="flex-1 overflow-y-auto p-2 md:p-4">
-                    {renderContent()}
-                </main>
+            {/* Main content - FONDO BLANCO (cambiado de bg-amber-50 a bg-white) */}
+            {/* Main content - FONDO TRANSPARENTE */}
+               <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+                    
+                    {/* Header para móvil: Contiene el título y el botón del menú */}
+                    {!isSidebarOpen && (
+                        <div className="md:hidden flex justify-between items-center p-4">
+                            <h1 className="text-xl font-bold">Dashboard</h1>
+                            <button
+                                onClick={() => setIsSidebarOpen(true)}
+                                className="p-2  rounded-lg shadow-md active:scale-95 transition-all duration-200"
+                            >
+                                <TbMenu2 className="text-black text-xl" />
+                            </button>
+                        </div>
+                    )}
+                    
+                    {/* Main content */}
+                    <main className="flex-1 overflow-y-auto p-2 md:p-4 bg-white">
+                        {renderContent()}
+                    </main>
+                </div>
             </div>
-        </div>
-    );
-}
+        );
+    }
 
 export default Dashboard;
