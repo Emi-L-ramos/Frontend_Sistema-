@@ -130,7 +130,7 @@ function MatriculaPage() {
                 
                     <div class="form-row" style="width: 30%"> <span class="label">Sexo:</span> ${matricula.sexo || ''}</div>
                   
-                    <div class="form-row"> <span class="label">Nacionalidad/fecha de nacimiento:</span> ${matricula.fecha_nacimiento}</div>
+                    <div class="form-row"> <span class="label">Nacionalidad/fecha de nacimiento:</span> ${matricula.fecha_nacimiento}, ${matricula.nacionalidad || ''}</div>
                   
                 </div>
                 <div style="display: flex; gap: 20px;">
@@ -207,7 +207,7 @@ function MatriculaPage() {
             return;
         }
         //Aqui configuramos un mensaje automatico para whatpsap
-        const mensaje = `Hola🙌🙌 ${matricula.nombre} ${matricula.apellido || ''}, tu matricula ha sido registrada exitosamente✅ nos complaces comunicarte que te has inscrito en el curso  ${matricula.tipo_curso || ''} de vehiculo para la Categoria ${matricula.categoria} esperamos que aprobechas al amaxino tus clases como teorica y practica, !Si tienes alguna Consulta no olvides en Comunicarte conosotro👍👍👍 `;
+        const mensaje = `Hola ${matricula.nombre} ${matricula.apellido || ''}, Tu matricula ha sido registrada exitosamente. Nos complaces comunicarte que te has inscrito en el curso  ${matricula.tipo_curso || ''} de vehiculo para la Categoria ${matricula.categoria}, esperamos que aprobechas al máximo tus clases como teoríca y práctica, ¡Si tienes alguna Consulta no dudes en Comunicarte con nosotros!`;
         const url = `https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`;
         window.open(url, '_blank');
     };
@@ -336,7 +336,6 @@ function MatriculaPage() {
                             value={filtroEdad}
                             onChange={(e) => setFiltroEdad(e.target.value)}
                             className="border rounded-3xl focus:outline-none bg-white border-blue-500 h-11 px-3"
-                            className="border rounded-lg focus:outline-none bg-white border-blue-500 h-11 px-3"
                         >
                             <option value="">Todas las edades</option>
                             <option value="menores18">Menor a 18 Año</option>
@@ -355,7 +354,7 @@ function MatriculaPage() {
                         </button>
                     </div>
 
-                                    {/* FILTRO POR RANGO DE FECHAS */}
+                    {/* FILTRO POR RANGO DE FECHAS */}
                     <input
                         type="date"
                         value={fechaDesde}
