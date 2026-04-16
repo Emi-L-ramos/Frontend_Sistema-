@@ -1,4 +1,3 @@
-// src/pages/matricula/MatriculaPage.jsx
 import { useState, useEffect } from "react";
 import { FiUserPlus, FiSearch, FiX, FiPrinter } from "react-icons/fi";
 import { AiOutlinePrinter } from "react-icons/ai";
@@ -17,13 +16,11 @@ function MatriculaPage() {
     const [fechaDesde, setFechaDesde] = useState("");
     const [fechaHasta, setFechaHasta] = useState("");
 
-
     const closeModal = () => {
         setEditData(null);
         setShowModal(false);
     };
- 
-    // Traer datos desde Django
+
     const fetchMatriculas = async () => {
         try {
             const token = localStorage.getItem("token");
@@ -55,106 +52,92 @@ function MatriculaPage() {
         }
     };
 
-    // Función para imprimir matrícula individual
     const imprimirMatriculaIndividual = (matricula) => {
-    const ventanaImpresion = window.open('', '_blank');
-    ventanaImpresion.document.write(`
-        <html>
-            <head>
-                <style>
-                    @page { size: A4; margin: 15mm; }
-                    body { font-family: 'Arial', sans-serif; font-size: 13px; line-height: 1.4; color: #000; }
-                    .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
-                    .titulo { font-weight: bold; text-decoration: underline; margin-bottom: 15px; }
-                    .form-row { margin-bottom: 10px; border-bottom: 1px solid #000; width: 100%; display: inline-block; }
-                    .label { font-weight: bold; }
-                    
-                    /* Tabla Inferior */
-                    table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-                    th, td { border: 1px solid #000; padding: 5px; height: 30px; text-align: left; }
-                    .th-col { width: 100px; }
-                    
-                    .footer-nota { font-size: 11px; margin-top: 20px; }
-                    .pie-pagina { margin-top: 40px; text-align: center; border-top: 2px solid #333; padding-top: 10px; font-size: 11px; }
-                </style>
-            </head>
-            <body>
-                <div class="header">
-                    <strong>Instituto de Formación y Capacitación "Adiact"</strong><br>
-                    <em>Somos expertos en Formación y Capacitación del Talento Humano</em><br>
-                    <em>Ética, Integridad, Dedicación y Solidaridad</em>
-                </div>
+        const ventanaImpresion = window.open('', '_blank');
+        ventanaImpresion.document.write(`
+            <html>
+                <head>
+                    <style>
+                        @page { size: A4; margin: 15mm; }
+                        body { font-family: 'Arial', sans-serif; font-size: 13px; line-height: 1.4; color: #000; }
+                        .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
+                        .titulo { font-weight: bold; text-decoration: underline; margin-bottom: 15px; }
+                        .form-row { margin-bottom: 10px; border-bottom: 1px solid #000; width: 100%; display: inline-block; }
+                        .label { font-weight: bold; }
+                        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                        th, td { border: 1px solid #000; padding: 5px; height: 30px; text-align: left; }
+                        .th-col { width: 100px; }
+                        .footer-nota { font-size: 11px; margin-top: 20px; }
+                        .pie-pagina { margin-top: 40px; text-align: center; border-top: 2px solid #333; padding-top: 10px; font-size: 11px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <strong>Instituto de Formación y Capacitación "Adiact"</strong><br>
+                        <em>Somos expertos en Formación y Capacitación del Talento Humano</em><br>
+                        <em>Ética, Integridad, Dedicación y Solidaridad</em>
+                    </div>
+                    <div class="titulo">HOJA DE MATRICULA DE ADULTOS A CURSO DE: EDUCACION VIAL Y MANEJO RESPONSABLE... Fecha: ${matricula.f_matricula}</div>
+                    <div class="form-row"><span class="label">Nombres y apellidos:</span> ${matricula.nombre || ''} ${matricula.apellido || ''}</div>
+                    <div style="display: flex; gap: 20px;">
+                        <div class="form-row" style="width: 30%"> <span class="label">Sexo:</span> ${matricula.sexo || ''}</div>
+                        <div class="form-row"> <span class="label">Nacionalidad/fecha de nacimiento:</span> ${matricula.fecha_nacimiento}</div>
+                    </div>
+                    <div style="display: flex; gap: 20px;">
+                        <div class="form-row" style="width: 30%"> <span class="label">Edad:</span> ${matricula.edad || ''}</div>
+                        <div class="form-row"> <span class="label">Número de cédula:</span> ${matricula.cedula || ''}</div>
+                    </div>
+                    <div class="form-row"> <span class="label">Dirección:</span> ${matricula.direccion || '' }</div>
+                    <div class="form-row"> <span class="label">Correo electrónico:</span>${matricula.correo_electronico || '' }</div>
+                    <div style="display: flex; gap: 20px;">
+                        <div class="form-row"> <span class="label">Teléfono convencional:</span> ${matricula.telefono_movil}</div>
+                        <div class="form-row"> <span class="label">Teléfono móvil:</span> ${matricula.telefono_movil || ''}</div>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <div class="form-row"> <span class="label">Nivel Academico:</span>${matricula.nivel_educativo || '' }</div>
+                        <div class="form-row"> <span class="label">Profesión u oficio:</span> ${matricula.profesion_u_oficio || '' }</div>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <div class="form-row"> <span class="label">Modalidad:</span> ${matricula.modalidad  || '' }</div>
+                        <div class="form-row"> <span class="label">Horario:</span> ${matricula.horario || '' }</div>
+                        <div class="form-row"> <span class="label">Tipo de curso:</span> ${matricula.tipo_curso || ''}</div>
+                    </div>
+                    <div style="text-align: center; margin: 30px 0; font-weight: bold;">FIRMA DEL SOLICITANTE</div>
+                    <table>
+                        <tr><td class="th-col">DE:</td><td>Escuela de Manejo</td><td class="th-col">FECHA:</td><td></td></tr>
+                        <tr><td class="th-col">ASUNTO:</td><td colspan="3" style="height: 60px;"></td></tr>
+                        <tr><td class="th-col">CANTIDAD:</td><td colspan="3"></td></tr>
+                    </table>
+                    <div class="footer-nota">
+                        <strong>NOTA:</strong><br>
+                        1-NO SE ACEPTA DEVOLUCIONES.<br>
+                        2-TIENE 60 DIAS PARA GESTION DE LICENCIA.<br>
+                        3-AUSENCIA INJUSTIFICADA ES CLASE DADA
+                    </div>
+                    <div class="pie-pagina">
+                        <strong>ESCUELA DE MANEJO EL CACIQUE ADIACT</strong><br>
+                        Gasolinera UNO Sutiava 1 cuadra al norte y ½ c. oeste. Teléfono: 2315 - 2568
+                    </div>
+                </body>
+            </html>
+        `);
+        ventanaImpresion.document.close();
+        ventanaImpresion.print();
+    };
 
-                <div class="titulo">HOJA DE MATRICULA DE ADULTOS A CURSO DE: EDUCACION VIAL Y MANEJO RESPONSABLE... Fecha: ${matricula.f_matricula}</div>
-
-                <div class="form-row"><span class="label">Nombres y apellidos:</span> ${matricula.nombre || ''} ${matricula.apellido || ''}</div>
-                <div style="display: flex; gap: 20px;">
-                    <div class="form-row" style="width: 30%"> <span class="label">Sexo:</span> ${matricula.sexo || ''}</div>
-                    <div class="form-row"> <span class="label">Nacionalidad/fecha de nacimiento:</span> ${matricula.fecha_nacimiento}</div>
-                </div>
-                <div style="display: flex; gap: 20px;">
-                    <div class="form-row" style="width: 30%"> <span class="label">Edad:</span> ${matricula.edad || ''}</div>
-                    <div class="form-row"> <span class="label">Número de cédula:</span> ${matricula.cedula || ''}</div>
-                </div>
-                <div class="form-row"> <span class="label">Dirección:</span> ${matricula.direccion || '' }</div>
-                <div class="form-row"> <span class="label">Correo electrónico:</span>${matricula.correo_electronico || '' }</div>
-                <div style="display: flex; gap: 20px;">
-                    <div class="form-row"> <span class="label">Teléfono convencional:</span> ${matricula.telefono_movil}</div>
-                    <div class="form-row"> <span class="label">Teléfono móvil:</span> ${matricula.telefono_movil || ''}</div>
-                </div>
-                <div style="display: flex; gap: 10px;">
-                    <div class="form-row"> <span class="label">Nivel Academico:</span>${matricula.nivel_educativo || '' }</div>
-                    <div class="form-row"> <span class="label">Profesión u oficio:</span> ${matricula.profesion_u_oficio || '' }</div>
-                </div>
-                <div style="display: flex; gap: 10px;">
-                    <div class="form-row"> <span class="label">Modalidad:</span> ${matricula.modalidad  || '' }</div>
-                    <div class="form-row"> <span class="label">Horario:</span> ${matricula.horario || '' }</div>
-                    <div class="form-row"> <span class="label">Tipo de curso:</span> ${matricula.tipo_curso || ''}</div>
-                </div>
-
-                <div style="text-align: center; margin: 30px 0; font-weight: bold;">FIRMA DEL SOLICITANTE</div>
-
-                <table>
-                    <tr><td class="th-col">DE:</td><td>Escuela de Manejo</td><td class="th-col">FECHA:</td><td></td></tr>
-                    <tr><td class="th-col">ASUNTO:</td><td colspan="3" style="height: 60px;"></td></tr>
-                    <tr><td class="th-col">CANTIDAD:</td><td colspan="3"></td></tr>
-                </table>
-
-                <div class="footer-nota">
-                    <strong>NOTA:</strong><br>
-                    1-NO SE ACEPTA DEVOLUCIONES.<br>
-                    2-TIENE 60 DIAS PARA GESTION DE LICENCIA.<br>
-                    3-AUSENCIA INJUSTIFICADA ES CLASE DADA
-                </div>
-
-                <div class="pie-pagina">
-                    <strong>ESCUELA DE MANEJO EL CACIQUE ADIACT</strong><br>
-                    Gasolinera UNO Sutiava 1 cuadra al norte y ½ c. oeste. Teléfono: 2315 - 2568
-                </div>
-            </body>
-        </html>
-    `);
-    ventanaImpresion.document.close();
-    ventanaImpresion.print();
-};
-
-    // Función para enviar WhatsApp
     const enviarWhatsApp = (matricula) => {
         const telefono = matricula.telefono_movil;
         if (!telefono) {
             alert("El estudiante no tiene número de teléfono registrado");
             return;
         }
-
-        const mensaje = `Hola ${matricula.nombre} ${matricula.apellido || ''}, te confirmamos tu matrícula en el curso ${matricula.tipo_curso || ''}. Monto: C$${parseFloat(matricula.monto_total || 0).toFixed(2)}. ¡Bienvenido!`;
+        const mensaje = `Hola ${matricula.nombre} ${matricula.apellido || ''}, te confirmamos tu matrícula en el curso ${matricula.tipo_curso || ''}. ¡Bienvenido!`;
         const url = `https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`;
         window.open(url, '_blank');
     };
 
-    // Función para imprimir por edades
     const imprimirPorEdades = () => {
         let datosAImprimir = [];
-        
         if (filtroEdad === "menores18") {
             datosAImprimir = data.filter(item => parseInt(item.edad) < 18);
         } else if (filtroEdad === "18a30") {
@@ -164,7 +147,7 @@ function MatriculaPage() {
         } else if (filtroEdad === "mayores50") {
             datosAImprimir = data.filter(item => parseInt(item.edad) > 50);
         } else {
-            datosAImprimir = filteredByAge; // Usar filteredByAge en lugar de displayData
+            datosAImprimir = filteredByAge;
         }
 
         const ventanaImpresion = window.open('', '_blank');
@@ -179,22 +162,14 @@ function MatriculaPage() {
                         th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
                         th { background-color: #4CAF50; color: white; }
                         .total { margin-top: 20px; font-weight: bold; text-align: right; }
-                        @media print {
-                            button { display: none; }
-                        }
                     </style>
                 </head>
                 <body>
                     <h1>Reporte de Matrículas</h1>
-                    <p><strong>Filtro de edad:</strong> ${filtroEdad === "menores18" ? "Menores de 18 años" : 
-                        filtroEdad === "18a30" ? "18 a 30 años" :
-                        filtroEdad === "31a50" ? "31 a 50 años" :
-                        filtroEdad === "mayores50" ? "Mayores de 50 años" : "Todos los registros"}</p>
-                    <p><strong>Fecha de generación:</strong> ${new Date().toLocaleString()}</p>
-                    <p><strong>Total de registros:</strong> ${datosAImprimir.length}</p>
+                    <p><strong>Filtro:</strong> ${filtroEdad || "Todos"}</p>
                     <table>
                         <thead>
-                            <tr><th>Nombre</th><th>Cédula</th><th>Edad</th><th>Sexo</th><th>Teléfono</th><th>Categoría</th><th>Curso</th><th>Monto</th></tr>
+                            <tr><th>Nombre</th><th>Cédula</th><th>Edad</th><th>Sexo</th><th>Teléfono</th><th>Curso</th></tr>
                         </thead>
                         <tbody>
                             ${datosAImprimir.map(item => `
@@ -204,15 +179,11 @@ function MatriculaPage() {
                                     <td>${item.edad || ''}</td>
                                     <td>${item.sexo || ''}</td>
                                     <td>${item.telefono_movil || ''}</td>
-                                    <td>${item.categoria || ''}</td>
                                     <td>${item.tipo_curso || ''}</td>
-                                    <td>C$${parseFloat(item.monto_total || 0).toFixed(2)}</td>
                                 </tr>
                             `).join('')}
                         </tbody>
                     </table>
-                    <div class="total">Total recaudado: C$${datosAImprimir.reduce((sum, item) => sum + (parseFloat(item.monto_total) || 0), 0).toFixed(2)}</div>
-                    <p style="margin-top: 30px; text-align: center; color: #666;">Reporte generado el ${new Date().toLocaleDateString()}</p>
                 </body>
             </html>
         `);
@@ -224,16 +195,13 @@ function MatriculaPage() {
         fetchMatriculas();
     }, []);
 
-    // Filtro por nombre/cédula
     const filteredData = data.filter(item =>
         (item.nombre?.toLowerCase() || "").includes(search.toLowerCase()) ||
         (item.cedula || "").includes(search)
     );
 
-    // Filtro por edad
     const filteredByAge = (() => {
         if (!filtroEdad) return filteredData;
-        
         return filteredData.filter(item => {
             const edad = parseInt(item.edad);
             if (isNaN(edad)) return false;
@@ -250,56 +218,86 @@ function MatriculaPage() {
     return (
         <div className="min-h-screen">
             {/* HEADER */}
-            <div className="max-w-7xl mx-auto mb-4 space-y-10">
-                <div className="space-y-2">
+            <div className="max-w-7xl mx-auto mb-4 space-y-6">
+                <div className="space-y-1">
                     <h1 className="text-4xl font-bold">Matrículas</h1>
                     <p className="text-gray-600">Registro y gestión de nuevas matrículas</p>
                 </div>
 
-                <div className="flex flex-col md:flex-row gap-4 md:justify-between rounded-xl">
-                    {/* BUSCADOR por nombre/cédula */}
-                    <div className="relative w-full md:w-1/3">
-                        <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                {/* BARRA DE HERRAMIENTAS - CORREGIDA PARA ALINEACIÓN */}
+                <div className="flex flex-col md:flex-row items-center gap-3">
+                    
+                    {/* BUSCADOR */}
+                    <div className="relative w-full md:w-1/3 flex items-center">
+                        <FiSearch className="absolute left-3 text-gray-400 z-10" />
                         <input
                             type="text"
                             placeholder="Buscar por nombre o cédula..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 border rounded-3xl focus:outline-none bg-white border-blue-500 hover:outline-2 hover:outline-offset-2 hover:outline-dashed hover:border-blue-900 transition"
+                            className="w-full h-11 pl-10 pr-4 border rounded-3xl border-blue-500 focus:outline-none bg-white transition hover:border-blue-900"
                         />
                     </div>
 
-                    {/* FILTRO POR EDADES */}
-                    <div className="flex gap-2">
-                        <select
-                            value={filtroEdad}
-                            onChange={(e) => setFiltroEdad(e.target.value)}
-                            className="px-4 py-2 border rounded-lg focus:outline-none bg-white border-blue-500"
-                        >
-                            <option value="">Todas las edades</option>
-                            <option value="menores18">Menores de 18 años</option>
-                            <option value="18a30">18 a 30 años</option>
-                            <option value="31a50">31 a 50 años</option>
-                            <option value="mayores50">Mayores de 50 años</option>
-                        </select>
+                    {/* FILTRO EDADES */}
+                    <select
+                        value={filtroEdad}
+                        onChange={(e) => setFiltroEdad(e.target.value)}
+                        className="h-11 px-4 border rounded-lg border-blue-500 focus:outline-none bg-white"
+                    >
+                        <option value="">Todas las edades</option>
+                        <option value="menores18">Menores de 18 años</option>
+                        <option value="18a30">18 a 30 años</option>
+                        <option value="31a50">31 a 50 años</option>
+                        <option value="mayores50">Mayores de 50 años</option>
+                    </select>
 
-                        {/* BOTÓN IMPRIMIR POR EDADES */}
-                        <button
-                            onClick={imprimirPorEdades}
-                            className="flex items-center gap-2 bg-white text-white px-5 py-2 rounded-lg hover:bg-yellow-400 transition hover:cursor-pointer"
-                        >
-                            <FiPrinter className="text-black" />
-                            
-                        </button>
+                    {/* BOTÓN IMPRIMIR EDADES */}
+                    <button
+                        onClick={imprimirPorEdades}
+                        className="h-11 w-12 flex items-center justify-center bg-white border border-gray-300 rounded-lg hover:bg-gray-100 transition shadow-sm"
+                    >
+                        <FiPrinter className="text-black text-xl" />    
+                    </button>
+
+                    {/* RANGO DE FECHAS */}
+                    <div className="flex items-center gap-2">
+                        <input
+                            type="date"
+                            value={fechaDesde}
+                            onChange={(e) => setFechaDesde(e.target.value)}
+                            className="h-11 px-3 border rounded-lg border-blue-500 bg-white"
+                        />
+                        <input
+                            type="date"
+                            value={fechaHasta}
+                            onChange={(e) => setFechaHasta(e.target.value)}
+                            className="h-11 px-3 border rounded-lg border-blue-500 bg-white"
+                        />
                     </div>
+
+                    {/* BOTÓN IMPRIMIR FECHAS */}
+                    <button
+                        onClick={() => {
+                            let filtrados = data;
+                            if (fechaDesde) filtrados = filtrados.filter(item => new Date(item.f_matricula) >= new Date(fechaDesde));
+                            if (fechaHasta) filtrados = filtrados.filter(item => new Date(item.f_matricula) <= new Date(fechaHasta));
+                            if (filtrados.length === 0) return alert("No hay registros.");
+                            
+                            const v = window.open('', '_blank');
+                            v.document.write(`<html><body><h1>Reporte</h1><table>${filtrados.map(i => `<tr><td>${i.nombre}</td></tr>`).join('')}</table></body></html>`);
+                            v.document.close();
+                            v.print();
+                        }}
+                        className="h-11 px-4 flex items-center justify-center bg-green-500 text-white rounded-lg hover:bg-green-600 transition"
+                    >
+                        <FiPrinter className="text-xl" />
+                    </button>
 
                     {/* BOTÓN NUEVA MATRÍCULA */}
                     <button
-                        onClick={() => {
-                            setEditData(null);
-                            setShowModal(true);
-                        }}
-                        className="flex items-center gap-2 text-black px-5 py-2 cursor-pointer rounded-lg outline-2 outline-offset-2 outline-dashed hover:outline-yellow-400 hover:bg-yellow-400 hover:text-white transition"
+                        onClick={() => { setEditData(null); setShowModal(true); }}
+                        className="h-11 px-5 flex items-center gap-2 text-black font-medium border-2 border-dashed border-gray-800 rounded-lg hover:bg-yellow-400 hover:text-white transition ml-auto"
                     >
                         <FiUserPlus />
                         Nueva Matrícula
@@ -320,7 +318,6 @@ function MatriculaPage() {
                                 <th className="p-3">Teléfono</th>
                                 <th className="p-3">Categoría</th>
                                 <th className="p-3">Curso</th>
-                                <th className="p-3">Monto</th>
                                 <th className="p-3">Opciones</th>
                             </tr>
                         </thead>
@@ -329,7 +326,7 @@ function MatriculaPage() {
                                 <tr><td colSpan="9" className="p-6 text-center">Cargando...</td></tr>
                             ) : displayData.length > 0 ? (
                                 displayData.map(item => (
-                                    <tr key={item.id} className="hover:bg-blue-200 transition">
+                                    <tr key={item.id} className="hover:bg-blue-200 transition border-b border-gray-100">
                                         <td className="p-2">{item.nombre} {item.apellido}</td>
                                         <td className="p-2">{item.cedula}</td>
                                         <td className="p-2">{item.edad}</td>
@@ -337,37 +334,12 @@ function MatriculaPage() {
                                         <td className="p-2">{item.telefono_movil}</td>
                                         <td className="p-2">{item.categoria}</td>
                                         <td className="p-2">{item.tipo_curso}</td>
-                                        <td className="p-2 font-bold text-blue-600">C$ {parseFloat(item.monto_total || 0).toFixed(2)}</td>
                                         <td className="p-2">
                                             <div className="flex items-center gap-3">
-                                                <button 
-                                                    onClick={() => eliminarMatricula(item.id)} 
-                                                    className="p-2 rounded-lg hover:bg-red-100" 
-                                                    title="Eliminar"
-                                                >
-                                                    <RiDeleteBinLine className="text-red-500 text-xl hover:text-red-700 hover:cursor-pointer" />
-                                                </button>
-                                                <button 
-                                                    onClick={() => { setEditData(item); setShowModal(true); }} 
-                                                    className="p-2 rounded-lg hover:bg-blue-100" 
-                                                    title="Editar"
-                                                >
-                                                    <CiEdit className="text-blue-500 text-xl hover:text-blue-700 hover:cursor-pointer" />
-                                                </button>
-                                                <button 
-                                                    onClick={() => imprimirMatriculaIndividual(item)} 
-                                                    className="p-2 rounded-lg hover:bg-green-100" 
-                                                    title="Imprimir Matrícula"
-                                                >
-                                                    <AiOutlinePrinter className="text-green-500 text-xl hover:text-green-700 hover:cursor-pointer" />
-                                                </button>
-                                                <button 
-                                                    onClick={() => enviarWhatsApp(item)}
-                                                    className="p-2 rounded-lg hover:bg-green-100"
-                                                    title="Enviar por WhatsApp"
-                                                >
-                                                    <IoLogoWhatsapp className="text-green-600 text-xl hover:text-green-700 hover:cursor-pointer" />
-                                                </button>
+                                                <button onClick={() => eliminarMatricula(item.id)} className="p-2 rounded-lg hover:bg-red-100"><RiDeleteBinLine className="text-red-500 text-xl" /></button>
+                                                <button onClick={() => { setEditData(item); setShowModal(true); }} className="p-2 rounded-lg hover:bg-blue-100"><CiEdit className="text-blue-500 text-xl" /></button>
+                                                <button onClick={() => imprimirMatriculaIndividual(item)} className="p-2 rounded-lg hover:bg-green-100"><AiOutlinePrinter className="text-green-500 text-xl" /></button>
+                                                <button onClick={() => enviarWhatsApp(item)} className="p-2 rounded-lg hover:bg-green-100"><IoLogoWhatsapp className="text-green-600 text-xl" /></button>
                                             </div>
                                         </td>
                                     </tr>

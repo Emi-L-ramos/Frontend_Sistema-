@@ -1,5 +1,6 @@
 // src/components/MatriculaForm.jsx
 import { useState, useEffect } from "react";
+import Swal from "sweetalert2";
 
 function MatriculaForm({ initialData, onSave, onError }) {
     const [formData, setFormData] = useState({
@@ -25,7 +26,7 @@ function MatriculaForm({ initialData, onSave, onError }) {
         categoria: '',
         apariconia: '',
     });
-    
+
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState({});
     const [serverErrors, setServerErrors] = useState({});
@@ -88,7 +89,7 @@ function MatriculaForm({ initialData, onSave, onError }) {
                 const date = new Date(initialData.fecha_nacimiento);
                 fechaNacimiento = date.toISOString().split('T')[0];
             }
-            
+
             setFormData({
                 f_matricula: initialData.f_matricula || '',
                 nombre: initialData.nombre || '',
@@ -121,7 +122,7 @@ function MatriculaForm({ initialData, onSave, onError }) {
             ...prev,
             [name]: value
         }));
-        
+
         // Limpiar errores cuando el usuario escribe
         if (errors[name]) {
             setErrors(prev => ({ ...prev, [name]: '' }));
@@ -133,7 +134,6 @@ function MatriculaForm({ initialData, onSave, onError }) {
 
     const validateForm = () => {
         const newErrors = {};
-        
         if (!formData.nombre.trim()) newErrors.nombre = 'El nombre es requerido';
         if (!formData.apellido.trim()) newErrors.apellido = 'El apellido es requerido';
         if (!formData.cedula.trim()) newErrors.cedula = 'La cédula es requerida';
@@ -142,75 +142,89 @@ function MatriculaForm({ initialData, onSave, onError }) {
         } else if (!/\S+@\S+\.\S+/.test(formData.correo_electronico)) {
             newErrors.correo_electronico = 'Correo electrónico inválido';
         }
+
         if (!formData.horario) newErrors.horario = 'El horario es requerido';
         if (!formData.modalidad) newErrors.modalidad = 'La modalidad es requerida';
         if (!formData.tipo_curso) newErrors.tipo_curso = 'El tipo de curso es requerido';
         if (!formData.fecha_nacimiento) newErrors.fecha_nacimiento = 'La fecha de nacimiento es requerida';
-        
+
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
         if (!validateForm()) {
             if (onError) onError(new Error('Por favor complete todos los campos requeridos'));
             return;
         }
-        
+
         setLoading(true);
         setServerErrors({});
-        
+
         // Preparar datos para enviar
         const dataToSend = {
             ...formData,
             // Asegurar que los campos numéricos sean números
             edad: formData.edad ? parseInt(formData.edad) : null,
         };
-        
+
         console.log("Enviando datos:", dataToSend);
-        
+
         try {
             const token = localStorage.getItem("token");
-            const url = initialData 
+            const url = initialData
                 ? `http://localhost:8000/api/matricula/${initialData.id}/`
                 : "http://localhost:8000/api/matricula/";
-            
+
             const method = initialData ? "PUT" : "POST";
-            
+
             const response = await fetch(url, {
                 method: method,
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Token ${token}`
                 },
+
                 body: JSON.stringify(dataToSend)
             });
-            
+
             const responseData = await response.json();
             console.log("Respuesta del servidor:", responseData);
-            
+
             if (!response.ok) {
-                // Mostrar errores específicos del servidor
                 if (responseData) {
                     setServerErrors(responseData);
-                    
-                    // Formatear mensaje de error
                     let errorMessage = "Error al guardar:\n";
                     for (const [field, errors] of Object.entries(responseData)) {
                         errorMessage += `- ${field}: ${errors.join(', ')}\n`;
                     }
+
+                    await Swal.fire({
+                        title: 'Error',
+                        text: errorMessage,
+                        icon: 'error',
+                        confirmButtonColor: '#d33'
+                    });
+
                     throw new Error(errorMessage);
                 } else {
                     throw new Error(`Error ${response.status}: ${response.statusText}`);
                 }
             }
-            
-            console.log("Matrícula guardada:", responseData);
-            
+
+            <MatriculaForm
+                key={initialData?.id || 'new'}
+                initialData={initialData}
+                onSave={() => {
+                    fetchMatriculas();
+                    closeModal();
+                    alert("¡Matrícula guardada con éxito!"); 
+                }}
+            />
+
             if (onSave) onSave(responseData);
-            
+
         } catch (error) {
             console.error("Error:", error);
             if (onError) onError(error);
@@ -235,13 +249,12 @@ function MatriculaForm({ initialData, onSave, onError }) {
                     </ul>
                 </div>
             )}
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Datos Personales */}
                 <div className="md:col-span-2">
                     <h3 className="text-lg font-semibold text-gray-700 mb-3">Datos Personales</h3>
                 </div>
-                
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                         Nombre *
@@ -258,7 +271,7 @@ function MatriculaForm({ initialData, onSave, onError }) {
                     {errors.nombre && <p className="text-red-500 text-xs mt-1">{errors.nombre}</p>}
                     {serverErrors.nombre && <p className="text-red-500 text-xs mt-1">{serverErrors.nombre}</p>}
                 </div>
-                
+
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                         Apellido *
@@ -274,8 +287,7 @@ function MatriculaForm({ initialData, onSave, onError }) {
                     />
                     {errors.apellido && <p className="text-red-500 text-xs mt-1">{errors.apellido}</p>}
                     {serverErrors.apellido && <p className="text-red-500 text-xs mt-1">{serverErrors.apellido}</p>}
-                </div>
-                
+                </div>  
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                         Cédula *
@@ -292,7 +304,6 @@ function MatriculaForm({ initialData, onSave, onError }) {
                     {errors.cedula && <p className="text-red-500 text-xs mt-1">{errors.cedula}</p>}
                     {serverErrors.cedula && <p className="text-red-500 text-xs mt-1">{serverErrors.cedula}</p>}
                 </div>
-                
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                         Edad
@@ -305,7 +316,6 @@ function MatriculaForm({ initialData, onSave, onError }) {
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                 </div>
-                
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                         Sexo
@@ -322,7 +332,6 @@ function MatriculaForm({ initialData, onSave, onError }) {
                         ))}
                     </select>
                 </div>
-                
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                         Nacionalidad
@@ -335,7 +344,6 @@ function MatriculaForm({ initialData, onSave, onError }) {
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                 </div>
-                
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                         Fecha de Nacimiento *
@@ -352,7 +360,6 @@ function MatriculaForm({ initialData, onSave, onError }) {
                     {errors.fecha_nacimiento && <p className="text-red-500 text-xs mt-1">{errors.fecha_nacimiento}</p>}
                     {serverErrors.fecha_nacimiento && <p className="text-red-500 text-xs mt-1">{serverErrors.fecha_nacimiento}</p>}
                 </div>
-                
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                         Correo Electrónico *
@@ -369,7 +376,6 @@ function MatriculaForm({ initialData, onSave, onError }) {
                     {errors.correo_electronico && <p className="text-red-500 text-xs mt-1">{errors.correo_electronico}</p>}
                     {serverErrors.correo_electronico && <p className="text-red-500 text-xs mt-1">{serverErrors.correo_electronico}</p>}
                 </div>
-                
                 <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                         Dirección
@@ -382,7 +388,6 @@ function MatriculaForm({ initialData, onSave, onError }) {
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                 </div>
-                
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                         Teléfono Móvil
@@ -395,7 +400,6 @@ function MatriculaForm({ initialData, onSave, onError }) {
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                 </div>
-                
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                         Nivel Educativo
@@ -412,7 +416,6 @@ function MatriculaForm({ initialData, onSave, onError }) {
                         ))}
                     </select>
                 </div>
-                
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                         Profesión u Oficio
@@ -425,7 +428,6 @@ function MatriculaForm({ initialData, onSave, onError }) {
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                 </div>
-                
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                         Contacto de Emergencia
@@ -438,7 +440,6 @@ function MatriculaForm({ initialData, onSave, onError }) {
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                 </div>
-                
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                         Teléfono de Emergencia
@@ -451,12 +452,27 @@ function MatriculaForm({ initialData, onSave, onError }) {
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                 </div>
-                
+
                 {/* Datos Académicos */}
                 <div className="md:col-span-2">
                     <h3 className="text-lg font-semibold text-gray-700 mb-3">Datos Académicos</h3>
                 </div>
-                
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Fecha de Matrícula *
+                    </label>
+                    <input
+                        type="date"
+                        name="f_matricula"
+                        value={formData.f_matricula}
+                        onChange={handleChange}
+                        className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                            errors.f_matricula || serverErrors.f_matricula ? 'border-red-500' : 'border-gray-300'
+                        }`}
+                    />
+                    {errors.f_matricula && <p className="text-red-500 text-xs mt-1">{errors.f_matricula}</p>}
+                    {serverErrors.f_matricula && <p className="text-red-500 text-xs mt-1">{serverErrors.f_matricula}</p>}
+                </div>
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                         Modalidad *
@@ -477,7 +493,6 @@ function MatriculaForm({ initialData, onSave, onError }) {
                     {errors.modalidad && <p className="text-red-500 text-xs mt-1">{errors.modalidad}</p>}
                     {serverErrors.modalidad && <p className="text-red-500 text-xs mt-1">{serverErrors.modalidad}</p>}
                 </div>
-                
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                         Horario *
@@ -498,7 +513,6 @@ function MatriculaForm({ initialData, onSave, onError }) {
                     {errors.horario && <p className="text-red-500 text-xs mt-1">{errors.horario}</p>}
                     {serverErrors.horario && <p className="text-red-500 text-xs mt-1">{serverErrors.horario}</p>}
                 </div>
-                
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                         Tipo de Curso *
@@ -519,7 +533,6 @@ function MatriculaForm({ initialData, onSave, onError }) {
                     {errors.tipo_curso && <p className="text-red-500 text-xs mt-1">{errors.tipo_curso}</p>}
                     {serverErrors.tipo_curso && <p className="text-red-500 text-xs mt-1">{serverErrors.tipo_curso}</p>}
                 </div>
-                
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                         Categoría
@@ -536,7 +549,6 @@ function MatriculaForm({ initialData, onSave, onError }) {
                         ))}
                     </select>
                 </div>
-                
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                         Tipo de Pago
@@ -553,7 +565,6 @@ function MatriculaForm({ initialData, onSave, onError }) {
                         ))}
                     </select>
                 </div>
-                
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                         ¿Cómo se enteró?
@@ -571,7 +582,9 @@ function MatriculaForm({ initialData, onSave, onError }) {
                     </select>
                 </div>
             </div>
-            
+
+           
+
             <div className="flex justify-end gap-3 pt-4 border-t">
                 <button
                     type="button"
@@ -580,8 +593,6 @@ function MatriculaForm({ initialData, onSave, onError }) {
                 >
                     Cancelar
                 </button>
-
-
                 <button
                     type="submit"
                     disabled={loading}

@@ -109,6 +109,8 @@ function Dashboard() {
                         <span>Dashboard</span>
                     </button>
                             
+                    {user?.rol === 'admin' && (
+                    <>
                     <button
                         onClick={() => { setActiveTab('matricula'); setIsSidebarOpen(false); }}
                         className={`w-full flex items-center p-3 space-x-3 rounded-xl transition ${
@@ -132,6 +134,9 @@ function Dashboard() {
                         <HiOutlineDocumentCurrencyDollar size={'1.5rem'} />
                         <span>Recibos</span>
                     </button>
+                    </>
+                    )}
+
 
                     {/* Solo admin puede ver usuarios */}
                     {user?.rol === 'admin' && (
