@@ -6,6 +6,7 @@ import { RiDeleteBinLine } from "react-icons/ri";
 import { CiEdit } from "react-icons/ci";
 import MatriculaForm from "../../components/matriculaForm";
 import { IoLogoWhatsapp } from "react-icons/io5";
+import Swal from 'sweetalert2';
 
 function MatriculaPage() {
     const [showModal, setShowModal] = useState(false);
@@ -39,9 +40,30 @@ function MatriculaPage() {
         }
     };
 
+    //Funcion para eliminar una matricula
+
     const eliminarMatricula = async (id) => {
-        const confirmacion = confirm("¿Seguro que quieres eliminar?");
-        if (!confirmacion) return;
+    const result = await Swal.fire({
+        title: '¿Estás seguro?',
+        text: "¡No podrás revertir esta acción!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    });
+
+    if (result.isConfirmed) {
+        // Mostrar loading
+        Swal.fire({
+            title: 'Eliminando...',
+            text: 'Por favor espera',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
 
         try {
             const token = localStorage.getItem("token");
@@ -49,11 +71,24 @@ function MatriculaPage() {
                 method: "DELETE",
                 headers: { "Authorization": `Token ${token}` }
             });
+            
             setData(prev => prev.filter(item => item.id !== id));
+            
+            Swal.fire(
+                '¡Eliminado!',
+                'La matrícula ha sido eliminada correctamente.',
+                'success'
+            );
         } catch (error) {
             console.error("Error eliminando:", error);
+            Swal.fire(
+                'Error',
+                'Hubo un problema al eliminar la matrícula.',
+                'error'
+            );
         }
-    };
+    }
+};
 
     // Función para imprimir matrícula individual
     const imprimirMatriculaIndividual = (matricula) => {
@@ -68,6 +103,7 @@ function MatriculaPage() {
                     .titulo { font-weight: bold; text-decoration: underline; margin-bottom: 15px; }
                     .form-row { margin-bottom: 10px; border-bottom: 1px solid #000; width: 100%; display: inline-block; }
                     .label { font-weight: bold; }
+                    .span {font-size: 24px;}
                     
                     /* Tabla Inferior */
                     table { width: 100%; border-collapse: collapse; margin: 20px 0; }
@@ -86,32 +122,57 @@ function MatriculaPage() {
                 </div>
 
                 <div class="titulo">HOJA DE MATRICULA DE ADULTOS A CURSO DE: EDUCACION VIAL Y MANEJO RESPONSABLE... Fecha: ${matricula.f_matricula}</div>
-
-                <div class="form-row"><span class="label">Nombres y apellidos:</span> ${matricula.nombre || ''} ${matricula.apellido || ''}</div>
+                
+                <div class="form-row"><span class="label">Nombres y apellidos:</span "> ${matricula.nombre || ''}  ${matricula.apellido || ''}</div>
+                
+             
                 <div style="display: flex; gap: 20px;">
+                
                     <div class="form-row" style="width: 30%"> <span class="label">Sexo:</span> ${matricula.sexo || ''}</div>
+                  
                     <div class="form-row"> <span class="label">Nacionalidad/fecha de nacimiento:</span> ${matricula.fecha_nacimiento}</div>
+                  
                 </div>
                 <div style="display: flex; gap: 20px;">
+                
                     <div class="form-row" style="width: 30%"> <span class="label">Edad:</span> ${matricula.edad || ''}</div>
+                     
                     <div class="form-row"> <span class="label">Número de cédula:</span> ${matricula.cedula || ''}</div>
+                     
                 </div>
                 <div class="form-row"> <span class="label">Dirección:</span> ${matricula.direccion || '' }</div>
+                  
                 <div class="form-row"> <span class="label">Correo electrónico:</span>${matricula.correo_electronico || '' }</div>
+                 
                 <div style="display: flex; gap: 20px;">
                     <div class="form-row"> <span class="label">Teléfono convencional:</span> ${matricula.telefono_movil}</div>
+                    
                     <div class="form-row"> <span class="label">Teléfono móvil:</span> ${matricula.telefono_movil || ''}</div>
+                    
                 </div>
                 <div style="display: flex; gap: 10px;">
                     <div class="form-row"> <span class="label">Nivel Academico:</span>${matricula.nivel_educativo || '' }</div>
+                    
                     <div class="form-row"> <span class="label">Profesión u oficio:</span> ${matricula.profesion_u_oficio || '' }</div>
+                   
                 </div>
                 <div style="display: flex; gap: 10px;">
                     <div class="form-row"> <span class="label">Modalidad:</span> ${matricula.modalidad  || '' }</div>
+                    
                     <div class="form-row"> <span class="label">Horario:</span> ${matricula.horario || '' }</div>
+                      
                     <div class="form-row"> <span class="label">Tipo de curso:</span> ${matricula.tipo_curso || ''}</div>
+                    
                 </div>
-
+                <br/>
+                <br/>
+                <br/>
+                <br/>
+                <br/>
+                <br/>
+                <br/>
+                <br/>
+                <br/>
                 <div style="text-align: center; margin: 30px 0; font-weight: bold;">FIRMA DEL SOLICITANTE</div>
 
                 <table>
@@ -145,8 +206,8 @@ function MatriculaPage() {
             alert("El estudiante no tiene número de teléfono registrado");
             return;
         }
-
-        const mensaje = `Hola ${matricula.nombre} ${matricula.apellido || ''}, te confirmamos tu matrícula en el curso ${matricula.tipo_curso || ''}. Monto: C$${parseFloat(matricula.monto_total || 0).toFixed(2)}. ¡Bienvenido!`;
+        //Aqui configuramos un mensaje automatico para whatpsap
+        const mensaje = `Hola🙌🙌 ${matricula.nombre} ${matricula.apellido || ''}, tu matricula ha sido registrada exitosamente✅ nos complaces comunicarte que te has inscrito en el curso  ${matricula.tipo_curso || ''} de vehiculo para la Categoria ${matricula.categoria} esperamos que aprobechas al amaxino tus clases como teorica y practica, !Si tienes alguna Consulta no olvides en Comunicarte conosotro👍👍👍 `;
         const url = `https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`;
         window.open(url, '_blank');
     };
@@ -248,7 +309,7 @@ function MatriculaPage() {
     const displayData = filteredByAge;
 
     return (
-        <div className="min-h-screen">
+        <div className="">
             {/* HEADER */}
             <div className="max-w-7xl mx-auto mb-4 space-y-10">
                 <div className="space-y-2">
@@ -276,8 +337,8 @@ function MatriculaPage() {
                             onChange={(e) => setFiltroEdad(e.target.value)}
                             className="px-4 py-2 border rounded-lg focus:outline-none bg-white border-blue-500"
                         >
-                            <option value="">Todas las edades</option>
-                            <option value="menores18">Menores de 18 años</option>
+                            <option value="" className="hover:bg-amber-400 hover:cursor-pointer ">Todas las edades</option>
+                            <option value="menores18" className="hover:bg-amber-400 hover:cursor-pointer">Menor a 18 Año</option>
                             <option value="18a30">18 a 30 años</option>
                             <option value="31a50">31 a 50 años</option>
                             <option value="mayores50">Mayores de 50 años</option>
@@ -308,36 +369,41 @@ function MatriculaPage() {
             </div>
 
             {/* TABLA */}
-            <div className="max-w-7xl mx-auto bg-white rounded-xl shadow-sm overflow-hidden">
+            <div className="max-h-[600px] overflow-y-auto ">
                 <div className="overflow-x-auto">
-                    <table className="w-full table-auto">
+                    
+                    <table className="table-auto w-full">
                         <thead className="bg-gray-50">
                             <tr className="border-gray-300">
                                 <th className="p-3">Nombre</th>
                                 <th className="p-3">Cédula</th>
+                              
                                 <th className="p-3">Edad</th>
                                 <th className="p-3">Sexo</th>
                                 <th className="p-3">Teléfono</th>
                                 <th className="p-3">Categoría</th>
                                 <th className="p-3">Curso</th>
-                                <th className="p-3">Monto</th>
                                 <th className="p-3">Opciones</th>
                             </tr>
                         </thead>
+
+
+
+                        {/*Tabla que muestra los datos */}
                         <tbody>
                             {loading ? (
                                 <tr><td colSpan="9" className="p-6 text-center">Cargando...</td></tr>
                             ) : displayData.length > 0 ? (
                                 displayData.map(item => (
                                     <tr key={item.id} className="hover:bg-blue-200 transition">
-                                        <td className="p-2">{item.nombre} {item.apellido}</td>
-                                        <td className="p-2">{item.cedula}</td>
-                                        <td className="p-2">{item.edad}</td>
-                                        <td className="p-2">{item.sexo}</td>
-                                        <td className="p-2">{item.telefono_movil}</td>
-                                        <td className="p-2">{item.categoria}</td>
+                                        <td className="px-2">{item.nombre} {item.apellido}</td>
+                                        <td className="px-2">{item.cedula}</td>
+                                      
+                                        <td className="px-5">{item.edad}</td>
+                                        <td className="px-5">{item.sexo}</td>
+                                        <td className="px-7">{item.telefono_movil}</td>
+                                        <td className="px-9  text-blue-800 font-bold ">{item.categoria}</td>
                                         <td className="p-2">{item.tipo_curso}</td>
-                                        <td className="p-2 font-bold text-blue-600">C$ {parseFloat(item.monto_total || 0).toFixed(2)}</td>
                                         <td className="p-2">
                                             <div className="flex items-center gap-3">
                                                 <button 
@@ -376,6 +442,10 @@ function MatriculaPage() {
                                 <tr><td colSpan="9" className="p-6 text-center text-gray-400">No hay registros</td></tr>
                             )}
                         </tbody>
+
+
+
+
                     </table>
                 </div>
             </div>
