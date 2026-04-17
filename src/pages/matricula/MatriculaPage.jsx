@@ -173,13 +173,17 @@ function MatriculaPage() {
                 <br/>
                 <br/>
                 <br/>
+                <br/>
+                <br/>
+                 <br/>
+                  <br/>
+                   <br/>
+                    <br/>
+
+
                 <div style="text-align: center; margin: 30px 0; font-weight: bold;">FIRMA DEL SOLICITANTE</div>
 
-                <table>
-                    <tr><td class="th-col">DE:</td><td>Escuela de Manejo</td><td class="th-col">FECHA:</td><td></td></tr>
-                    <tr><td class="th-col">ASUNTO:</td><td colspan="3" style="height: 60px;"></td></tr>
-                    <tr><td class="th-col">CANTIDAD:</td><td colspan="3"></td></tr>
-                </table>
+                
 
                 <div class="footer-nota">
                     <strong>NOTA:</strong><br>
@@ -309,17 +313,16 @@ function MatriculaPage() {
     const displayData = filteredByAge;
 
     return (
-        <div className="">
-            {/* HEADER */}
-            <div className="max-w-7xl mx-auto mb-4 space-y-10">
-                <div className="space-y-2">
+        <div className="w-full min-w-0 overflow-x-auto">
+            <div className="min-w-[1200px] px-4">
+                <div className="mb-4 space-y-10">
                     <h1 className="text-4xl font-bold">Matrículas</h1>
                     <p className="text-gray-600">Registro y gestión de nuevas matrículas</p>
                 </div>
 
-                <div className="flex flex-col md:flex-row gap-4 md:justify-between rounded-xl">
+                <div className="flex flex-row gap-4 justify-between rounded-xl whitespace-nowrap">
                     {/* BUSCADOR por nombre/cédula */}
-                    <div className="relative w-full md:w-1/3">
+                    <div className="relative w-[380px] shrink-0">
                         <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                         <input
                             type="text"
@@ -436,15 +439,13 @@ function MatriculaPage() {
             </div>
 
             {/* TABLA */}
-            <div className="max-h-[600px] overflow-y-auto ">
+            <div className="max-h-[600px] overflow-y-auto w-full">
                 <div className="overflow-x-auto">
-                    
-                    <table className="table-auto w-full">
+                    <table className="table-auto min-w-[1200px] w-full">
                         <thead className="bg-gray-50">
                             <tr className="border-gray-300">
                                 <th className="p-3">Nombre</th>
                                 <th className="p-3">Cédula</th>
-                              
                                 <th className="p-3">Edad</th>
                                 <th className="p-3">Sexo</th>
                                 <th className="p-3">Teléfono</th>

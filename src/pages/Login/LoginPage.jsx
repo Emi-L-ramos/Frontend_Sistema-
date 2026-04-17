@@ -1,6 +1,6 @@
 // src/pages/login/LoginPage.jsx
 import { useState } from 'react';
-import { useAuth } from '../../context/AuthContext';  // ✅ Ruta correcta
+import { useAuth } from '../../context/AuthContext'; 
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 
@@ -8,7 +8,7 @@ function LoginPage() {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
-    const { login } = useAuth();  // ✅ Ahora debería funcionar
+    const { login } = useAuth();  
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
@@ -47,7 +47,7 @@ function LoginPage() {
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600">
             <div className="bg-white p-8 rounded-lg shadow-md w-96">
                 <h1 className="text-2xl font-bold mb-6 text-center text-gray-800">
-                    Sistema Escolar
+                    Sistema CACIQUE ADIACT
                 </h1>
                 <form onSubmit={handleSubmit}>
                     <input
