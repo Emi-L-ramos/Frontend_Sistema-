@@ -313,16 +313,16 @@ function MatriculaPage() {
     const displayData = filteredByAge;
 
     return (
-        <div className="w-full min-w-0 overflow-x-auto">
-            <div className="min-w-[1200px] px-4">
+        <div className="w-full max-w-full min-w-0 overflow-hidden px-4">
                 <div className="mb-4 space-y-10">
                     <h1 className="text-4xl font-bold">Matrículas</h1>
                     <p className="text-gray-600">Registro y gestión de nuevas matrículas</p>
                 </div>
-
-                <div className="flex flex-row gap-4 justify-between rounded-xl whitespace-nowrap">
+                <div className="w-full max-w-full overflow-x-auto">
+                    <div className="w-[1300px]">
+                        <div className="flex flex-row items-center gap-3 rounded-xl whitespace-nowrap mb-4">
                     {/* BUSCADOR por nombre/cédula */}
-                    <div className="relative w-[380px] shrink-0">
+                    <div className="relative w-[280px] shrink-0">
                         <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                         <input
                             type="text"
@@ -338,7 +338,7 @@ function MatriculaPage() {
                         <select
                             value={filtroEdad}
                             onChange={(e) => setFiltroEdad(e.target.value)}
-                            className="border rounded-3xl focus:outline-none bg-white border-blue-500 h-11 px-3"
+                            className="w-[170px] border rounded-3xl focus:outline-none bg-white border-blue-500 h-11 px-3 shrink-0"
                         >
                             <option value="">Todas las edades</option>
                             <option value="menores18">Menor a 18 Año</option>
@@ -350,10 +350,9 @@ function MatriculaPage() {
                         {/* BOTÓN IMPRIMIR POR EDADES */}
                         <button
                             onClick={imprimirPorEdades}
-                            className="flex items-center gap-2 bg-white text-black px-5 py-0 rounded-3xl hover:bg-blue-300 transition hover:cursor-pointer h-11 border border-gray-300 hover:border-blue-400"
+                            className="flex items-center gap-1 bg-white text-black px-5 py-0 rounded-3xl hover:bg-blue-300 transition hover:cursor-pointer h-11 hover:border-blue-400"
                         >
-                            <FiPrinter className="text-black" />
-                            
+                            <FiPrinter className="text-black" /> Por Edades    
                         </button>
                     </div>
 
@@ -362,14 +361,14 @@ function MatriculaPage() {
                         type="date"
                         value={fechaDesde}
                         onChange={(e) => setFechaDesde(e.target.value)}
-                        className="px-4 py-2 border rounded-3xl bg-white border-blue-500"
+                        className="w-[140px] px-4 py-2 border rounded-3xl bg-white border-blue-500 shrink-0"
                         title="Fecha desde"
                     />
                     <input
                         type="date"
                         value={fechaHasta}
                         onChange={(e) => setFechaHasta(e.target.value)}
-                        className="px-4 py-2 border rounded-3xl bg-white border-blue-500"
+                        className="w-[140px] px-4 py-2 border rounded-3xl bg-white border-blue-500 shrink-0"
                         title="Fecha hasta"
                     />
                     <button
@@ -420,7 +419,7 @@ function MatriculaPage() {
                         }}
                         className="flex items-center gap-2 bg-white text-black px-4 py-2 rounded-3xl hover:bg-blue-300 transition cursor-pointer"
                     >
-                        <FiPrinter />
+                        <FiPrinter /> Por Fechas
                     </button>
 
                     {/* BOTÓN NUEVA MATRÍCULA */}
@@ -436,22 +435,20 @@ function MatriculaPage() {
                     </button>
                 </div>
 
-            </div>
-
             {/* TABLA */}
-            <div className="max-h-[600px] overflow-y-auto w-full">
-                <div className="overflow-x-auto">
-                    <table className="table-auto min-w-[1200px] w-full">
+            <div className="max-h-[600px] overflow-y-auto overflow-x-hidden w-full">
+                <div>
+                    <table className="table-fixed w-full">
                         <thead className="bg-gray-50">
                             <tr className="border-gray-300">
-                                <th className="p-3">Nombre</th>
-                                <th className="p-3">Cédula</th>
-                                <th className="p-3">Edad</th>
-                                <th className="p-3">Sexo</th>
-                                <th className="p-3">Teléfono</th>
-                                <th className="p-3">Categoría</th>
-                                <th className="p-3">Curso</th>
-                                <th className="p-3">Opciones</th>
+                                <th className="p-3 w-[220px]">Nombre</th>
+                                <th className="p-3 w-[180px]">Cédula</th>
+                                <th className="p-3 w-[90px]">Edad</th>
+                                <th className="p-3 w-[90px]">Sexo</th>
+                                <th className="p-3 w-[150px]">Teléfono</th>
+                                <th className="p-3 w-[120px]">Categoría</th>
+                                <th className="p-3 w-[180px]">Curso</th>
+                                <th className="p-3 w-[170px]">Opciones</th> 
                             </tr>
                         </thead>
 
@@ -508,14 +505,11 @@ function MatriculaPage() {
                                 <tr><td colSpan="9" className="p-6 text-center text-gray-400">No hay registros</td></tr>
                             )}
                         </tbody>
-
-
-
-
                     </table>
                 </div>
             </div>
-
+        </div>
+    </div>
             {/* MODAL */}
             {showModal && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">

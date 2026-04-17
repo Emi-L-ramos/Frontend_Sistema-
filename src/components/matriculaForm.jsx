@@ -57,7 +57,7 @@ function MatriculaForm({ initialData, onSave, onError }) {
     ];
 
     const TIPO_CURSO_OPTIONS = [
-        { value: 'Curso_avanzado', label: 'Curso Avanzado' },
+        { value: 'Curso_regular', label: 'Curso Regular' },
         { value: 'Reforzamiento', label: 'Reforzamiento' }
     ];
 
