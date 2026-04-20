@@ -21,7 +21,6 @@ function MatriculaForm({ initialData, onSave, onError }) {
         telefono_emergencia: '',
         modalidad: '',
         horario: '',
-        tipo_pago: '',
         tipo_curso: '',
         categoria: '',
         apariconia: '',
@@ -50,11 +49,7 @@ function MatriculaForm({ initialData, onSave, onError }) {
         { value: '4PM A 6PM', label: '4:00 PM - 6:00 PM' }
     ];
 
-    const TIPO_PAGO_OPTIONS = [
-        { value: 'Pago_completo', label: 'Pago Completo' },
-        { value: 'Anticipo', label: 'Anticipo' },
-        { value: 'Beneficio', label: 'Beneficio' }
-    ];
+  
 
     const TIPO_CURSO_OPTIONS = [
         { value: 'Curso_regular', label: 'Curso Regular' },
@@ -107,7 +102,7 @@ function MatriculaForm({ initialData, onSave, onError }) {
                 telefono_emergencia: initialData.telefono_emergencia || '',
                 modalidad: initialData.modalidad || '',
                 horario: initialData.horario || '',
-                tipo_pago: initialData.tipo_pago || '',
+               
                 tipo_curso: initialData.tipo_curso || '',
                 categoria: initialData.categoria || '',
                 apariconia: initialData.apariconia || '',
@@ -575,22 +570,7 @@ function MatriculaForm({ initialData, onSave, onError }) {
                     </select>
                 </div>
                 
-                <div>
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
-                        Tipo de Pago
-                    </label>
-                    <select
-                        name="tipo_pago"
-                        value={formData.tipo_pago}
-                        onChange={handleChange}
-                        className="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-                    >
-                        <option value="">Seleccionar</option>
-                        {TIPO_PAGO_OPTIONS.map(option => (
-                            <option key={option.value} value={option.value}>{option.label}</option>
-                        ))}
-                    </select>
-                </div>
+                {/*Se elimino el buton de tip de pagos */}
                 
                 <div>
                     <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
@@ -623,7 +603,7 @@ function MatriculaForm({ initialData, onSave, onError }) {
                 <button
                     type="submit"
                     disabled={loading}
-                    className="px-6 py-2 text-sm sm:text-base text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 order-1 sm:order-2"
+                    className="px-6 py-2 text-sm sm:text-base text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 order-1 sm:order-2 hover:cursor-pointer"
                 >
                     {loading ? (
                         <span className="flex items-center justify-center gap-2">
