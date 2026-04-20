@@ -90,8 +90,7 @@ function MatriculaPage() {
     }
 };
 
-    // Función para imprimir matrícula individual
-    const imprimirMatriculaIndividual = (matricula) => {
+const imprimirMatriculaIndividual = (matricula) => {
     const ventanaImpresion = window.open('', '_blank');
     ventanaImpresion.document.write(`
         <html>
@@ -114,7 +113,7 @@ function MatriculaPage() {
                         flex-grow: 1; 
                     }
                     .logo-img { 
-                        width: 80px; /* Ajusta este valor al tamaño de tus logos */
+                        width: 80px; 
                         height: auto; 
                     }
 
@@ -149,7 +148,7 @@ function MatriculaPage() {
                 Fecha: ${matricula.f_matricula}</div>
                 <br/>
             
-                <div class="form-row"><span class="label">Nombres y apellidos:</span "> ${matricula.nombre || ''}  ${matricula.apellido || ''}</div>
+                <div class="form-row"><span class="label">Nombres y apellidos:</span> ${matricula.nombre || ''}  ${matricula.apellido || ''}</div>
                  <br/>
                  <br/>
                 <div style="display: flex; gap: 20px;">
@@ -160,11 +159,8 @@ function MatriculaPage() {
                 <br/>
              
                 <div style="display: flex; gap: 20px;">
-                  
                     <div class="form-row" style="width: 30%"> <span class="label">Edad:</span> ${matricula.edad || ''}</div>
-                  
                     <div class="form-row"> <span class="label">Número de cédula:</span> ${matricula.cedula || ''}</div>
-                     
                 </div>
                   <br/>
            
@@ -179,30 +175,20 @@ function MatriculaPage() {
                 <div style="display: flex; gap: 20px;">
                     <div class="form-row"> <span class="label">Teléfono Movil:</span> ${matricula.telefono_movil}</div>
                     <br/>
-                    
-                    
                     <div class="form-row"> <span class="label">Teléfono de Emergencia:</span> ${matricula.telefono_emergencia || ''}</div>
-                    
                 </div>
                     <br/>
 
                 <div style="display: flex; gap: 10px;">
                     <div class="form-row"> <span class="label">Nivel Academico:</span>${matricula.nivel_educativo || '' }</div>
-                   
-                    
                     <div class="form-row"> <span class="label">Profesión u oficio:</span> ${matricula.profesion_u_oficio || '' }</div>
-                   
                 </div>
 
-            
                 <br/>
                 <div style="display: flex; gap: 10px;">
                     <div class="form-row"> <span class="label">Modalidad:</span> ${matricula.modalidad  || '' }</div>
-                    
                     <div class="form-row"> <span class="label">Horario:</span> ${matricula.horario || '' }</div>
-                      
                     <div class="form-row"> <span class="label">Tipo de curso:</span> ${matricula.tipo_curso || ''}</div>
-                    
                 </div>
                 <br/>
                 <br/>
@@ -214,12 +200,8 @@ function MatriculaPage() {
                 <br/>
                 <br/>
                 <br/>
-               
-
 
                 <div style="text-align: center; margin: 30px 0; font-weight: bold;">FIRMA DEL SOLICITANTE</div>
-
-                
 
                 <div class="footer-nota">
                     <strong>NOTA:</strong><br>
@@ -232,13 +214,20 @@ function MatriculaPage() {
                     <strong>ESCUELA DE MANEJO EL CACIQUE ADIACT</strong><br>
                     Gasolinera UNO Sutiava 1 cuadra al norte y ½ c. oeste. Teléfono: 2315 - 2568
                 </div>
+
+                <script>
+                    window.onload = function() {
+                        setTimeout(() => {
+                            window.print();
+                            window.close();
+                        }, 500); 
+                    };
+                </script>
             </body>
         </html>
     `);
     ventanaImpresion.document.close();
-    ventanaImpresion.print();
 };
-
     // Función para enviar WhatsApp
     const enviarWhatsApp = (matricula) => {
         const telefono = matricula.telefono_movil;
