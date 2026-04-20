@@ -44,8 +44,9 @@ function LoginPage() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600">
-            <div className="bg-white p-8 rounded-lg shadow-md w-96">
+        <div className="min-h-screen flex items-center justify-center">
+            <div className=" p-15 rounded-lg shadow-md w-full max-w-md">
+                <img src="Logo.png" alt="Logo" className="w-40 h-40 mx-auto mb-4" />
                 <h1 className="text-2xl font-bold mb-6 text-center text-gray-800">
                     Sistema CACIQUE ADIACT
                 </h1>
