@@ -177,11 +177,11 @@ function MatriculaPage() {
                   <br/>
                
                 <div style="display: flex; gap: 20px;">
-                    <div class="form-row"> <span class="label">Teléfono convencional:</span> ${matricula.telefono_movil}</div>
-                    <br/>
+                    <div class="form-row"> <span class="label">Teléfono Movil:</span> ${matricula.telefono_movil}</div>
                     <br/>
                     
-                    <div class="form-row"> <span class="label">Teléfono móvil:</span> ${matricula.telefono_movil || ''}</div>
+                    
+                    <div class="form-row"> <span class="label">Teléfono de Emergencia:</span> ${matricula.telefono_emergencia || ''}</div>
                     
                 </div>
                     <br/>
@@ -194,7 +194,7 @@ function MatriculaPage() {
                    
                 </div>
 
-                 <br/>
+            
                 <br/>
                 <div style="display: flex; gap: 10px;">
                     <div class="form-row"> <span class="label">Modalidad:</span> ${matricula.modalidad  || '' }</div>
