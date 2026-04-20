@@ -1,8 +1,8 @@
 // frontend/src/pages/recibos/RecibosPage.jsx
 import { useEffect, useState } from "react";
-import { FiPlus, FiSearch, FiPrinter, FiDownload, FiFileText } from "react-icons/fi";
-import { RiDeleteBinLine } from "react-icons/ri"; // ✅ IMPORTAR EL ICONO DE ELIMINAR
-import Swal from "sweetalert2"; // ✅ IMPORTAR SWAL PARA ALERTAS
+import { FiPlus, FiSearch, FiPrinter, FiFileText } from "react-icons/fi";
+import { RiDeleteBinLine } from "react-icons/ri";
+import Swal from "sweetalert2";
 import * as XLSX from 'xlsx';
 import RecibosForm from "../../components/RecibosForm";
 
@@ -37,7 +37,6 @@ function RecibosPage() {
         }
     };
 
-    // ✅ Función para eliminar recibo
     const eliminarRecibo = async (id) => {
         const confirm = await Swal.fire({
             title: '¿Eliminar recibo?',
@@ -62,7 +61,7 @@ function RecibosPage() {
 
                 if (response.ok) {
                     Swal.fire('Eliminado', 'El recibo ha sido eliminado', 'success');
-                    fetchRecibos(); // Recargar la lista
+                    fetchRecibos();
                 } else {
                     Swal.fire('Error', 'No se pudo eliminar el recibo', 'error');
                 }
@@ -76,7 +75,7 @@ function RecibosPage() {
         if (recibos.length > 0) {
             const matriculasUnicas = [];
             const idsVistos = new Set();
-            
+
             recibos.forEach(recibo => {
                 if (recibo.matricula && !idsVistos.has(recibo.matricula)) {
                     idsVistos.add(recibo.matricula);
@@ -96,6 +95,12 @@ function RecibosPage() {
         fetchRecibos();
     }, []);
 
+    const matriculasCompletas = new Set(
+        recibos
+            .filter(r => r.tipo_pago === "completo" || r.estado === "pagado")
+            .map(r => r.matricula)
+    );
+
     const filtrados = recibos.filter(r => {
         const searchTerm = busqueda.toLowerCase();
         return (
@@ -114,7 +119,6 @@ function RecibosPage() {
         const fecha = new Date(r.fecha_pago);
         return fecha.getMonth() === mesActual && fecha.getFullYear() === anioActual;
     });
-
     const totalMes = recibosMes.reduce((acc, r) => acc + (parseFloat(r.monto_pagado) || 0), 0);
 
     const formatearFecha = (fecha) => {
@@ -123,36 +127,38 @@ function RecibosPage() {
         return date.toLocaleDateString('es-ES');
     };
 
+    const obtenerEstado = (r) => {
+        const tipo = r.tipo_pago || "";
+        if (tipo === "completo" || r.estado === "pagado") return "Completo";
+        if (tipo === "beneficio") return "Beneficio";
+        return "Anticipo";
+    };
+
+    const obtenerClaseEstado = (r) => {
+       const tipo = r.tipo_pago || "";
+        if (tipo === "completo" || r.estado === "pagado") return "bg-green-100 text-green-700";
+        if (tipo === "beneficio") return "bg-purple-100 text-purple-700";
+        if (r.tipo_pago === "beneficio") return "bg-purple-100 text-purple-700";
+        if (matriculasCompletas.has(r.matricula)) return "bg-green-100 text-green-700";
+        return "bg-yellow-100 text-yellow-700";
+    };
+
     const exportarAExcel = () => {
         const datosExcel = filtrados.map(recibo => ({
             'N° Recibo': recibo.numero_recibo || 'N/A',
             'Fecha': formatearFecha(recibo.fecha_pago),
             'Estudiante': `${recibo.matricula_data?.nombre || ''} ${recibo.matricula_data?.apellido || ''}`.trim(),
             'Cédula': recibo.matricula_data?.cedula || 'N/A',
+            'Tipo de Pago': obtenerEstado(recibo),
             'Monto (C$)': parseFloat(recibo.monto_pagado || 0).toFixed(2),
             'Método de Pago': recibo.metodo_pago || 'Efectivo',
-            'Estado': recibo.estado === "pagado" ? "Cancelado" : "Pendiente"
+            'Estado': obtenerEstado(recibo)
         }));
 
         const ws = XLSX.utils.json_to_sheet(datosExcel);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'Recibos');
         XLSX.writeFile(wb, `recibos_${new Date().toISOString().slice(0, 10)}.xlsx`);
-    };
-
-    const exportarMesActual = () => {
-        const datosExcel = recibosMes.map(recibo => ({
-            'N° Recibo': recibo.numero_recibo || 'N/A',
-            'Fecha': formatearFecha(recibo.fecha_pago),
-            'Estudiante': `${recibo.matricula_data?.nombre || ''} ${recibo.matricula_data?.apellido || ''}`.trim(),
-            'Cédula': recibo.matricula_data?.cedula || 'N/A',
-            'Monto (C$)': parseFloat(recibo.monto_pagado || 0).toFixed(2),
-        }));
-
-        const ws = XLSX.utils.json_to_sheet(datosExcel);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'Recibos_Mes');
-        XLSX.writeFile(wb, `recibos_mes_${new Date().toISOString().slice(0, 10)}.xlsx`);
     };
 
     return (
@@ -162,8 +168,8 @@ function RecibosPage() {
                 <p className="text-sm text-gray-500">Gestión de pagos y recibos emitidos</p>
             </div>
 
-            {/* Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-4">
+            {/*Cards*/}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
                 <div className="bg-white p-3 md:p-4 rounded-xl shadow-sm border border-gray-100">
                     <p className="text-gray-500 text-xs md:text-sm">Ingresos Totales</p>
                     <h2 className="text-xl md:text-2xl font-bold text-green-600">C${totalIngresos.toFixed(2)}</h2>
@@ -172,10 +178,6 @@ function RecibosPage() {
                     <p className="text-gray-500 text-xs md:text-sm">Recibos este mes</p>
                     <h2 className="text-xl md:text-2xl font-bold text-blue-600">{recibosMes.length}</h2>
                     <p className="text-xs text-gray-400">Total: C${totalMes.toFixed(2)}</p>
-                </div>
-                <div className="bg-white p-3 md:p-4 rounded-xl shadow-sm border border-gray-100">
-                    <p className="text-gray-500 text-xs md:text-sm">Total Recibos</p>
-                    <h2 className="text-xl md:text-2xl font-bold text-purple-600">{recibos.length}</h2>
                 </div>
             </div>
 
@@ -194,9 +196,6 @@ function RecibosPage() {
                 <div className="flex flex-wrap gap-2">
                     <button onClick={exportarAExcel} className="bg-green-600 text-white px-3 py-2 rounded-lg flex items-center gap-2 hover:bg-green-700 text-sm">
                         <FiFileText size={16} /> Exportar Todo
-                    </button>
-                    <button onClick={exportarMesActual} className="bg-blue-600 text-white px-3 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700 text-sm">
-                        <FiDownload size={16} /> Exportar Mes
                     </button>
                     <button onClick={() => { setEditData(null); setShowModal(true); }} className="bg-indigo-600 text-white px-3 py-2 rounded-lg flex items-center gap-2 hover:bg-indigo-700 text-sm">
                         <FiPlus size={16} /> Nuevo Recibo
@@ -239,25 +238,21 @@ function RecibosPage() {
                                         <td className="p-3 font-bold text-green-600 text-sm">C${parseFloat(r.monto_pagado || 0).toFixed(2)}</td>
                                         <td className="p-3 text-sm">{r.metodo_pago || "Efectivo"}</td>
                                         <td className="p-3">
-                                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                                r.estado === "pagado" 
-                                                    ? "bg-green-100 text-green-700" 
-                                                    : "bg-yellow-100 text-red-700"
-                                            }`}>
-                                                {r.estado === "pagado" ? "Cancelado" : "Pendiente"}
+                                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${obtenerClaseEstado(r)}`}>
+                                                {obtenerEstado(r)}
                                             </span>
                                         </td>
                                         <td className="p-3">
                                             <div className="flex gap-2">
-                                                <button 
-                                                    onClick={() => { setEditData(r); setShowModal(true); }} 
+                                                <button
+                                                    onClick={() => { setEditData(r); setShowModal(true); }}
                                                     className="text-blue-500 hover:text-blue-700 transition"
                                                     title="Ver/Editar"
                                                 >
                                                     <FiPrinter size={18} />
                                                 </button>
-                                                <button 
-                                                    onClick={() => eliminarRecibo(r.id)} 
+                                                <button
+                                                    onClick={() => eliminarRecibo(r.id)}
                                                     className="text-red-500 hover:text-red-700 transition"
                                                     title="Eliminar recibo"
                                                 >
