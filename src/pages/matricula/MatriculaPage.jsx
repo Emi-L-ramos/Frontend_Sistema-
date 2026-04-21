@@ -151,18 +151,29 @@ function MatriculaPage() {
                         <br/>
                         <div style="display: flex; gap: 20px;">
                             <div class="form-row" style="width: 30%"><span class="label">Edad:</span> ${matricula.edad || ''}</div>
+                            <br/>
                             <div class="form-row"><span class="label">Número de cédula:</span> ${matricula.cedula || ''}</div>
                         </div>
+                        <br/>
                         <div class="form-row"><span class="label">Dirección:</span> ${matricula.direccion || ''}</div>
+                        <br/>
+                        <br/>
                         <div class="form-row"><span class="label">Correo electrónico:</span> ${matricula.correo_electronico || ''}</div>
+                        <br/><br/>
                         <div style="display: flex; gap: 20px;">
                             <div class="form-row"><span class="label">Teléfono convencional:</span> ${matricula.telefono_movil || ''}</div>
                             <div class="form-row"><span class="label">Teléfono móvil:</span> ${matricula.telefono_emergencia || ''}</div>
                         </div>
+
+                        <br/>
+
                         <div style="display: flex; gap: 10px;">
                             <div class="form-row"><span class="label">Nivel Academico:</span> ${matricula.nivel_educativo || ''}</div>
                             <div class="form-row"><span class="label">Profesión u oficio:</span> ${matricula.profesion_u_oficio || ''}</div>
                         </div>
+
+                        <br/>
+
                         <div style="display: flex; gap: 10px;">
                             <div class="form-row"><span class="label">Modalidad:</span> ${matricula.modalidad || ''}</div>
                             <div class="form-row"><span class="label">Horario:</span> ${matricula.horario || ''}</div>
