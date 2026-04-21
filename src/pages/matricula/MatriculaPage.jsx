@@ -98,6 +98,7 @@ const imprimirMatriculaIndividual = (matricula) => {
                 <style>
                     @page { size: A4; margin: 15mm; }
                     body { font-family: 'Arial', sans-serif; font-size: 13px; line-height: 1.4; color: #000; }
+<<<<<<< Updated upstream
                     
                     /* Ajustes para el Header con Flexbox */
                     .header { 
@@ -117,9 +118,13 @@ const imprimirMatriculaIndividual = (matricula) => {
                         height: auto; 
                     }
 
+=======
+                    .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
+>>>>>>> Stashed changes
                     .titulo { font-weight: bold; text-decoration: underline; margin-bottom: 15px; }
                     .form-row { margin-bottom: 10px; border-bottom: 1px solid #000; width: 100%; display: inline-block; }
                     .label { font-weight: bold; }
+                    .span {font-size: 24px;}
                     
                     /* Tabla Inferior */
                     table { width: 100%; border-collapse: collapse; margin: 20px 0; }
@@ -132,17 +137,12 @@ const imprimirMatriculaIndividual = (matricula) => {
             </head>
             <body>
                 <div class="header">
-                    <img src="Logo_esesa.png" class="logo-img" alt="Logo">
-                    
-                    <div class="header-text">
-                        <strong>Instituto de Formación y Capacitación "Adiact"</strong><br>
-                        <em>Somos expertos en Formación y Capacitación del Talento Humano</em><br>
-                        <em>Ética, Integridad, Dedicación y Solidaridad</em>
-                    </div>
-
-                    <img src="Logo.png" class="logo-img" alt="Logo">
+                    <strong>Instituto de Formación y Capacitación "Adiact"</strong><br>
+                    <em>Somos expertos en Formación y Capacitación del Talento Humano</em><br>
+                    <em>Ética, Integridad, Dedicación y Solidaridad</em>
                 </div>
 
+<<<<<<< Updated upstream
                 <div class="titulo">HOJA DE MATRICULA DE ADULTOS A CURSO DE: EDUCACION VIAL Y MANEJO RESPONSABLE.
                 <br/>
                 Fecha: ${matricula.f_matricula}</div>
@@ -160,31 +160,55 @@ const imprimirMatriculaIndividual = (matricula) => {
              
                 <div style="display: flex; gap: 20px;">
                     <div class="form-row" style="width: 30%"> <span class="label">Edad:</span> ${matricula.edad || ''}</div>
+=======
+                <div class="titulo">HOJA DE MATRICULA DE ADULTOS A CURSO DE: EDUCACION VIAL Y MANEJO RESPONSABLE... Fecha: ${matricula.f_matricula}</div>
+                
+                <div class="form-row"><span class="label">Nombres y apellidos:</span "> ${matricula.nombre || ''}  ${matricula.apellido || ''}</div>
+                
+             
+                <div style="display: flex; gap: 20px;">
+                
+                    <div class="form-row" style="width: 30%"> <span class="label">Sexo:</span> ${matricula.sexo || ''}</div>
+                  
+                    <div class="form-row"> <span class="label">Nacionalidad/fecha de nacimiento:</span> ${matricula.fecha_nacimiento}, ${matricula.nacionalidad || ''}</div>
+                  
+                </div>
+                <div style="display: flex; gap: 20px;">
+                
+                    <div class="form-row" style="width: 30%"> <span class="label">Edad:</span> ${matricula.edad || ''}</div>
+                     
+>>>>>>> Stashed changes
                     <div class="form-row"> <span class="label">Número de cédula:</span> ${matricula.cedula || ''}</div>
                 </div>
-                  <br/>
-           
                 <div class="form-row"> <span class="label">Dirección:</span> ${matricula.direccion || '' }</div>
-                  <br/>
-                  <br/>
-                
+                  
                 <div class="form-row"> <span class="label">Correo electrónico:</span>${matricula.correo_electronico || '' }</div>
-                  <br/>
-                  <br/>
-               
+                 
                 <div style="display: flex; gap: 20px;">
+<<<<<<< Updated upstream
                     <div class="form-row"> <span class="label">Teléfono Movil:</span> ${matricula.telefono_movil}</div>
                     <br/>
                     <div class="form-row"> <span class="label">Teléfono de Emergencia:</span> ${matricula.telefono_emergencia || ''}</div>
+=======
+                    <div class="form-row"> <span class="label">Teléfono convencional:</span> ${matricula.telefono_movil}</div>
+                    
+                    <div class="form-row"> <span class="label">Teléfono móvil:</span> ${matricula.telefono_movil || ''}</div>
+                    
+>>>>>>> Stashed changes
                 </div>
-                    <br/>
-
                 <div style="display: flex; gap: 10px;">
                     <div class="form-row"> <span class="label">Nivel Academico:</span>${matricula.nivel_educativo || '' }</div>
+<<<<<<< Updated upstream
+=======
+                    
+>>>>>>> Stashed changes
                     <div class="form-row"> <span class="label">Profesión u oficio:</span> ${matricula.profesion_u_oficio || '' }</div>
                 </div>
+<<<<<<< Updated upstream
 
                 <br/>
+=======
+>>>>>>> Stashed changes
                 <div style="display: flex; gap: 10px;">
                     <div class="form-row"> <span class="label">Modalidad:</span> ${matricula.modalidad  || '' }</div>
                     <div class="form-row"> <span class="label">Horario:</span> ${matricula.horario || '' }</div>
@@ -200,6 +224,15 @@ const imprimirMatriculaIndividual = (matricula) => {
                 <br/>
                 <br/>
                 <br/>
+<<<<<<< Updated upstream
+=======
+                <br/>
+                 <br/>
+                  <br/>
+                   <br/>
+                    <br/>
+
+>>>>>>> Stashed changes
 
                 <div style="text-align: center; margin: 30px 0; font-weight: bold;">FIRMA DEL SOLICITANTE</div>
 
@@ -236,18 +269,7 @@ const imprimirMatriculaIndividual = (matricula) => {
             return;
         }
         //Aqui configuramos un mensaje automatico para whatpsap
-        const driveLink = "https://drive.google.com/drive/folders/1UysqcQZQNAqBnSDtWmnssxGZL2XPuki8?usp=drive_link";
-
-        const mensaje = `Hola ${matricula.nombre} ${matricula.apellido || ''}, 
-
-        Tu matrícula ha sido registrada exitosamente. Nos complace comunicarte que te has inscrito en el  ${matricula.tipo_curso || ''} de vehículo para la categoría ${matricula.categoria}. 
-
-        Aque te proporcionamos el material de Estudio....
-          ${driveLink}
-
-        Esperamos que aproveches al máximo tus clases teóricas y prácticas. 
-        ¡Si tienes alguna consulta no dudes en comunicarte con nosotros!`;
-
+        const mensaje = `Hola ${matricula.nombre} ${matricula.apellido || ''}, Tu matricula ha sido registrada exitosamente. Nos complaces comunicarte que te has inscrito en el curso  ${matricula.tipo_curso || ''} de vehiculo para la Categoria ${matricula.categoria}, esperamos que aprobechas al máximo tus clases como teoríca y práctica, ¡Si tienes alguna Consulta no dudes en Comunicarte con nosotros!`;
         const url = `https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`;
         window.open(url, '_blank');
     };
@@ -349,12 +371,12 @@ const imprimirMatriculaIndividual = (matricula) => {
     const displayData = filteredByAge;
 
     return (
-        <div className="w-full max-w-full min-w-0 overflow-hidden px-4 ">
+        <div className="w-full max-w-full min-w-0 overflow-hidden px-4">
                 <div className="mb-4 space-y-10">
                     <h1 className="text-4xl font-bold">Matrículas</h1>
                     <p className="text-gray-600">Registro y gestión de nuevas matrículas</p>
                 </div>
-                <div className="w-full max-w-full overflow-x-auto ">
+                <div className="w-full max-w-full overflow-x-auto">
                     <div className="w-[1300px]">
                         <div className="flex flex-row items-center gap-3 rounded-xl whitespace-nowrap mb-4">
                     {/* BUSCADOR por nombre/cédula */}
@@ -466,7 +488,7 @@ const imprimirMatriculaIndividual = (matricula) => {
                         }}
                         className="flex items-center gap-2 text-black px-5 py-0 cursor-pointer rounded-3xl border border-gray-300 hover:bg-blue-300 hover:text-whitetransition h-11"
                     >
-                        <FiUserPlus className="size-4"/>
+                        <FiUserPlus className="size-7"/>
                         <span>Nueva Matrícula</span>
                     </button>
                 </div>
@@ -524,7 +546,7 @@ const imprimirMatriculaIndividual = (matricula) => {
                                                     className="p-2 rounded-lg hover:bg-green-100" 
                                                     title="Imprimir Matrícula"
                                                 >
-                                                    <AiOutlinePrinter className="text-gray-500 text-xl hover:text-green-700 hover:cursor-pointer" />
+                                                    <AiOutlinePrinter className="text-green-500 text-xl hover:text-green-700 hover:cursor-pointer" />
                                                 </button>
                                                 <button 
                                                     onClick={() => enviarWhatsApp(item)}
@@ -552,8 +574,8 @@ const imprimirMatriculaIndividual = (matricula) => {
                     <div className="bg-white rounded-2xl shadow-lg w-full max-w-5xl" style={{ maxHeight: "90vh", overflowY: "auto" }}>
                         <div className="flex justify-between p-4 border-b">
                             <h2 className="font-bold text-4xl">{editData ? "Editar Matrícula" : "Nueva Matrícula"}</h2>
-                            <button onClick={closeModal} className="text-red-700 text-2xl hover:bg-red-100 rounded-full w-12 h-12 hover:cursor-pointer flex items-center justify-center">
-                                <FiX className="hover:cursor-pointer" />
+                            <button onClick={closeModal} className="text-red-700 text-2xl hover:bg-red-100 rounded-full w-12 h-12">
+                                <FiX />
                             </button>
                         </div>
                         <div className="p-6">
