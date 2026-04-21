@@ -5,6 +5,7 @@ import { RiDeleteBinLine } from "react-icons/ri";
 import Swal from "sweetalert2";
 import * as XLSX from 'xlsx';
 import RecibosForm from "../../components/RecibosForm";
+import { CiEdit } from "react-icons/ci";
 
 function RecibosPage() {
     const [recibos, setRecibos] = useState([]);
@@ -190,14 +191,14 @@ function RecibosPage() {
                         placeholder="Buscar por N° Recibo, estudiante o cédula..."
                         value={busqueda}
                         onChange={(e) => setBusqueda(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                        className="w-full pl-10 pr-4 py-2 border border-blue-300 rounded-3xl focus:outline-none focus:ring-2 focus:ring-blue-300 cursor-pointer text-sm"
                     />
                 </div>
                 <div className="flex flex-wrap gap-2">
-                    <button onClick={exportarAExcel} className="bg-green-600 text-white px-3 py-2 rounded-lg flex items-center gap-2 hover:bg-green-700 text-sm">
+                    <button onClick={exportarAExcel} className="bg-white text-black px-3 py-2 rounded-3xl flex items-center gap-2 hover:bg-blue-300 cursor-pointer text-sm">
                         <FiFileText size={16} /> Exportar Todo
                     </button>
-                    <button onClick={() => { setEditData(null); setShowModal(true); }} className="bg-indigo-600 text-white px-3 py-2 rounded-lg flex items-center gap-2 hover:bg-indigo-700 text-sm">
+                    <button onClick={() => { setEditData(null); setShowModal(true); }} className="bg-white text-black px-3 py-2 rounded-3xl flex items-center gap-2 hover:bg-blue-300 cursor-pointer text-sm">
                         <FiPlus size={16} /> Nuevo Recibo
                     </button>
                 </div>
@@ -244,12 +245,20 @@ function RecibosPage() {
                                         </td>
                                         <td className="p-3">
                                             <div className="flex gap-2">
+                                                {/*                                                
                                                 <button
                                                     onClick={() => { setEditData(r); setShowModal(true); }}
                                                     className="text-blue-500 hover:text-blue-700 transition"
                                                     title="Ver/Editar"
                                                 >
                                                     <FiPrinter size={18} />
+                                                </button>*/}
+                                                <button 
+                                                    onClick={() => { setEditData(r); setShowModal(true); }} 
+                                                    className="p-2 rounded-lg hover:bg-blue-100" 
+                                                    title="Editar"
+                                                >
+                                                    <CiEdit size={18} />
                                                 </button>
                                                 <button
                                                     onClick={() => eliminarRecibo(r.id)}
