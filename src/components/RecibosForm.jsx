@@ -313,15 +313,20 @@ function RecibosForm({ onSave, initialData, matriculas = [] }) {
             return;
         }
 
-        const totalCurso = calcularTotal();
-        const monto = parseFloat(form.monto_cordobas || form.monto_pagado);
+    const totalCurso = calcularTotal();
+    const monto = parseFloat(form.monto_cordobas || form.monto_pagado);
 
-        if (!monto || monto <= 0) {
-            Swal.fire("Error", "Debe ingresar un monto válido", "error");
-            setLoading(false);
-            return;
-        }
+    if (!monto || monto <= 0) {
+        Swal.fire("Error", "Debe ingresar un monto válido", "error");
+        setLoading(false);
+        return;
+    }
 
+    // === BENEFICIO: monto libre, no se valida contra el total ===
+    if (form.tipo_pago === "beneficio") {
+        // No hay validaciones de monto. Se permite cualquier descuento.
+    } else {
+        // === Validaciones para COMPLETO y ANTICIPO ===
         if (monto > totalCurso) {
             Swal.fire("Error", `El monto no puede exceder C$${totalCurso.toFixed(2)}`, "error");
             setLoading(false);
@@ -334,12 +339,39 @@ function RecibosForm({ onSave, initialData, matriculas = [] }) {
             return;
         }
 
-        if (form.tipo_pago === "anticipo" && monto >= totalCurso) {
-            Swal.fire("Error", `Si el pago es anticipo, el monto debe ser menor que C$${totalCurso.toFixed(2)}. Para cancelar todo seleccione "Completo".`, "error");
-            setLoading(false);
-            return;
-        }
+        // === Validaciones de cantidad de recibos (anticipo) ===
+        if (form.tipo_pago === "anticipo" && saldoInfo) {
+            const cantidadPagos = saldoInfo.cantidad_pagos || 0;
+            const saldoPendiente = parseFloat(saldoInfo.saldo_pendiente || 0);
 
+            if (cantidadPagos >= 2) {
+                Swal.fire("Error", "Ya se registraron los 2 anticipos permitidos para esta matrícula.", "error");
+                setLoading(false);
+                return;
+            }
+
+            if (cantidadPagos === 1) {
+                // Es el SEGUNDO anticipo → debe cubrir exactamente el saldo pendiente
+                if (Math.abs(monto - saldoPendiente) > 0.01) {
+                    Swal.fire(
+                        "Pago incompleto",
+                        `El segundo pago debe cubrir exactamente el saldo pendiente: C$${saldoPendiente.toFixed(2)}. ` +
+                        `No se permiten saldos pendientes después del segundo recibo.`,
+                        "error"
+                    );
+                    setLoading(false);
+                    return;
+                }
+            } else {
+                // Primer anticipo: debe ser menor al total
+                if (monto >= totalCurso) {
+                    Swal.fire("Error", `Si el pago es anticipo, el monto debe ser menor que C$${totalCurso.toFixed(2)}.`, "error");
+                    setLoading(false);
+                    return;
+                }
+            }
+        }
+    }
         const token = localStorage.getItem("token");
         const isEditing = !!initialData?.id;
 
@@ -392,10 +424,11 @@ function RecibosForm({ onSave, initialData, matriculas = [] }) {
                         navigate("/dashboard/recibos");
                     }
                 });
-            } else {
-                const data = await response.json();
-                Swal.fire("Error", Object.values(data).flat().join("\n"), "error");
-            }
+                } else {
+                    const data = await response.json();
+                    const mensaje = data.error || Object.values(data).flat().join("\n");
+                    Swal.fire("Error", mensaje, "error");
+                }
         } catch (error) {
             Swal.fire("Error", "Error de conexión", "error");
         } finally {
