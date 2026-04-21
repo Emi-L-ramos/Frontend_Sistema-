@@ -79,130 +79,124 @@ function MatriculaPage() {
                 'La matrícula ha sido eliminada correctamente.',
                 'success'
             );
-        } catch (error) {
-            console.error("Error eliminando:", error);
-            Swal.fire(
-                'Error',
-                'Hubo un problema al eliminar la matrícula.',
-                'error'
-            );
+            } catch (error) {
+                console.error("Error eliminando:", error);
+                Swal.fire(
+                    'Error',
+                    'Hubo un problema al eliminar la matrícula.',
+                    'error'
+                );
+            }
         }
-    }
-};
+    };
 
-    // Función para imprimir matrícula individual
-    const imprimirMatriculaIndividual = (matricula) => {
-    const ventanaImpresion = window.open('', '_blank');
-    ventanaImpresion.document.write(`
-        <html>
-            <head>
-                <style>
-                    @page { size: A4; margin: 15mm; }
-                    body { font-family: 'Arial', sans-serif; font-size: 13px; line-height: 1.4; color: #000; }
-                    .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
-                    .titulo { font-weight: bold; text-decoration: underline; margin-bottom: 15px; }
-                    .form-row { margin-bottom: 10px; border-bottom: 1px solid #000; width: 100%; display: inline-block; }
-                    .label { font-weight: bold; }
-                    .span {font-size: 24px;}
+        const imprimirMatriculaIndividual = (matricula) => {
+            const baseUrl = window.location.origin;
+            const ventanaImpresion = window.open('', '_blank');
+            ventanaImpresion.document.write(`
+                <html>
+                    <head>
+                        <style>
+                            @page { size: A4; margin: 15mm; }
+                            body { font-family: 'Arial', sans-serif; font-size: 13px; line-height: 1.4; color: #000; }
+                            
+                            .header { 
+                                display: flex; 
+                                align-items: center; 
+                                justify-content: space-between; 
+                                border-bottom: 2px solid #333; 
+                                padding-bottom: 10px; 
+                                margin-bottom: 20px; 
+                            }
+                            .header-text { 
+                                text-align: center; 
+                                flex-grow: 1; 
+                            }
+                            .logo-img { 
+                                width: 80px; 
+                                height: auto; 
+                            }
+                            .titulo { font-weight: bold; text-decoration: underline; margin-bottom: 15px; }
+                            .form-row { margin-bottom: 10px; border-bottom: 1px solid #000; width: 100%; display: inline-block; }
+                            .label { font-weight: bold; }
+                            table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                            th, td { border: 1px solid #000; padding: 5px; height: 30px; text-align: left; }
+                            .footer-nota { font-size: 11px; margin-top: 20px; }
+                            .pie-pagina { margin-top: 40px; text-align: center; border-top: 2px solid #333; padding-top: 10px; font-size: 11px; }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="header">
+                            <img src="${baseUrl}/Logo.png" class="logo-img" alt="Logo Adiact" />
+                            <div class="header-text">
+                                <strong>Instituto de Formación y Capacitación "Adiact"</strong><br>
+                                <em>Somos expertos en Formación y Capacitación del Talento Humano</em><br>
+                                <em>Ética, Integridad, Dedicación y Solidaridad</em>
+                            </div>
+                            <img src="${baseUrl}/Logo_esesa.png" class="logo-img" alt="Logo Escuela" />
+                        </div>
+
+                        <div class="titulo">HOJA DE MATRICULA DE ADULTOS A CURSO DE: EDUCACION VIAL Y MANEJO RESPONSABLE.
+                        <br/>
+                        Fecha: ${matricula.f_matricula}</div>
+                        <br/>
                     
-                    /* Tabla Inferior */
-                    table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-                    th, td { border: 1px solid #000; padding: 5px; height: 30px; text-align: left; }
-                    .th-col { width: 100px; }
-                    
-                    .footer-nota { font-size: 11px; margin-top: 20px; }
-                    .pie-pagina { margin-top: 40px; text-align: center; border-top: 2px solid #333; padding-top: 10px; font-size: 11px; }
-                </style>
-            </head>
-            <body>
-                <div class="header">
-                    <strong>Instituto de Formación y Capacitación "Adiact"</strong><br>
-                    <em>Somos expertos en Formación y Capacitación del Talento Humano</em><br>
-                    <em>Ética, Integridad, Dedicación y Solidaridad</em>
-                </div>
+                        <div class="form-row"><span class="label">Nombres y apellidos:</span> ${matricula.nombre || ''}  ${matricula.apellido || ''}</div>
+                        <br/>
+                        <br/>
+                        <div style="display: flex; gap: 20px;">
+                            <div class="form-row" style="width: 30%"><span class="label">Sexo:</span> ${matricula.sexo || ''}</div>
+                            <div class="form-row"><span class="label">Nacionalidad/fecha de nacimiento:</span> ${matricula.fecha_nacimiento}, ${matricula.nacionalidad || ''}</div>
+                        </div>
+                        <br/>
+                        <div style="display: flex; gap: 20px;">
+                            <div class="form-row" style="width: 30%"><span class="label">Edad:</span> ${matricula.edad || ''}</div>
+                            <div class="form-row"><span class="label">Número de cédula:</span> ${matricula.cedula || ''}</div>
+                        </div>
+                        <div class="form-row"><span class="label">Dirección:</span> ${matricula.direccion || ''}</div>
+                        <div class="form-row"><span class="label">Correo electrónico:</span> ${matricula.correo_electronico || ''}</div>
+                        <div style="display: flex; gap: 20px;">
+                            <div class="form-row"><span class="label">Teléfono convencional:</span> ${matricula.telefono_movil || ''}</div>
+                            <div class="form-row"><span class="label">Teléfono móvil:</span> ${matricula.telefono_emergencia || ''}</div>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <div class="form-row"><span class="label">Nivel Academico:</span> ${matricula.nivel_educativo || ''}</div>
+                            <div class="form-row"><span class="label">Profesión u oficio:</span> ${matricula.profesion_u_oficio || ''}</div>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <div class="form-row"><span class="label">Modalidad:</span> ${matricula.modalidad || ''}</div>
+                            <div class="form-row"><span class="label">Horario:</span> ${matricula.horario || ''}</div>
+                            <div class="form-row"><span class="label">Tipo de curso:</span> ${matricula.tipo_curso || ''}</div>
+                        </div>
+                        <br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
 
-                <div class="titulo">HOJA DE MATRICULA DE ADULTOS A CURSO DE: EDUCACION VIAL Y MANEJO RESPONSABLE... Fecha: ${matricula.f_matricula}</div>
-                
-                <div class="form-row"><span class="label">Nombres y apellidos:</span "> ${matricula.nombre || ''}  ${matricula.apellido || ''}</div>
-                
-             
-                <div style="display: flex; gap: 20px;">
-                
-                    <div class="form-row" style="width: 30%"> <span class="label">Sexo:</span> ${matricula.sexo || ''}</div>
-                  
-                    <div class="form-row"> <span class="label">Nacionalidad/fecha de nacimiento:</span> ${matricula.fecha_nacimiento}, ${matricula.nacionalidad || ''}</div>
-                  
-                </div>
-                <div style="display: flex; gap: 20px;">
-                
-                    <div class="form-row" style="width: 30%"> <span class="label">Edad:</span> ${matricula.edad || ''}</div>
-                     
-                    <div class="form-row"> <span class="label">Número de cédula:</span> ${matricula.cedula || ''}</div>
-                     
-                </div>
-                <div class="form-row"> <span class="label">Dirección:</span> ${matricula.direccion || '' }</div>
-                  
-                <div class="form-row"> <span class="label">Correo electrónico:</span>${matricula.correo_electronico || '' }</div>
-                 
-                <div style="display: flex; gap: 20px;">
-                    <div class="form-row"> <span class="label">Teléfono convencional:</span> ${matricula.telefono_movil}</div>
-                    
-                    <div class="form-row"> <span class="label">Teléfono móvil:</span> ${matricula.telefono_movil || ''}</div>
-                    
-                </div>
-                <div style="display: flex; gap: 10px;">
-                    <div class="form-row"> <span class="label">Nivel Academico:</span>${matricula.nivel_educativo || '' }</div>
-                    
-                    <div class="form-row"> <span class="label">Profesión u oficio:</span> ${matricula.profesion_u_oficio || '' }</div>
-                   
-                </div>
-                <div style="display: flex; gap: 10px;">
-                    <div class="form-row"> <span class="label">Modalidad:</span> ${matricula.modalidad  || '' }</div>
-                    
-                    <div class="form-row"> <span class="label">Horario:</span> ${matricula.horario || '' }</div>
-                      
-                    <div class="form-row"> <span class="label">Tipo de curso:</span> ${matricula.tipo_curso || ''}</div>
-                    
-                </div>
-                <br/>
-                <br/>
-                <br/>
-                <br/>
-                <br/>
-                <br/>
-                <br/>
-                <br/>
-                <br/>
-                <br/>
-                <br/>
-                 <br/>
-                  <br/>
-                   <br/>
-                    <br/>
+                        <div style="text-align: center; margin: 30px 0; font-weight: bold;">FIRMA DEL SOLICITANTE</div>
 
+                        <div class="footer-nota">
+                            <strong>NOTA:</strong><br>
+                            1-NO SE ACEPTA DEVOLUCIONES.<br>
+                            2-TIENE 60 DIAS PARA GESTION DE LICENCIA.<br>
+                            3-AUSENCIA INJUSTIFICADA ES CLASE DADA
+                        </div>
 
-                <div style="text-align: center; margin: 30px 0; font-weight: bold;">FIRMA DEL SOLICITANTE</div>
+                        <div class="pie-pagina">
+                            <strong>ESCUELA DE MANEJO EL CACIQUE ADIACT</strong><br>
+                            Gasolinera UNO Sutiava 1 cuadra al norte y ½ c. oeste. Teléfono: 2315 - 2568
+                        </div>
 
-                
-
-                <div class="footer-nota">
-                    <strong>NOTA:</strong><br>
-                    1-NO SE ACEPTA DEVOLUCIONES.<br>
-                    2-TIENE 60 DIAS PARA GESTION DE LICENCIA.<br>
-                    3-AUSENCIA INJUSTIFICADA ES CLASE DADA
-                </div>
-
-                <div class="pie-pagina">
-                    <strong>ESCUELA DE MANEJO EL CACIQUE ADIACT</strong><br>
-                    Gasolinera UNO Sutiava 1 cuadra al norte y ½ c. oeste. Teléfono: 2315 - 2568
-                </div>
-            </body>
-        </html>
-    `);
-    ventanaImpresion.document.close();
-    ventanaImpresion.print();
-};
-
+                        <script>
+                            window.onload = function() {
+                                setTimeout(() => {
+                                    window.print();
+                                    window.close();
+                                }, 500); 
+                            };
+                        </script>
+                    </body>
+                </html>
+            `);
+            ventanaImpresion.document.close();
+        };
     // Función para enviar WhatsApp
     const enviarWhatsApp = (matricula) => {
         const telefono = matricula.telefono_movil;
