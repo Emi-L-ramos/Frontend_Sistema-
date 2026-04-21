@@ -164,7 +164,34 @@ function RecibosForm({ onSave, initialData, matriculas = [] }) {
         setBusquedaEstudiante(`${estudiante.nombre} ${estudiante.apellido} - ${estudiante.cedula}`);
         setMostrarResultados(false);
         cargarInfoMatricula(estudiante.id, horas);
+        if (tipo === "reforzamiento") cargarHorasPrevias(estudiante.id);
     };
+
+const cargarHorasPrevias = async (matriculaId) => {
+    try {
+        const token = localStorage.getItem("token");
+        const response = await fetch(`http://127.0.0.1:8000/api/recibo/`, {
+            headers: { Authorization: `Token ${token}` }
+        });
+        if (response.ok) {
+            const recibos = await response.json();
+            const recibosDelEstudiante = recibos.filter(r => r.matricula === matriculaId);
+            if (recibosDelEstudiante.length > 0) {
+                const horasPrevias = recibosDelEstudiante[0].horas_reforzamiento;
+                if (horasPrevias) {
+                    setForm(prev => ({
+                        ...prev,
+                        horas_reforzamiento: horasPrevias,
+                        cantidad: horasPrevias
+                    }));
+                    cargarInfoMatricula(matriculaId, horasPrevias);
+                }
+            }
+        }
+    } catch (error) {
+        console.error("Error cargando horas previas:", error);
+    }
+};
 
     const limpiarSeleccion = () => {
         setForm(initialState);
@@ -241,8 +268,8 @@ function RecibosForm({ onSave, initialData, matriculas = [] }) {
             // Si es completo, actualizamos montos. 
             // Si es anticipo, reseteamos para obligar al usuario a ingresar el nuevo abono
             if (nuevoForm.tipo_pago === "completo") {
-                nuevoForm.monto_pagado = nuevoTotal.toFixed(2);
-                nuevoForm.monto_cordobas = nuevoTotal.toFixed(2);
+                nuevoForm.monto_pagado = String(nuevoTotal);
+                nuevoForm.monto_cordobas = String(nuevoTotal);
             } else {
                 nuevoForm.monto_pagado = "";
                 nuevoForm.monto_cordobas = "";
@@ -259,8 +286,8 @@ function RecibosForm({ onSave, initialData, matriculas = [] }) {
         if (name === "tipo_pago") {
             const totalActual = calcularTotal(tipoCurso, nuevoForm.horas_reforzamiento);
             if (value === "completo") {
-                nuevoForm.monto_pagado = totalActual.toFixed(2);
-                nuevoForm.monto_cordobas = totalActual.toFixed(2);
+                nuevoForm.monto_pagado = String(nuevoTotal);
+                nuevoForm.monto_cordobas = String(nuevoTotal);
             } else {
                 nuevoForm.monto_pagado = "";
                 nuevoForm.monto_cordobas = "";
@@ -328,13 +355,13 @@ function RecibosForm({ onSave, initialData, matriculas = [] }) {
     } else {
         // === Validaciones para COMPLETO y ANTICIPO ===
         if (monto > totalCurso) {
-            Swal.fire("Error", `El monto no puede exceder C$${totalCurso.toFixed(2)}`, "error");
+            SSwal.fire("Error", `El monto no puede exceder C$${totalCurso}`, "error");
             setLoading(false);
             return;
         }
 
-        if (form.tipo_pago === "completo" && monto !== totalCurso) {
-            Swal.fire("Error", `Para pago completo el monto debe ser C$${totalCurso.toFixed(2)}`, "error");
+        if (form.tipo_pago === "completo" && Math.round(monto) !== Math.round(totalCurso)) {
+            Swal.fire("Error", `Para pago completo el monto debe ser C$${totalCurso}`, "error");
             setLoading(false);
             return;
         }
@@ -352,10 +379,10 @@ function RecibosForm({ onSave, initialData, matriculas = [] }) {
 
             if (cantidadPagos === 1) {
                 // Es el SEGUNDO anticipo → debe cubrir exactamente el saldo pendiente
-                if (Math.abs(monto - saldoPendiente) > 0.01) {
+                if (Math.round(monto) !== Math.round(saldoPendiente)) {
                     Swal.fire(
                         "Pago incompleto",
-                        `El segundo pago debe cubrir exactamente el saldo pendiente: C$${saldoPendiente.toFixed(2)}. ` +
+                        `El segundo pago debe cubrir exactamente el saldo pendiente: C$${Math.round(saldoPendiente)}. ` +
                         `No se permiten saldos pendientes después del segundo recibo.`,
                         "error"
                     );
@@ -442,7 +469,7 @@ function RecibosForm({ onSave, initialData, matriculas = [] }) {
         <form onSubmit={handleSubmit} className="space-y-6">
             <div className="bg-gray-100 p-3 rounded-lg text-center">
                 <p className="text-sm text-gray-600">Total calculado del curso</p>
-                <p className="text-2xl font-bold text-blue-600">C$ {totalCurso.toFixed(2)}</p>
+                <p className="text-2xl font-bold text-blue-600">C$ {totalCurso}</p>
                 <p className="text-xs text-gray-500">
                     {tipoCurso === "regular"
                         ? "Curso regular: 15 horas por C$6500"
