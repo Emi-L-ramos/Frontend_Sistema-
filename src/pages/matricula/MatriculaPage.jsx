@@ -79,16 +79,16 @@ function MatriculaPage() {
                 'La matrícula ha sido eliminada correctamente.',
                 'success'
             );
-            } catch (error) {
-                console.error("Error eliminando:", error);
-                Swal.fire(
-                    'Error',
-                    'Hubo un problema al eliminar la matrícula.',
-                    'error'
-                );
-            }
+        } catch (error) {
+            console.error("Error eliminando:", error);
+            Swal.fire(
+                'Error',
+                'Hubo un problema al eliminar la matrícula.',
+                'error'
+            );
         }
-    };
+    }
+};
 
         const imprimirMatriculaIndividual = (matricula) => {
             const baseUrl = window.location.origin;
@@ -197,6 +197,7 @@ function MatriculaPage() {
             `);
             ventanaImpresion.document.close();
         };
+
     // Función para enviar WhatsApp
     const enviarWhatsApp = (matricula) => {
         const telefono = matricula.telefono_movil;
