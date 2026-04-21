@@ -7,7 +7,10 @@ import MatriculaPage from "./pages/matricula/MatriculaPage";
 import RecibosPage from "./pages/recibos/RecibosPage";
 import UsuariosPage from "./pages/admin/UsuariosPage";
 import ProtectedRoute from "./components/ProtectedRoute";
+import { ChakraProvider } from "@chakra-ui/react";
+import calendario from "./pages/calendario/calendario"; // ✅ Corregir importación de calendario
 import "./App.css";
+import Calendario from "./pages/calendario/calendario";
 
 function App() {
     return (
@@ -40,6 +43,13 @@ function App() {
                             <UsuariosPage />
                         </ProtectedRoute>
                     } />
+
+                    <Route path="/dashboard/calendario" element={
+                        <ProtectedRoute rolesPermitidos={['admin']}>
+                            <Calendario />
+                        </ProtectedRoute>
+                    } />
+                    
                     
                     <Route path="*" element={<Navigate to="/login" />} />
                 </Routes>
