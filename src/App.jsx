@@ -7,6 +7,8 @@ import MatriculaPage from "./pages/matricula/MatriculaPage";
 import RecibosPage from "./pages/recibos/RecibosPage";
 import UsuariosPage from "./pages/admin/UsuariosPage";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Asistencia from "./pages/asistencia/Asistencia";
+
 import "./App.css";
 
 function App() {
@@ -16,6 +18,7 @@ function App() {
                 <Routes>
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/" element={<Navigate to="/login" />} />
+                    <Route path="/asistencia" element={<Asistencia />} />
                     
                     <Route path="/dashboard" element={
                         <ProtectedRoute>
