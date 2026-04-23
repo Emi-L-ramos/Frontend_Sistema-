@@ -286,8 +286,8 @@ const cargarHorasPrevias = async (matriculaId) => {
         if (name === "tipo_pago") {
             const totalActual = calcularTotal(tipoCurso, nuevoForm.horas_reforzamiento);
             if (value === "completo") {
-                nuevoForm.monto_pagado = String(nuevoTotal);
-                nuevoForm.monto_cordobas = String(nuevoTotal);
+                nuevoForm.monto_pagado = String(totalActual);
+                nuevoForm.monto_cordobas = String(totalActual);
             } else {
                 nuevoForm.monto_pagado = "";
                 nuevoForm.monto_cordobas = "";
