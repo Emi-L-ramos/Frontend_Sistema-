@@ -25,10 +25,10 @@ function Dashboard() {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('dashboard');
 
-    // Depuración
+    // DepuraciÃ³n
     console.log("Usuario logueado:", user);
     console.log("Rol del usuario:", user?.rol);
-    console.log("¿Es admin?", user?.rol === 'admin');
+    console.log("Â¿Es admin?", user?.rol === 'admin');
 
     function renderContent() {
         switch (activeTab) {
@@ -57,7 +57,7 @@ function Dashboard() {
 
     return (
         <div className="flex h-screen bg-white font-sans">
-            {/* Overlay para móvil */}
+            {/* Overlay para mÃ³vil */}
             {isSidebarOpen && (
                 <div 
                     
@@ -117,7 +117,7 @@ function Dashboard() {
                         }`}
                     >
                         <FiUserPlus size={'1.5rem'} />
-                        <span>Matrículas</span>
+                        <span>MatrÃ­culas</span>
                     </button>
 
                     <button
@@ -139,7 +139,7 @@ function Dashboard() {
                     {user?.rol === 'admin' && (
                         <>
                             <div className="pt-4 mt-4 border-t border-gray-200">
-                                <p className="text-xs text-gray-400 px-3 mb-2">ADMINISTRACIÓN</p>
+                                <p className="text-xs text-gray-400 px-3 mb-2">ADMINISTRACIÃ“N</p>
                             </div>
                             
                             <button
@@ -156,9 +156,9 @@ function Dashboard() {
                         </>
                     )}
 
-                    {/* Gestión Académica */}
+                    {/* GestiÃ³n AcadÃ©mica */}
                     <div className="pt-4 mt-4 border-t border-gray-200">
-                        <p className="text-xs text-gray-400 px-3 mb-2">GESTIÓN ACADÉMICA</p>
+                        <p className="text-xs text-gray-400 px-3 mb-2">GESTIÃ“N ACADÃ‰MICA</p>
                     </div>
 
                     <button
@@ -240,7 +240,7 @@ function Dashboard() {
             {/* Main content - FONDO TRANSPARENTE */}
                <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
                     
-                    {/* Header para móvil: Contiene el título y el botón del menú */}
+                    {/* Header para mÃ³vil: Contiene el tÃ­tulo y el botÃ³n del menÃº */}
                     {!isSidebarOpen && (
                         <div className="md:hidden flex justify-between items-center p-4">
                             <h1 className="text-xl font-bold">Dashboard</h1>

@@ -24,6 +24,8 @@ function MatriculaForm({ initialData, onSave, onError }) {
         tipo_curso: '',
         categoria: '',
         apariconia: '',
+        horas_reforzamiento: '',
+        observaciones: '',
     });
     
     const [loading, setLoading] = useState(false);
@@ -42,11 +44,12 @@ function MatriculaForm({ initialData, onSave, onError }) {
     ];
 
     const HORARIO_OPTIONS = [
-        { value: '6AM A 8AM', label: '6:00 AM - 8:00 AM' },
-        { value: '8AM A 10AM', label: '8:00 AM - 10:00 AM' },
-        { value: '10AM A 12PM', label: '10:00 AM - 12:00 PM' },
-        { value: '12PM A 2PM', label: '12:00 PM - 2:00 PM' },
-        { value: '4PM A 6PM', label: '4:00 PM - 6:00 PM' }
+        { value: '6AM', label: '6:00 AM' },
+        { value: '8AM', label: '8:00 AM' },
+        { value: '10AM', label: '10:00 AM' },
+        { value: '12PM', label: '12:00 PM' },
+        { value: '02PM', label: '02:00 PM' },
+        { value: '04PM', label: '04:00 PM' }
     ];
 
   
@@ -57,9 +60,9 @@ function MatriculaForm({ initialData, onSave, onError }) {
     ];
 
     const CATEGORIA_OPTIONS = [
-        { value: '1', label: 'Categoría 1' },
-        { value: '2', label: 'Categoría 2' },
-        { value: '3', label: 'Categoría 3' }
+        { value: '1', label: 'CategorÃ­a 1' },
+        { value: '2', label: 'CategorÃ­a 2' },
+        { value: '3', label: 'CategorÃ­a 3' }
     ];
 
     const NIVEL_EDUCATIVO_OPTIONS = [
@@ -106,6 +109,8 @@ function MatriculaForm({ initialData, onSave, onError }) {
                 tipo_curso: initialData.tipo_curso || '',
                 categoria: initialData.categoria || '',
                 apariconia: initialData.apariconia || '',
+                horas_reforzamiento: initialData.horas_reforzamiento || '',
+                observaciones: initialData.observaciones || '',
             });
         }
     }, [initialData]);
@@ -130,16 +135,17 @@ function MatriculaForm({ initialData, onSave, onError }) {
         
         if (!formData.nombre.trim()) newErrors.nombre = 'El nombre es requerido';
         if (!formData.apellido.trim()) newErrors.apellido = 'El apellido es requerido';
-        if (!formData.cedula.trim()) newErrors.cedula = 'La cédula es requerida';
+        if (!formData.cedula.trim()) newErrors.cedula = 'La cÃ©dula es requerida';
         if (!formData.correo_electronico.trim()) {
             newErrors.correo_electronico = 'El correo es requerido';
         } else if (!/\S+@\S+\.\S+/.test(formData.correo_electronico)) {
-            newErrors.correo_electronico = 'Correo electrónico inválido';
+            newErrors.correo_electronico = 'Correo electrÃ³nico invÃ¡lido';
         }
         if (!formData.horario) newErrors.horario = 'El horario es requerido';
         if (!formData.modalidad) newErrors.modalidad = 'La modalidad es requerida';
         if (!formData.tipo_curso) newErrors.tipo_curso = 'El tipo de curso es requerido';
         if (!formData.fecha_nacimiento) newErrors.fecha_nacimiento = 'La fecha de nacimiento es requerida';
+        
         
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
@@ -162,10 +168,13 @@ function MatriculaForm({ initialData, onSave, onError }) {
         
         setLoading(true);
         setServerErrors({});
-        
+
         const dataToSend = {
             ...formData,
             edad: formData.edad ? parseInt(formData.edad) : null,
+            horas_reforzamiento: formData.horas_reforzamiento !== ""
+                ? parseInt(formData.horas_reforzamiento)
+                : null,
         };
         
         try {
@@ -207,8 +216,8 @@ function MatriculaForm({ initialData, onSave, onError }) {
             }
             
             await Swal.fire({
-                title: '¡Éxito!',
-                text: initialData ? 'Matrícula actualizada correctamente' : 'Matrícula guardada correctamente',
+                title: 'Â¡Ã‰xito!',
+                text: initialData ? 'MatrÃ­cula actualizada correctamente' : 'MatrÃ­cula guardada correctamente',
                 icon: 'success',
                 confirmButtonColor: '#3085d6',
                 timer: 2000,
@@ -230,7 +239,7 @@ function MatriculaForm({ initialData, onSave, onError }) {
             {/* Mostrar errores del servidor */}
             {Object.keys(serverErrors).length > 0 && (
                 <div className="bg-red-50 border border-red-500 text-red-700 px-3 py-2 sm:px-4 sm:py-3 rounded-lg text-sm sm:text-base">
-                    <h4 className="font-bold mb-2">Errores de validación:</h4>
+                    <h4 className="font-bold mb-2">Errores de validaciÃ³n:</h4>
                     <ul className="list-disc list-inside">
                         {Object.entries(serverErrors).map(([field, errors]) => (
                             <li key={field}>
@@ -241,17 +250,17 @@ function MatriculaForm({ initialData, onSave, onError }) {
                 </div>
             )}
             
-            {/* Grid responsivo: 1 columna en móvil, 2 en tablet, 3 en desktop grande */}
+            {/* Grid responsivo: 1 columna en mÃ³vil, 2 en tablet, 3 en desktop grande */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
                 
-                {/* Título - ocupa todas las columnas */}
+                {/* TÃ­tulo - ocupa todas las columnas */}
                 <div className="col-span-1 sm:col-span-2 lg:col-span-3">
                     <h3 className="text-base sm:text-lg lg:text-xl font-semibold text-gray-800 mb-2 sm:mb-3 pb-2 border-b-2 border-blue-500 inline-block">
-                        📋 Datos Personales
+                        ðŸ“‹ Datos Personales
                     </h3>
                 </div>
                 
-                {/* Campos del formulario con tamaños responsivos */}
+                {/* Campos del formulario con tamaÃ±os responsivos */}
                 <div>
                     <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
                         Nombre <span className="text-red-500">*</span>
@@ -288,7 +297,7 @@ function MatriculaForm({ initialData, onSave, onError }) {
                 
                 <div>
                     <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
-                        Cédula <span className="text-red-500">*</span>
+                        CÃ©dula <span className="text-red-500">*</span>
                     </label>
                     <input
                         type="text"
@@ -365,7 +374,7 @@ function MatriculaForm({ initialData, onSave, onError }) {
                 
                 <div>
                     <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
-                        Correo Electrónico <span className="text-red-500">*</span>
+                        Correo ElectrÃ³nico <span className="text-red-500">*</span>
                     </label>
                     <input
                         type="email"
@@ -382,7 +391,7 @@ function MatriculaForm({ initialData, onSave, onError }) {
                 
                 <div className="sm:col-span-2 lg:col-span-3">
                     <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
-                        Dirección
+                        DirecciÃ³n
                     </label>
                     <input
                         type="text"
@@ -395,7 +404,7 @@ function MatriculaForm({ initialData, onSave, onError }) {
                 
                 <div>
                     <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
-                        Teléfono Móvil
+                        TelÃ©fono MÃ³vil
                     </label>
                     <input
                         type="tel"
@@ -425,7 +434,7 @@ function MatriculaForm({ initialData, onSave, onError }) {
                 
                 <div>
                     <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
-                        Profesión u Oficio
+                        ProfesiÃ³n u Oficio
                     </label>
                     <input
                         type="text"
@@ -451,7 +460,7 @@ function MatriculaForm({ initialData, onSave, onError }) {
                 
                 <div>
                     <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
-                        Teléfono de Emergencia
+                        TelÃ©fono de Emergencia
                     </label>
                     <input
                         type="tel"
@@ -467,10 +476,10 @@ function MatriculaForm({ initialData, onSave, onError }) {
                 
                 
                 
-                {/* Datos Académicos */}
+                {/* Datos AcadÃ©micos */}
                 <div className="col-span-1 sm:col-span-2 lg:col-span-3">
                     <h3 className="text-base sm:text-lg lg:text-xl font-semibold text-gray-800 mb-2 sm:mb-3 pb-2 border-b-2 border-green-500 inline-block mt-4">
-                        🎓 Datos Académicos
+                         Datos Académicos
                     </h3>
                 </div>
 
@@ -552,10 +561,42 @@ function MatriculaForm({ initialData, onSave, onError }) {
                     {errors.tipo_curso && <p className="text-red-500 text-xs mt-1">{errors.tipo_curso}</p>}
                     {serverErrors.tipo_curso && <p className="text-red-500 text-xs mt-1">{serverErrors.tipo_curso}</p>}
                 </div>
+
+                {formData.tipo_curso === 'Reforzamiento' && (
+                    <div>
+                        <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
+                        Horas de Reforzamiento <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                        name="horas_reforzamiento"
+                        value={formData.horas_reforzamiento}
+                        onChange={handleChange}
+                        className="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                        >
+                        <option value="">-- Seleccionar horas --</option>
+                        <option value="1">1 hora</option>
+                        <option value="2">2 horas</option>
+                        <option value="3">3 horas</option>
+                        <option value="4">4 horas</option>
+                        <option value="5">5 horas</option>
+                        <option value="6">6 horas</option>
+                        <option value="7">7 horas</option>
+                        <option value="8">8 horas</option>
+                        <option value="9">9 horas</option>
+                        <option value="10">10 horas</option>
+                        <option value="11">11 horas</option>
+                        <option value="12">12 horas</option>
+                        <option value="13">13 horas</option>
+                        <option value="14">14 horas</option>
+                        <option value="15">15 horas</option>
+                        <option value="16">16 horas</option>
+                        </select>
+                    </div>
+                )}
                 
                 <div>
                     <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
-                        Categoría
+                        CategorÃ­a
                     </label>
                     <select
                         name="categoria"
@@ -570,11 +611,9 @@ function MatriculaForm({ initialData, onSave, onError }) {
                     </select>
                 </div>
                 
-                {/*Se elimino el buton de tip de pagos */}
-                
                 <div>
                     <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
-                        ¿Cómo se enteró?
+                        como se enteró?
                     </label>
                     <select
                         name="apariconia"
@@ -587,6 +626,19 @@ function MatriculaForm({ initialData, onSave, onError }) {
                             <option key={option.value} value={option.value}>{option.label}</option>
                         ))}
                     </select>
+                </div>
+
+                <div className="sm:col-span-2 lg:col-span-3">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
+                        Observación
+                    </label>
+                    <input
+                        type="text"
+                        name="observaciones"
+                        value={formData.observaciones}
+                        onChange={handleChange}
+                        className="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                    />
                 </div>
             </div>
             

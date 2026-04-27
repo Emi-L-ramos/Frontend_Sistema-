@@ -25,6 +25,7 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
   const [mostrarDropdownEstudiante, setMostrarDropdownEstudiante] = useState(false);
   const [estudianteSeleccionado, setEstudianteSeleccionado] = useState(null);
   const [mesActual, setMesActual] = useState(new Date());
+  const [horasPorDia, setHorasPorDia] = useState(2);
 
   useEffect(() => {
     if (!abierto) return;
@@ -67,9 +68,9 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
     const generarFechas = (fechaInicio) => {
       if (!fechaInicio) return [];
       const tipo = estudianteSeleccionado?.tipo_curso;
-      const numClases = tipo === "Reforzamiento"
-        ? Math.floor((estudianteSeleccionado?.horas_clases || 16) / 2)
-        : 8;
+     const numClases = tipo === "Reforzamiento"
+      ? Math.floor((estudianteSeleccionado?.horas_clases || 16) / horasPorDia)
+      : Math.floor(16 / horasPorDia);
       const fechas = [];
       let fecha = new Date(fechaInicio);
       let clasesCreadas = 0;
@@ -99,9 +100,10 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
   };
 
   const seleccionarEstudiante = (estudiante) => {
+    console.log("tipo_curso recibido:", estudiante.tipo_curso);
     setEstudianteSeleccionado(estudiante);
     setForm({ ...form, matricula_id: estudiante.id });
-    setBusquedaEstudiante(`${estudiante.nombre} ${estudiante.apellido || ''} - ${estudiante.cedula || 'Sin cédula'}`);
+    setBusquedaEstudiante(`${estudiante.nombre} ${estudiante.apellido || ''} - ${estudiante.cedula || 'Sin cÃ©dula'}`);
     setMostrarDropdownEstudiante(false);
     actualizarFechaMinima(estudiante);
   };
@@ -123,8 +125,8 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
 
   if (!permitido) {
     setError(tipo === "Reforzamiento"
-      ? "⚠️ Modalidad Extraordinaria: solo sábado y domingo"
-      : "⚠️ Modalidad Regular: solo lunes a viernes");
+      ? "âš ï¸ Modalidad Extraordinaria: solo sÃ¡bado y domingo"
+      : "âš ï¸ Modalidad Regular: solo lunes a viernes");
     return;
   }
 
@@ -132,7 +134,7 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
   const fechaObj = new Date(fechaStr);
 
   if (fechaMinima && fechaObj < fechaMinima) {
-    setError(`⚠️ La fecha no puede ser anterior a ${formatearFecha(fechaMinima.toISOString().split('T')[0])}`);
+    setError(`âš ï¸ La fecha no puede ser anterior a ${formatearFecha(fechaMinima.toISOString().split('T')[0])}`);
     return;
   }
 
@@ -144,15 +146,15 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
 };
   const agregarExamenManual = async () => {
     if (!examenManual.fecha) {
-      setError("⚠️ Debe seleccionar una fecha para el examen");
+      setError("âš ï¸ Debe seleccionar una fecha para el examen");
       return;
     }
     if (!form.instructor_id || !form.matricula_id) {
-      setError("⚠️ Debe seleccionar instructor y estudiante primero");
+      setError("âš ï¸ Debe seleccionar instructor y estudiante primero");
       return;
     }
     if (fechasGeneradas.length < 7) {
-      setError("⚠️ Primero debe crear el bloque de 7 clases teóricas");
+      setError("âš ï¸ Primero debe crear el bloque de 7 clases teÃ³ricas");
       return;
     }
     
@@ -160,7 +162,7 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
     const ultimaClase = fechasGeneradas[fechasGeneradas.length - 1];
     
     if (ultimaClase && fechaExamen <= ultimaClase) {
-      setError("⚠️ La fecha del examen debe ser posterior a la última clase teórica");
+      setError("âš ï¸ La fecha del examen debe ser posterior a la Ãºltima clase teÃ³rica");
       return;
     }
     
@@ -175,7 +177,7 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
       });
       setMostrarExamenManual(false);
       setExamenManual({ fecha: "", hora_inicio: "08:00", hora_fin: "10:00" });
-      setError("✅ Examen programado exitosamente");
+      setError("âœ… Examen programado exitosamente");
       setTimeout(() => setError(""), 3000);
     } catch (err) {
       setError(err.message || "Error al programar el examen");
@@ -207,7 +209,7 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
 
   const diasMes = obtenerDiasMes(mesActual);
   const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-  const diasSemana = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+  const diasSemana = ['Dom', 'Lun', 'Mar', 'MiÃ©', 'Jue', 'Vie', 'SÃ¡b'];
 
   const cambiarMes = (incremento) => {
     const nuevoMes = new Date(mesActual);
@@ -225,21 +227,21 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
     e.preventDefault();
     setError("");
     if (!form.instructor_id) {
-      setError("⚠️ Debe seleccionar un instructor conductor");
+      setError("âš ï¸ Debe seleccionar un instructor conductor");
       return;
     }
     if (!form.matricula_id) {
-      setError("⚠️ Debe seleccionar un estudiante");
+      setError("âš ï¸ Debe seleccionar un estudiante");
       return;
     }
     if (!form.fecha_inicio) {
-      setError("⚠️ Debe seleccionar una fecha de inicio");
+      setError("âš ï¸ Debe seleccionar una fecha de inicio");
       return;
     }
     
     setCargando(true);
     try {
-      await crearBloqueCitas(form);
+      await crearBloqueCitas({ ...form, horas_por_dia: horasPorDia });
       if (mostrarExamenManual && examenManual.fecha) {
         try {
           await crearExamenManual({
@@ -249,12 +251,12 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
             hora_inicio: examenManual.hora_inicio,
             hora_fin: examenManual.hora_fin
           });
-          setError("✅ Bloque de clases y examen creados exitosamente");
+          setError("âœ… Bloque de clases y examen creados exitosamente");
         } catch (examError) {
-          setError("⚠️ Bloque creado, pero hubo un error al crear el examen");
+          setError("âš ï¸ Bloque creado, pero hubo un error al crear el examen");
         }
       } else {
-        setError("✅ Bloque de clases creado exitosamente");
+        setError("âœ… Bloque de clases creado exitosamente");
       }
       setTimeout(() => {
         onCreada?.();
@@ -269,8 +271,11 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
 
   if (!abierto) return null;
 
-  const horarioClase = estudianteSeleccionado?.horario || "8:00 AM - 10:00 AM";
-  const fechaMinimaStr = fechaMinima ? fechaMinima.toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+  const horarioClase = estudianteSeleccionado?.horario || "";
+  const fechaMinimaStr = fechaMinima 
+    ? fechaMinima.toISOString().split('T')[0] 
+    : new Date().toISOString().split('T')[0];
+
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-all duration-300">
@@ -283,7 +288,7 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
               </div>
               <div>
                 <h2 className="text-xl font-bold text-white">Programar Bloque de Clases</h2>
-                <p className="text-sm text-blue-100">8 clases teóricas + examen manual (opcional)</p>
+                <p className="text-sm text-blue-100">8 clases pràcticas + examen manual (opcional)</p>
               </div>
             </div>
             <button onClick={onClose} className="text-white/80 hover:text-white hover:bg-white/10 rounded-xl p-2 transition-all duration-200">
@@ -308,7 +313,7 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
               <option value="">-- Seleccionar instructor --</option>
               {instructores.map((i) => (
                 <option key={i.id} value={i.id}>
-                  👨‍🏫 {i.nombre || i.first_name || `Instructor ${i.id}`}
+                  ðŸ‘¨â€ðŸ« {i.nombre || i.first_name || `Instructor ${i.id}`}
                 </option>
               ))}
             </select>
@@ -338,7 +343,7 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
                   onFocus={() => {
                     setMostrarDropdownEstudiante(true);
                     if (estudianteSeleccionado && busquedaEstudiante === "") {
-                      setBusquedaEstudiante(`${estudianteSeleccionado.nombre} ${estudianteSeleccionado.apellido || ''} - ${estudianteSeleccionado.cedula || 'Sin cédula'}`);
+                      setBusquedaEstudiante(`${estudianteSeleccionado.nombre} ${estudianteSeleccionado.apellido || ''} - ${estudianteSeleccionado.cedula || 'Sin cÃ©dula'}`);
                     }
                   }}
                   onBlur={() => {
@@ -348,7 +353,7 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
                       }
                     }, 200);
                   }}
-                  placeholder="Buscar por nombre, apellido o cédula..."
+                  placeholder="Buscar por nombre, apellido o cÃ©dula..."
                   className="w-full border-2 border-gray-200 rounded-xl pl-10 pr-10 py-3 text-sm focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all duration-200 bg-gray-50 hover:bg-white"
                 />
                 {estudianteSeleccionado && (
@@ -378,8 +383,8 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
                           <div>
                             <p className="font-medium text-gray-800 text-sm">{est.nombre} {est.apellido || ''}</p>
                             <p className="text-xs text-gray-500">
-                              📄 Cédula: {est.cedula || 'N/A'} | 📍 Horario: {est.horario || 'No definido'}
-                              {est.f_matricula && <span className="ml-2">📅 Matrícula: {new Date(est.f_matricula).toLocaleDateString()}</span>}
+                              “ Cedula: {est.cedula || 'N/A'} | “ Horario: {est.horario || 'No definido'}
+                              {est.f_matricula && <span className="ml-2">“MatrÃ­cula: {new Date(est.f_matricula).toLocaleDateString()}</span>}
                             </p>
                           </div>
                           <ChevronRight className="w-4 h-4 text-gray-400" />
@@ -403,9 +408,9 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
                         {estudianteSeleccionado.nombre} {estudianteSeleccionado.apellido || ''}
                       </p>
                       <p className="text-xs text-green-600">
-                        Cédula: {estudianteSeleccionado.cedula || 'N/A'} | Horario: {estudianteSeleccionado.horario || '8:00 AM - 10:00 AM'}
+                        CÃ©dula: {estudianteSeleccionado.cedula || 'N/A'} | Horario: {estudianteSeleccionado.horario || '8:00 AM - 10:00 AM'}
                         {estudianteSeleccionado.f_matricula && (
-                          <span className="ml-2">📅 Matrícula: {new Date(estudianteSeleccionado.f_matricula).toLocaleDateString()}</span>
+                          <span className="ml-2">ðŸ“… MatrÃ­cula: {new Date(estudianteSeleccionado.f_matricula).toLocaleDateString()}</span>
                         )}
                       </p>
                     </div>
@@ -417,7 +422,22 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
               </div>
             )}
           </div>
-
+          <div className="group">
+            <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+              <Clock className="w-4 h-4 text-purple-600" />
+              Horas por Día
+            </label>
+            <select
+              value={horasPorDia}
+              onChange={(e) => setHorasPorDia(parseInt(e.target.value))}
+              className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 bg-gray-50 hover:bg-white"
+            >
+              <option value={2}>2 horas por día</option>
+              <option value={3}>3 horas por día</option>
+              <option value={4}>4 horas por día</option>
+              <option value={5}>5 horas por día</option>
+            </select>
+          </div>
           <div className="group">
             <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
               <Calendar className="w-4 h-4 text-purple-600" />
@@ -427,7 +447,7 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
             
             {fechaMinima && (
               <div className="mb-2 text-xs text-orange-600 bg-orange-50 p-2 rounded-lg">
-                📅 Fecha mínima permitida: {formatearFecha(fechaMinimaStr)}
+                ðŸ“… Fecha mÃ­nima permitida: {formatearFecha(fechaMinimaStr)}
               </div>
             )}
             
@@ -493,8 +513,8 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
                           `}
                         >
                           {dia.day}
-                          {esPasado && dia.isCurrentMonth && <span className="absolute -top-1 -right-1 text-[8px]">🚫</span>}
-                          {esFinSemana && dia.isCurrentMonth && <span className="absolute -top-1 -right-1 text-[8px]">🚫</span>}
+                          {esPasado && dia.isCurrentMonth && <span className="absolute -top-1 -right-1 text-[8px]">ðŸš«</span>}
+                          {esFinSemana && dia.isCurrentMonth && <span className="absolute -top-1 -right-1 text-[8px]">ðŸš«</span>}
                         </button>
                       );
                     })}
@@ -515,7 +535,7 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
               <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-3 flex items-center justify-between">
                 <h3 className="text-white font-semibold flex items-center gap-2">
                   <Calendar className="w-4 h-4" />
-                  Calendario de Clases (8 clases teóricas){estudianteSeleccionado ? ` — ${estudianteSeleccionado.nombre} ${estudianteSeleccionado.apellido || ''}` : ''}
+                  Calendario de Clases (8 clases teÃ³ricas){estudianteSeleccionado ? ` â€” ${estudianteSeleccionado.nombre} ${estudianteSeleccionado.apellido || ''}` : ''}
                 </h3>
               </div>
               <div className="p-4">
@@ -531,7 +551,7 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
                           <p className="text-gray-600 text-xs">{fecha.toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}</p>
                           {estudianteSeleccionado && (
                             <p className="text-[11px] text-blue-700 font-medium mt-0.5 truncate">
-                              👤 {estudianteSeleccionado.nombre} {estudianteSeleccionado.apellido || ''}
+                              ðŸ‘¤ {estudianteSeleccionado.nombre} {estudianteSeleccionado.apellido || ''}
                             </p>
                           )}
                         </div>
@@ -550,17 +570,17 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
                   Resumen del Bloque
                 </h4>
                 <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
-                  <div className="flex items-center gap-1"><div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div><span>7 clases teóricas automáticas</span></div>
+                  <div className="flex items-center gap-1"><div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div><span>7 clases teÃ³ricas automÃ¡ticas</span></div>
                   <div className="flex items-center gap-1"><div className="w-1.5 h-1.5 bg-orange-500 rounded-full"></div><span>1 examen manual (opcional)</span></div>
                   <div className="flex items-center gap-1"><div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div><span>Sin clases fines de semana</span></div>
-                  <div className="flex items-center gap-1"><div className="w-1.5 h-1.5 bg-purple-500 rounded-full"></div><span>Duración: {horarioClase}</span></div>
+                  <div className="flex items-center gap-1"><div className="w-1.5 h-1.5 bg-purple-500 rounded-full"></div><span>DuraciÃ³n: {horarioClase}</span></div>
                 </div>
               </div>
             </div>
           )}
 
           {error && (
-            <div className={`${error.includes('✅') ? 'bg-green-50 border-green-200 text-green-700' : 'bg-red-50 border-red-200 text-red-700'} border-2 text-sm rounded-xl p-4 flex items-start gap-2 animate-pulse`}>
+            <div className={`${error.includes('âœ…') ? 'bg-green-50 border-green-200 text-green-700' : 'bg-red-50 border-red-200 text-red-700'} border-2 text-sm rounded-xl p-4 flex items-start gap-2 animate-pulse`}>
               <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
               <span>{error}</span>
             </div>
@@ -577,7 +597,7 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
                   Creando bloque...
                 </div>
               ) : (
-                "✨ Crear Bloque de Clases"
+                "âœ¨ Crear Bloque de Clases"
               )}
             </button>
           </div>

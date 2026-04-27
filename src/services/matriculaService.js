@@ -17,7 +17,7 @@ function MatriculaPage() {
     };
     
 
-    // 🔥 Traer datos desde Django
+    // ðŸ”¥ Traer datos desde Django
     const fetchMatriculas = async () => {
         try {
             const token = localStorage.getItem("token");
@@ -39,7 +39,7 @@ function MatriculaPage() {
     };
 
     const eliminarMatricula = async (id) => {
-        const confirmacion = confirm("¿Seguro que quieres eliminar?");
+        const confirmacion = confirm("Â¿Seguro que quieres eliminar?");
         if (!confirmacion) return;
 
         try {
@@ -64,7 +64,7 @@ function MatriculaPage() {
         fetchMatriculas();
     }, []);
 
-    // 🔍 FILTRO
+    // ðŸ” FILTRO
     const filteredData = data.filter(item =>
         (item.nombre?.toLowerCase() || "").includes(search.toLowerCase()) ||
         (item.cedula || "").includes(search)
@@ -79,10 +79,10 @@ function MatriculaPage() {
             <div className="max-w-7xl mx-auto mb-4 space-y-10">
                 <div className="space-y-2">
                     <h1 className="text-4xl font-bold ">
-                  Matrículas
+                  MatrÃ­culas
                     </h1>
                     <p className="">
-                        Registro y gestión de nuevas matrículas
+                        Registro y gestiÃ³n de nuevas matrÃ­culas
                     </p>
                 </div>
 
@@ -100,13 +100,13 @@ function MatriculaPage() {
                         />
                     </div>
 
-                    {/* BOTÓN */}
+                    {/* BOTÃ“N */}
                     <button
                         onClick={() => setShowModal(true)}
                         className="flex items-center gap-2 text-blue-600 px-5 py-2 cursor-pointer rounded-lg outline-2 outline-offset-2 outline-dashed --- hover:outline-emerald-500 hover:bg-green-400 hover:text-white transition  "
                     >
                         <FiUserPlus />
-                        Nueva Matrícula
+                        Nueva MatrÃ­cula
                     </button>
 
                 </div>
@@ -116,18 +116,18 @@ function MatriculaPage() {
             <div className="max-w-7xl mx-auto bg-white rounded-xl shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full table-auto">
-                        {/* ✅ SOLO UN THEAD */}
+                        {/* âœ… SOLO UN THEAD */}
                         <thead className="bg-gray-50">
                             <tr className="border-gray-300">
                                 <th className="p-3 border-gray-300">Nombre</th>
-                                <th className="p-3 border-gray-300">Cédula</th>
+                                <th className="p-3 border-gray-300">CÃ©dula</th>
                                 <th className="p-3 border-gray-300">Sexo</th>
                             
-                                <th className="p-3 border-gray-300">Teléfono</th>
-                                <th className="p-3 border-gray-300">Categoría</th>
+                                <th className="p-3 border-gray-300">TelÃ©fono</th>
+                                <th className="p-3 border-gray-300">CategorÃ­a</th>
                                 <th className="p-3 border-gray-300">Pago</th>
                                 <th className="p-3 border-gray-300">Curso</th>
-                                <th className="p-3 border-gray-300">Descripción</th>
+                                <th className="p-3 border-gray-300">DescripciÃ³n</th>
                                 <th className="p-3 border-gray-300">Monto</th>
                                 <th className="p-3 border-gray-300">Opciones</th>
 
@@ -203,9 +203,9 @@ function MatriculaPage() {
                     <div className="bg-white rounded-2xl shadow-lg w-full max-w-5xl aspect-video">
  
                         <div className="flex justify-between p-4">
-                            <h2 className="font-bold text-4xl">Nueva Matrícula</h2>
+                            <h2 className="font-bold text-4xl">Nueva MatrÃ­cula</h2>
 
-                           {/* BOTÓN CERRAR  //Icon de cerraR el formulario */}
+                           {/* BOTÃ“N CERRAR  //Icon de cerraR el formulario */}
                             <button onClick={() => setShowModal(false)} className="w-12 text-red-700 text-2xl hover:bg-red-100 rounded-full flex items-center justify-center transition w-12 h-12 hover:cursor-pointer">
                                 <FiX />
                             </button>

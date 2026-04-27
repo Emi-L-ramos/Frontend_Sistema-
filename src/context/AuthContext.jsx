@@ -20,7 +20,7 @@ export const AuthProvider = ({ children }) => {
         const savedToken = localStorage.getItem('token');
         const savedUser = localStorage.getItem('user');
         
-        console.log("🔍 Cargando sesión guardada:", { savedToken, savedUser });
+        console.log("ðŸ” Cargando sesiÃ³n guardada:", { savedToken, savedUser });
         
         if (savedToken && savedUser) {
             setToken(savedToken);
@@ -30,7 +30,7 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
     const login = (userData, token) => {
-        console.log("🔍 LOGIN - Datos recibidos:", userData);
+        console.log("ðŸ” LOGIN - Datos recibidos:", userData);
         
         localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify(userData));
@@ -38,7 +38,7 @@ export const AuthProvider = ({ children }) => {
         setToken(token);
         setUser(userData);
         
-        console.log("🔍 LOGIN - Guardado en localStorage");
+        console.log("ðŸ” LOGIN - Guardado en localStorage");
         console.log("Token guardado:", localStorage.getItem('token'));
         console.log("User guardado:", localStorage.getItem('user'));
     };
@@ -48,7 +48,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem('user');
         setToken(null);
         setUser(null);
-        console.log("🔍 LOGOUT - Sesión cerrada");
+        console.log("ðŸ” LOGOUT - SesiÃ³n cerrada");
     };
 
     const tienePermiso = (permiso) => {

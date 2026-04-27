@@ -88,7 +88,7 @@ export default function ModalExamenManual({ abierto, onClose, onCreada }) {
               <option value="">-- Seleccionar --</option>
               {matriculas.map((m) => (
                 <option key={m.id} value={m.id}>
-                  {m.nombre} {m.apellido} — {m.cedula}
+                  {m.nombre} {m.apellido} â€” {m.cedula}
                 </option>
               ))}
             </select>
@@ -104,7 +104,7 @@ export default function ModalExamenManual({ abierto, onClose, onCreada }) {
               className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
             />
             <p className="text-xs text-gray-500 mt-1">
-              El examen puede ser cualquier día (incluso fin de semana).
+              El examen puede ser cualquier dÃ­a (incluso fin de semana).
             </p>
           </div>
 

@@ -40,12 +40,12 @@ function RecibosPage() {
 
     const eliminarRecibo = async (id) => {
         const confirm = await Swal.fire({
-            title: '¿Eliminar recibo?',
-            text: 'Esta acción actualizará el saldo pendiente del estudiante',
+            title: 'Â¿Eliminar recibo?',
+            text: 'Esta acciÃ³n actualizarÃ¡ el saldo pendiente del estudiante',
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#d33',
-            confirmButtonText: 'Sí, eliminar',
+            confirmButtonText: 'SÃ­, eliminar',
             cancelButtonText: 'Cancelar'
         });
 
@@ -67,7 +67,7 @@ function RecibosPage() {
                     Swal.fire('Error', 'No se pudo eliminar el recibo', 'error');
                 }
             } catch (error) {
-                Swal.fire('Error', 'Error de conexión', 'error');
+                Swal.fire('Error', 'Error de conexiÃ³n', 'error');
             }
         }
     };
@@ -146,13 +146,13 @@ function RecibosPage() {
 
     const exportarAExcel = () => {
         const datosExcel = filtrados.map(recibo => ({
-            'N° Recibo': recibo.numero_recibo || 'N/A',
+            'NÂ° Recibo': recibo.numero_recibo || 'N/A',
             'Fecha': formatearFecha(recibo.fecha_pago),
             'Estudiante': `${recibo.matricula_data?.nombre || ''} ${recibo.matricula_data?.apellido || ''}`.trim(),
-            'Cédula': recibo.matricula_data?.cedula || 'N/A',
+            'CÃ©dula': recibo.matricula_data?.cedula || 'N/A',
             'Tipo de Pago': obtenerEstado(recibo),
             'Monto (C$)': parseFloat(recibo.monto_pagado || 0).toFixed(2),
-            'Método de Pago': recibo.metodo_pago || 'Efectivo',
+            'MÃ©todo de Pago': recibo.metodo_pago || 'Efectivo',
             'Estado': obtenerEstado(recibo)
         }));
 
@@ -166,7 +166,7 @@ function RecibosPage() {
         <div className="h-full">
             <div className="mb-4">
                 <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Recibos de Pago</h1>
-                <p className="text-sm text-gray-500">Gestión de pagos y recibos emitidos</p>
+                <p className="text-sm text-gray-500">GestiÃ³n de pagos y recibos emitidos</p>
             </div>
 
             {/*Cards*/}
@@ -182,13 +182,13 @@ function RecibosPage() {
                 </div>
             </div>
 
-            {/* Barra de búsqueda y botones */}
+            {/* Barra de bÃºsqueda y botones */}
             <div className="flex flex-col sm:flex-row justify-between gap-3 mb-4">
                 <div className="relative flex-1">
                     <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                     <input
                         type="text"
-                        placeholder="Buscar por N° Recibo, estudiante o cédula..."
+                        placeholder="Buscar por NÂ° Recibo, estudiante o cÃ©dula..."
                         value={busqueda}
                         onChange={(e) => setBusqueda(e.target.value)}
                         className="w-full pl-10 pr-4 py-2 border border-blue-300 rounded-3xl focus:outline-none focus:ring-2 focus:ring-blue-300 cursor-pointer text-sm"
@@ -212,12 +212,12 @@ function RecibosPage() {
                     <table className="w-full text-sm">
                         <thead className="bg-gray-50">
                             <tr>
-                                <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">N° Recibo</th>
+                                <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">NÂ° Recibo</th>
                                 <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
                                 <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estudiante</th>
-                                <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cédula</th>
+                                <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CÃ©dula</th>
                                 <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monto</th>
-                                <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Método</th>
+                                <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">MÃ©todo</th>
                                 <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
                                 <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
                             </tr>
@@ -283,7 +283,7 @@ function RecibosPage() {
                     <div className="bg-white rounded-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
                         <div className="flex justify-between items-center p-4 border-b sticky top-0 bg-white">
                             <h2 className="text-xl font-bold">{editData ? "Editar Recibo" : "Nuevo Recibo"}</h2>
-                            <button onClick={() => { setShowModal(false); setEditData(null); }} className="text-gray-500 hover:text-red-500 text-2xl">✕</button>
+                            <button onClick={() => { setShowModal(false); setEditData(null); }} className="text-gray-500 hover:text-red-500 text-2xl">âœ•</button>
                         </div>
                         <div className="p-6">
                             <RecibosForm

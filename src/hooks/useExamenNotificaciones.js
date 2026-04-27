@@ -13,7 +13,7 @@ export function useExamenNotificaciones() {
       }
       if (permiso !== "granted") return;
 
-      // Obtener exámenes de hoy y mañana
+      // Obtener exÃ¡menes de hoy y maÃ±ana
       const hoy = new Date();
       const manana = new Date(hoy);
       manana.setDate(hoy.getDate() + 1);
@@ -34,10 +34,10 @@ export function useExamenNotificaciones() {
       examenes.forEach((examen) => {
         const esHoy = examen.fecha === formatFecha(hoy);
         const titulo = esHoy
-          ? "📋 Examen HOY"
-          : "📋 Examen MAÑANA";
+          ? "ðŸ“‹ Examen HOY"
+          : "ðŸ“‹ Examen MAÃ‘ANA";
 
-        const cuerpo = `${examen.estudiante_nombre} — ${examen.hora_inicio?.slice(0, 5)} a ${examen.hora_fin?.slice(0, 5)}\nInstructor: ${examen.instructor_nombre}`;
+        const cuerpo = `${examen.estudiante_nombre} â€” ${examen.hora_inicio?.slice(0, 5)} a ${examen.hora_fin?.slice(0, 5)}\nInstructor: ${examen.instructor_nombre}`;
 
         new Notification(titulo, {
           body: cuerpo,

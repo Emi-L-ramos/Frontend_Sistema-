@@ -144,7 +144,7 @@ function RecibosForm({ onSave, initialData, matriculas = [] }) {
 
     const seleccionarEstudiante = (estudiante) => {
         const tipo = normalizarTipoCurso(estudiante);
-        const horas = tipo === "reforzamiento" ? 1 : "";
+        const horas = tipo === "reforzamiento" ? (estudiante.horas_reforzamiento || 16) : "";
         const total = calcularTotal(tipo, horas);
 
         setForm({
@@ -167,31 +167,7 @@ function RecibosForm({ onSave, initialData, matriculas = [] }) {
         if (tipo === "reforzamiento") cargarHorasPrevias(estudiante.id);
     };
 
-const cargarHorasPrevias = async (matriculaId) => {
-    try {
-        const token = localStorage.getItem("token");
-        const response = await fetch(`http://127.0.0.1:8000/api/recibo/`, {
-            headers: { Authorization: `Token ${token}` }
-        });
-        if (response.ok) {
-            const recibos = await response.json();
-            const recibosDelEstudiante = recibos.filter(r => r.matricula === matriculaId);
-            if (recibosDelEstudiante.length > 0) {
-                const horasPrevias = recibosDelEstudiante[0].horas_reforzamiento;
-                if (horasPrevias) {
-                    setForm(prev => ({
-                        ...prev,
-                        horas_reforzamiento: horasPrevias,
-                        cantidad: horasPrevias
-                    }));
-                    cargarInfoMatricula(matriculaId, horasPrevias);
-                }
-            }
-        }
-    } catch (error) {
-        console.error("Error cargando horas previas:", error);
-    }
-};
+
 
     const limpiarSeleccion = () => {
         setForm(initialState);
@@ -295,7 +271,7 @@ const cargarHorasPrevias = async (matriculaId) => {
             nuevoForm.monto_dolares = calcularDolares(nuevoForm.monto_cordobas, nuevoForm.tasa_cambio);
         }
 
-        // 3. Sincronización de montos y dólares
+        // 3. SincronizaciÃ³n de montos y dÃ³lares
         if (name === "monto_cordobas" || name === "monto_pagado") {
             // Aseguramos que ambos campos reflejen lo mismo para evitar discrepancias en el JSON
             const valorLimpio = value; 
@@ -323,7 +299,7 @@ const cargarHorasPrevias = async (matriculaId) => {
         }
 
         if (!form.numero_recibo) {
-            Swal.fire("Error", "Debe ingresar el número de recibo", "error");
+            Swal.fire("Error", "Debe ingresar el nÃºmero de recibo", "error");
             setLoading(false);
             return;
         }
@@ -344,7 +320,7 @@ const cargarHorasPrevias = async (matriculaId) => {
     const monto = parseFloat(form.monto_cordobas || form.monto_pagado);
 
     if (!monto || monto <= 0) {
-        Swal.fire("Error", "Debe ingresar un monto válido", "error");
+        Swal.fire("Error", "Debe ingresar un monto vÃ¡lido", "error");
         setLoading(false);
         return;
     }
@@ -355,7 +331,7 @@ const cargarHorasPrevias = async (matriculaId) => {
     } else {
         // === Validaciones para COMPLETO y ANTICIPO ===
         if (monto > totalCurso) {
-            SSwal.fire("Error", `El monto no puede exceder C$${totalCurso}`, "error");
+            Swal.fire("Error", `El monto no puede exceder C$${totalCurso}`, "error");
             setLoading(false);
             return;
         }
@@ -372,18 +348,18 @@ const cargarHorasPrevias = async (matriculaId) => {
             const saldoPendiente = parseFloat(saldoInfo.saldo_pendiente || 0);
 
             if (cantidadPagos >= 2) {
-                Swal.fire("Error", "Ya se registraron los 2 anticipos permitidos para esta matrícula.", "error");
+                Swal.fire("Error", "Ya se registraron los 2 anticipos permitidos para esta matrÃ­cula.", "error");
                 setLoading(false);
                 return;
             }
 
             if (cantidadPagos === 1) {
-                // Es el SEGUNDO anticipo → debe cubrir exactamente el saldo pendiente
+                // Es el SEGUNDO anticipo â†’ debe cubrir exactamente el saldo pendiente
                 if (Math.round(monto) !== Math.round(saldoPendiente)) {
                     Swal.fire(
                         "Pago incompleto",
                         `El segundo pago debe cubrir exactamente el saldo pendiente: C$${Math.round(saldoPendiente)}. ` +
-                        `No se permiten saldos pendientes después del segundo recibo.`,
+                        `No se permiten saldos pendientes despuÃ©s del segundo recibo.`,
                         "error"
                     );
                     setLoading(false);
@@ -440,7 +416,7 @@ const cargarHorasPrevias = async (matriculaId) => {
 
             if (response.ok) {
                 Swal.fire({
-                    title: isEditing ? "¡Recibo actualizado!" : "¡Recibo creado!",
+                    title: isEditing ? "Â¡Recibo actualizado!" : "Â¡Recibo creado!",
                     text: `Monto registrado: C$${monto.toFixed(2)}`,
                     icon: "success",
                     confirmButtonText: "Aceptar"
@@ -457,7 +433,7 @@ const cargarHorasPrevias = async (matriculaId) => {
                     Swal.fire("Error", mensaje, "error");
                 }
         } catch (error) {
-            Swal.fire("Error", "Error de conexión", "error");
+            Swal.fire("Error", "Error de conexiÃ³n", "error");
         } finally {
             setLoading(false);
         }
@@ -484,7 +460,7 @@ const cargarHorasPrevias = async (matriculaId) => {
                         <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                         <input
                             type="text"
-                            placeholder="Escribe nombre, apellido o cédula..."
+                            placeholder="Escribe nombre, apellido o cÃ©dula..."
                             value={busquedaEstudiante}
                             onChange={(e) => {
                                 setBusquedaEstudiante(e.target.value);
@@ -520,7 +496,7 @@ const cargarHorasPrevias = async (matriculaId) => {
                                     >
                                         <div>
                                             <p className="font-semibold">{est.nombre} {est.apellido}</p>
-                                            <p className="text-sm text-gray-500">Cédula: {est.cedula}</p>
+                                            <p className="text-sm text-gray-500">CÃ©dula: {est.cedula}</p>
                                             <p className="text-xs text-blue-600">
                                                 Tipo de curso: {normalizarTipoCurso(est) === "regular" ? "Curso regular" : "Reforzamiento"}
                                             </p>
@@ -538,9 +514,9 @@ const cargarHorasPrevias = async (matriculaId) => {
                         <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
                             <p className="text-sm text-green-800 font-medium">Estudiante seleccionado:</p>
                             <p className="font-semibold">{matriculaSeleccionada.nombre} {matriculaSeleccionada.apellido}</p>
-                            <p className="text-sm text-gray-600">Cédula: {matriculaSeleccionada.cedula}</p>
+                            <p className="text-sm text-gray-600">CÃ©dula: {matriculaSeleccionada.cedula}</p>
                             <p className="text-sm text-gray-600">
-                                Tipo de curso desde matrícula: {tipoCurso === "regular" ? "Curso regular" : "Reforzamiento"}
+                                Tipo de curso desde matrÃ­cula: {tipoCurso === "regular" ? "Curso regular" : "Reforzamiento"}
                             </p>
                         </div>
                     )}
@@ -559,7 +535,7 @@ const cargarHorasPrevias = async (matriculaId) => {
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium mb-1">N° Recibo *</label>
+                    <label className="block text-sm font-medium mb-1">NÂ° Recibo *</label>
                     <input
                         type="text"
                         name="numero_recibo"
@@ -596,20 +572,11 @@ const cargarHorasPrevias = async (matriculaId) => {
 
                 {tipoCurso === "reforzamiento" && (
                     <div>
-                        <label className="block text-sm font-medium mb-1">Horas de Reforzamiento *</label>
-                        <select
-                            name="horas_reforzamiento"
-                            value={form.horas_reforzamiento || 1}
-                            onChange={handleChange}
-                            className="w-full p-2 border rounded"
-                            required
-                        >
-                            {HORAS_REFORZAMIENTO.map((hora) => (
-                                <option key={hora} value={hora}>
-                                    {hora} hora{hora > 1 ? "s" : ""}
-                                </option>
-                            ))}
-                        </select>
+                        <label className="block text-sm font-medium mb-1">Horas de Reforzamiento</label>
+                        <div className="w-full p-2 border rounded bg-gray-50 text-gray-700 font-semibold">
+                            {form.horas_reforzamiento || 0} hora{form.horas_reforzamiento !== 1 ? "s" : ""}
+                            <span className="text-xs text-gray-400 ml-2">(definidas en matrícula)</span>
+                        </div>
                     </div>
                 )}
 
@@ -648,7 +615,7 @@ const cargarHorasPrevias = async (matriculaId) => {
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium mb-1">Monto en Córdobas *</label>
+                    <label className="block text-sm font-medium mb-1">Monto en CÃ³rdobas *</label>
                     <input
                         type="number"
                         step="0.01"
@@ -661,7 +628,7 @@ const cargarHorasPrevias = async (matriculaId) => {
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium mb-1">Monto en Dólares</label>
+                    <label className="block text-sm font-medium mb-1">Monto en DÃ³lares</label>
                     <input
                         type="number"
                         step="0.01"
@@ -685,7 +652,7 @@ const cargarHorasPrevias = async (matriculaId) => {
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium mb-1">Método de Pago</label>
+                    <label className="block text-sm font-medium mb-1">MÃ©todo de Pago</label>
                     <select
                         name="metodo_pago"
                         value={form.metodo_pago}

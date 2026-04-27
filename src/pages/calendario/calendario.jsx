@@ -5,7 +5,7 @@ import CalendarioForm from "../../components/calendarioForm.jsx";
 import ModalExamenManual from "../../components/ModalExamenManual.jsx";
 
 const MONTHS = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
-const DAYS = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
+const DAYS = ["Dom","Lun","Mar","MiÃ©","Jue","Vie","SÃ¡b"];
 
 function buildMonthCells(year, month) {
   const firstDay = new Date(year, month, 1).getDay();
@@ -107,7 +107,7 @@ export default function Calendario() {
 
         {examenesProximos.length > 0 && (
           <div className="mb-4 bg-amber-50 border border-amber-300 rounded-xl p-4">
-            <h3 className="text-amber-800 font-semibold text-sm mb-2">📋 Exámenes próximos (próximos 7 días)</h3>
+            <h3 className="text-amber-800 font-semibold text-sm mb-2">ðŸ“‹ ExÃ¡menes prÃ³ximos (prÃ³ximos 7 dÃ­as)</h3>
             <ul className="space-y-1">
               {examenesProximos.map((ex) => {
                 const fechaEx = new Date(ex.fecha + "T00:00:00");
@@ -121,8 +121,8 @@ export default function Calendario() {
                       {etiqueta}
                     </span>
                     <span className="font-medium">{ex.estudiante_nombre}</span>
-                    <span className="text-amber-600">{ex.hora_inicio?.slice(0,5)} – {ex.hora_fin?.slice(0,5)}</span>
-                    <span className="text-amber-500 text-xs">· {ex.instructor_nombre}</span>
+                    <span className="text-amber-600">{ex.hora_inicio?.slice(0,5)} â€“ {ex.hora_fin?.slice(0,5)}</span>
+                    <span className="text-amber-500 text-xs">Â· {ex.instructor_nombre}</span>
                   </li>
                 );
               })}
@@ -189,7 +189,7 @@ export default function Calendario() {
                 <div className="text-sm">{c.fecha}</div>
                 <div className="text-sm text-gray-500 mt-0.5 flex items-center gap-1 justify-end">
                   <Clock className="w-3 h-3" />
-                  {c.hora_inicio?.slice(0, 5)} – {c.hora_fin?.slice(0, 5)}
+                  {c.hora_inicio?.slice(0, 5)} â€“ {c.hora_fin?.slice(0, 5)}
                 </div>
               </div>
             </div>
@@ -204,12 +204,12 @@ export default function Calendario() {
     <div className="max-w-[1280px] mx-auto px-8 py-8">
       <div className="mb-6">
         <h1 className="text-3xl font-bold">Calendario de Instructores</h1>
-        <p className="text-sm text-gray-500 mt-1">Asignación de horarios y estudiantes</p>
+        <p className="text-sm text-gray-500 mt-1">AsignaciÃ³n de horarios y estudiantes</p>
       </div>
 
       {examenesProximos.length > 0 && (
         <div className="mb-4 bg-amber-50 border border-amber-300 rounded-xl p-4">
-          <h3 className="text-amber-800 font-semibold text-sm mb-2">📋 Exámenes próximos (próximos 7 días)</h3>
+          <h3 className="text-amber-800 font-semibold text-sm mb-2">ðŸ“‹ ExÃ¡menes prÃ³ximos (prÃ³ximos 7 dÃ­as)</h3>
           <ul className="space-y-1">
             {examenesProximos.map((ex) => {
               const fechaEx = new Date(ex.fecha + "T00:00:00");
@@ -223,8 +223,8 @@ export default function Calendario() {
                     {etiqueta}
                   </span>
                   <span className="font-medium">{ex.estudiante_nombre}</span>
-                  <span className="text-amber-600">{ex.hora_inicio?.slice(0,5)} – {ex.hora_fin?.slice(0,5)}</span>
-                  <span className="text-amber-500 text-xs">· {ex.instructor_nombre}</span>
+                  <span className="text-amber-600">{ex.hora_inicio?.slice(0,5)} â€“ {ex.hora_fin?.slice(0,5)}</span>
+                  <span className="text-amber-500 text-xs">Â· {ex.instructor_nombre}</span>
                 </li>
               );
             })}
@@ -252,7 +252,7 @@ export default function Calendario() {
             onClick={() => setModalNueva(true)}
             className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium"
           >
-            <Plus className="w-4 h-4" /> Nueva Asignación
+            <Plus className="w-4 h-4" /> Nueva AsignaciÃ³n
           </button>
           <button
             type="button"
@@ -303,7 +303,7 @@ export default function Calendario() {
                             : "bg-blue-300 text-blue-900"
                         }`}
                       >
-                        {a.hora_inicio?.slice(0, 5)} · {a.estudiante_nombre}
+                        {a.hora_inicio?.slice(0, 5)} Â· {a.estudiante_nombre}
                       </div>
                     ))}
                     {extra > 0 && <div className="text-[11px] text-gray-400">+{extra}</div>}
@@ -325,7 +325,7 @@ export default function Calendario() {
               ? citas.filter((a) => a.fecha === diaSeleccionado)
               : hoyCitas
             ).length === 0 && (
-              <p className="text-sm text-gray-400">No hay clases este día.</p>
+              <p className="text-sm text-gray-400">No hay clases este dÃ­a.</p>
             )}
             {(diaSeleccionado
               ? citas.filter((a) => a.fecha === diaSeleccionado)
@@ -343,7 +343,7 @@ export default function Calendario() {
                 </div>
                 <div className="text-sm text-gray-500 mt-1">Instructor: {a.instructor_nombre}</div>
                 <div className={`text-xs mt-1 font-semibold ${parseInt(a.numero_clase) === 9 ? "text-red-500" : "text-gray-400"}`}>
-                    {parseInt(a.numero_clase) === 9 ? "🎓 EXAMEN" : `Clase ${a.numero_clase}/8`}
+                    {parseInt(a.numero_clase) === 9 ? "ðŸŽ“ EXAMEN" : `Clase ${a.numero_clase}/8`}
                   </div>
               </div>
             ))}
