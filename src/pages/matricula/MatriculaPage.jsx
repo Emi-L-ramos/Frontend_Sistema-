@@ -214,6 +214,8 @@ function MatriculaPage() {
         };
 
     // FunciÃ³n para enviar WhatsApp
+
+    const  driveLink = "https://drive.google.com/drive/folders/1UysqcQZQNAqBnSDtWmnssxGZL2XPuki8";
     const enviarWhatsApp = (matricula) => {
         const telefono = matricula.telefono_movil;
         if (!telefono) {
@@ -221,10 +223,13 @@ function MatriculaPage() {
             return;
         }
         //Aqui configuramos un mensaje automatico para whatpsap
-        const mensaje = `Hola ${matricula.nombre} ${matricula.apellido || ''}, Tu matricula ha sido registrada exitosamente. Nos complaces comunicarte que te has inscrito en el curso  ${matricula.tipo_curso || ''} de vehiculo para la Categoria ${matricula.categoria}, esperamos que aprobechas al mÃ¡ximo tus clases como teorÃ­ca y prÃ¡ctica, Â¡Si tienes alguna Consulta no dudes en Comunicarte con nosotros!`;
+        const mensaje = `Hola ${matricula.nombre} ${matricula.apellido || ''}, Tu matricula ha sido registrada exitosamente. Nos complaces comunicarte que te has inscrito en el curso  ${matricula.tipo_curso || ''} de vehiculo para la Categoria ${matricula.categoria}, esperamos que aprobechas al maximo tus clases como teori­ca y practica, ¡Si tienes alguna Consulta no dudes en Comunicarte con nosotros!, Material de estudio: ${driveLink}`;
         const url = `https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`;
         window.open(url, '_blank');
     };
+    
+
+  
 
     // FunciÃ³n para imprimir por edades
     const imprimirPorEdades = () => {

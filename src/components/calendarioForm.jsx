@@ -35,12 +35,14 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
           listarInstructores(),
           listarMatriculas()
         ]);
-        setInstructores(inst || []);
-        setMatriculas(mats || []);
+        console.log("Datos de instructores recibidos:", inst); // <-- ¡IMPORTANTE!
+        setInstructores(Array.isArray(inst) ? inst : []); // Asegura que sea un array
+        setMatriculas(Array.isArray(mats) ? mats : []);
       } catch (error) {
         console.error("Error:", error);
       }
     };
+
     cargarDatos();
     setForm({ instructor_id: "", matricula_id: "", fecha_inicio: "" });
     setFechasGeneradas([]);
@@ -146,15 +148,15 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
 };
   const agregarExamenManual = async () => {
     if (!examenManual.fecha) {
-      setError("âš ï¸ Debe seleccionar una fecha para el examen");
+      setError("Debe seleccionar una fecha para el examen");
       return;
     }
     if (!form.instructor_id || !form.matricula_id) {
-      setError("âš ï¸ Debe seleccionar instructor y estudiante primero");
+      setError("Debe seleccionar instructor y estudiante primero");
       return;
     }
     if (fechasGeneradas.length < 7) {
-      setError("âš ï¸ Primero debe crear el bloque de 7 clases teÃ³ricas");
+      setError("Primero debe crear el bloque de 7 clases teoricas");
       return;
     }
     
@@ -162,7 +164,7 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
     const ultimaClase = fechasGeneradas[fechasGeneradas.length - 1];
     
     if (ultimaClase && fechaExamen <= ultimaClase) {
-      setError("âš ï¸ La fecha del examen debe ser posterior a la Ãºltima clase teÃ³rica");
+      setError("La fecha del examen debe ser posterior a la Ãºltima clase teorica");
       return;
     }
     
@@ -177,7 +179,7 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
       });
       setMostrarExamenManual(false);
       setExamenManual({ fecha: "", hora_inicio: "08:00", hora_fin: "10:00" });
-      setError("âœ… Examen programado exitosamente");
+      setError("Examen programado exitosamente");
       setTimeout(() => setError(""), 3000);
     } catch (err) {
       setError(err.message || "Error al programar el examen");
@@ -227,15 +229,15 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
     e.preventDefault();
     setError("");
     if (!form.instructor_id) {
-      setError("âš ï¸ Debe seleccionar un instructor conductor");
+      setError("Debe seleccionar un instructor conductor");
       return;
     }
     if (!form.matricula_id) {
-      setError("âš ï¸ Debe seleccionar un estudiante");
+      setError("Debe seleccionar un estudiante");
       return;
     }
     if (!form.fecha_inicio) {
-      setError("âš ï¸ Debe seleccionar una fecha de inicio");
+      setError("Debe seleccionar una fecha de inicio");
       return;
     }
     
@@ -251,12 +253,12 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
             hora_inicio: examenManual.hora_inicio,
             hora_fin: examenManual.hora_fin
           });
-          setError("âœ… Bloque de clases y examen creados exitosamente");
+          setError("Bloque de clases y examen creados exitosamente");
         } catch (examError) {
-          setError("âš ï¸ Bloque creado, pero hubo un error al crear el examen");
+          setError("Bloque creado, pero hubo un error al crear el examen");
         }
       } else {
-        setError("âœ… Bloque de clases creado exitosamente");
+        setError(" Bloque de clases creado exitosamente");
       }
       setTimeout(() => {
         onCreada?.();
@@ -311,9 +313,9 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
               className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 bg-gray-50 hover:bg-white cursor-pointer"
             >
               <option value="">-- Seleccionar instructor --</option>
-              {instructores.map((i) => (
+                 {instructores.map((i) => (
                 <option key={i.id} value={i.id}>
-                  ðŸ‘¨â€ðŸ« {i.nombre || i.first_name || `Instructor ${i.id}`}
+                  {i.nombre_completo || i.nombre || i.username || `Instructor ${i.id}`}
                 </option>
               ))}
             </select>
@@ -395,6 +397,8 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
                 </div>
               )}
             </div>
+
+
             
             {estudianteSeleccionado && (
               <div className="mt-3 p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200">
