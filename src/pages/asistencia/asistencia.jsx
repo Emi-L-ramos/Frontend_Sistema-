@@ -163,7 +163,7 @@ export default function Asistencia() {
       {/* Encabezado */}
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-gray-900">Control de Asistencia</h1>
-        <p className="text-sm text-gray-500 mt-1">Registro de asistencia de los 8 encuentros</p>
+        <p className="text-sm text-gray-500 mt-1">Registro de asistencia de los encuentros</p>
       </div>
 
       {/* Stats */}
@@ -224,7 +224,7 @@ export default function Asistencia() {
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50">
                 <th className="px-4 py-3 text-left font-semibold text-gray-700">Estudiante</th>
-                <th className="px-4 py-3 text-left font-semibold text-gray-700">CÃ©dula</th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-700">Cédula</th>
                 {ENCUENTROS.map((e) => (
                   <th key={e} className={`px-3 py-3 text-center font-semibold ${e === encuentroFiltro ? "text-blue-600" : "text-gray-700"}`}>
                     E{e}
@@ -280,7 +280,7 @@ export default function Asistencia() {
           </div>
           Justificada (clase reprogramada)
         </div>
-        <div className="flex items-center gap-1.5"><Circle className="w-4 h-4 text-gray-200" /> Sin encuentro aÃºn</div>
+        <div className="flex items-center gap-1.5"><Circle className="w-4 h-4 text-gray-200" /> Sin encuentro aún</div>
       </div>
 
       {/* Modal Justificar */}
@@ -294,17 +294,17 @@ export default function Asistencia() {
               <div>
                 <h3 className="text-lg font-bold text-gray-900">Justificar Ausencia</h3>
                 <p className="text-xs text-gray-500">
-                  Encuentro {modalJustificar.numero} â€” {modalJustificar.fecha}
+                  Encuentro {modalJustificar.numero} — {modalJustificar.fecha}
                 </p>
               </div>
             </div>
             <p className="text-sm text-gray-600 mb-4 bg-orange-50 border border-orange-100 rounded-xl p-3">
-              âš ï¸ Esta clase y <strong>todas las siguientes</strong> (incluyendo el examen) se reprogramarÃ¡n al siguiente dÃ­a disponible.
+              Esta clase y <strong>todas las siguientes</strong> (incluyendo el examen) se reprogramarán al siguiente día disponible.
             </p>
             <textarea
               className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-orange-400 resize-none"
               rows={3}
-              placeholder="Motivo de la justificaciÃ³n..."
+              placeholder="Motivo de la justificación..."
               value={motivo}
               onChange={(e) => setMotivo(e.target.value)}
               autoFocus

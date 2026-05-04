@@ -299,7 +299,7 @@ function RecibosForm({ onSave, initialData, matriculas = [] }) {
         }
 
         if (!form.numero_recibo) {
-            Swal.fire("Error", "Debe ingresar el nÃºmero de recibo", "error");
+            Swal.fire("Error", "Debe ingresar el número de recibo", "error");
             setLoading(false);
             return;
         }
@@ -319,8 +319,8 @@ function RecibosForm({ onSave, initialData, matriculas = [] }) {
     const totalCurso = calcularTotal();
     const monto = parseFloat(form.monto_cordobas || form.monto_pagado);
 
-    if (!monto || monto <= 0) {
-        Swal.fire("Error", "Debe ingresar un monto vÃ¡lido", "error");
+    if (form.tipo_pago !== "beneficio" && (!monto || monto <= 0)) {
+        Swal.fire("Error", "Debe ingresar un monto válido", "error");
         setLoading(false);
         return;
     }
@@ -348,7 +348,7 @@ function RecibosForm({ onSave, initialData, matriculas = [] }) {
             const saldoPendiente = parseFloat(saldoInfo.saldo_pendiente || 0);
 
             if (cantidadPagos >= 2) {
-                Swal.fire("Error", "Ya se registraron los 2 anticipos permitidos para esta matrÃ­cula.", "error");
+                Swal.fire("Error", "Ya se registraron los 2 anticipos permitidos para esta matrícula.", "error");
                 setLoading(false);
                 return;
             }
@@ -359,7 +359,7 @@ function RecibosForm({ onSave, initialData, matriculas = [] }) {
                     Swal.fire(
                         "Pago incompleto",
                         `El segundo pago debe cubrir exactamente el saldo pendiente: C$${Math.round(saldoPendiente)}. ` +
-                        `No se permiten saldos pendientes despuÃ©s del segundo recibo.`,
+                        `No se permiten saldos pendientes después del segundo recibo.`,
                         "error"
                     );
                     setLoading(false);
@@ -416,7 +416,7 @@ function RecibosForm({ onSave, initialData, matriculas = [] }) {
 
             if (response.ok) {
                 Swal.fire({
-                    title: isEditing ? "Â¡Recibo actualizado!" : "Â¡Recibo creado!",
+                    title: isEditing ? "¡Recibo actualizado!" : "¡Recibo creado!",
                     text: `Monto registrado: C$${monto.toFixed(2)}`,
                     icon: "success",
                     confirmButtonText: "Aceptar"
@@ -433,7 +433,7 @@ function RecibosForm({ onSave, initialData, matriculas = [] }) {
                     Swal.fire("Error", mensaje, "error");
                 }
         } catch (error) {
-            Swal.fire("Error", "Error de conexiÃ³n", "error");
+            Swal.fire("Error", "Error de conexión", "error");
         } finally {
             setLoading(false);
         }
@@ -460,7 +460,7 @@ function RecibosForm({ onSave, initialData, matriculas = [] }) {
                         <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                         <input
                             type="text"
-                            placeholder="Escribe nombre, apellido o cÃ©dula..."
+                            placeholder="Escribe nombre, apellido o cédula..."
                             value={busquedaEstudiante}
                             onChange={(e) => {
                                 setBusquedaEstudiante(e.target.value);
@@ -496,7 +496,7 @@ function RecibosForm({ onSave, initialData, matriculas = [] }) {
                                     >
                                         <div>
                                             <p className="font-semibold">{est.nombre} {est.apellido}</p>
-                                            <p className="text-sm text-gray-500">CÃ©dula: {est.cedula}</p>
+                                            <p className="text-sm text-gray-500">Cédula: {est.cedula}</p>
                                             <p className="text-xs text-blue-600">
                                                 Tipo de curso: {normalizarTipoCurso(est) === "regular" ? "Curso regular" : "Reforzamiento"}
                                             </p>
@@ -514,9 +514,9 @@ function RecibosForm({ onSave, initialData, matriculas = [] }) {
                         <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
                             <p className="text-sm text-green-800 font-medium">Estudiante seleccionado:</p>
                             <p className="font-semibold">{matriculaSeleccionada.nombre} {matriculaSeleccionada.apellido}</p>
-                            <p className="text-sm text-gray-600">CÃ©dula: {matriculaSeleccionada.cedula}</p>
+                            <p className="text-sm text-gray-600">Cédula: {matriculaSeleccionada.cedula}</p>
                             <p className="text-sm text-gray-600">
-                                Tipo de curso desde matrÃ­cula: {tipoCurso === "regular" ? "Curso regular" : "Reforzamiento"}
+                                Tipo de curso desde matrícula: {tipoCurso === "regular" ? "Curso regular" : "Reforzamiento"}
                             </p>
                         </div>
                     )}
@@ -535,7 +535,7 @@ function RecibosForm({ onSave, initialData, matriculas = [] }) {
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium mb-1">NÂ° Recibo *</label>
+                    <label className="block text-sm font-medium mb-1">N° de Recibo/Factura *</label>
                     <input
                         type="text"
                         name="numero_recibo"
@@ -615,7 +615,7 @@ function RecibosForm({ onSave, initialData, matriculas = [] }) {
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium mb-1">Monto en CÃ³rdobas *</label>
+                    <label className="block text-sm font-medium mb-1">Monto en Córdobas *</label>
                     <input
                         type="number"
                         step="0.01"
@@ -628,7 +628,7 @@ function RecibosForm({ onSave, initialData, matriculas = [] }) {
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium mb-1">Monto en DÃ³lares</label>
+                    <label className="block text-sm font-medium mb-1">Monto en Dólares</label>
                     <input
                         type="number"
                         step="0.01"
@@ -652,7 +652,7 @@ function RecibosForm({ onSave, initialData, matriculas = [] }) {
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium mb-1">MÃ©todo de Pago</label>
+                    <label className="block text-sm font-medium mb-1">Método de Pago</label>
                     <select
                         name="metodo_pago"
                         value={form.metodo_pago}

@@ -57,7 +57,7 @@ function Dashboard() {
 
     return (
         <div className="flex h-screen bg-white font-sans">
-            {/* Overlay para mÃ³vil */}
+            {/* Overlay para móvil */}
             {isSidebarOpen && (
                 <div 
                     
@@ -117,7 +117,7 @@ function Dashboard() {
                         }`}
                     >
                         <FiUserPlus size={'1.5rem'} />
-                        <span>MatrÃ­culas</span>
+                        <span>Matrículas</span>
                     </button>
 
                     <button
@@ -139,7 +139,7 @@ function Dashboard() {
                     {user?.rol === 'admin' && (
                         <>
                             <div className="pt-4 mt-4 border-t border-gray-200">
-                                <p className="text-xs text-gray-400 px-3 mb-2">ADMINISTRACIÃ“N</p>
+                                <p className="text-xs text-gray-400 px-3 mb-2">ADMINISTRACIÓN</p>
                             </div>
                             
                             <button
@@ -156,9 +156,9 @@ function Dashboard() {
                         </>
                     )}
 
-                    {/* GestiÃ³n AcadÃ©mica */}
+                    {/* Gestión Académica */}
                     <div className="pt-4 mt-4 border-t border-gray-200">
-                        <p className="text-xs text-gray-400 px-3 mb-2">GESTIÃ“N ACADÃ‰MICA</p>
+                        <p className="text-xs text-gray-400 px-3 mb-2">GESTIÓN ACADÉMICA</p>
                     </div>
 
                     <button
@@ -236,14 +236,13 @@ function Dashboard() {
                 </div>
             </aside>
 
-            {/* Main content - FONDO BLANCO (cambiado de bg-amber-50 a bg-white) */}
             {/* Main content - FONDO TRANSPARENTE */}
                <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
                     
                     {/* Header para mÃ³vil: Contiene el tÃ­tulo y el botÃ³n del menÃº */}
                     {!isSidebarOpen && (
                         <div className="md:hidden flex justify-between items-center p-4">
-                            <h1 className="text-xl font-bold">Dashboard</h1>
+                            <h1 className="text-xl font-bold">Panel de Inicio</h1>
                             <button
                                 onClick={() => setIsSidebarOpen(true)}
                                 className="p-2  rounded-lg shadow-md active:scale-95 transition-all duration-200"

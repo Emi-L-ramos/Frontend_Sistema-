@@ -38,7 +38,7 @@ export default function ModalNuevaAsignacion({ abierto, onClose, onCreada }) {
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
         <div className="flex items-center justify-between p-5 border-b">
-          <h3 className="text-lg font-semibold">Nueva AsignaciÃ³n</h3>
+          <h3 className="text-lg font-semibold">Nueva Asignación</h3>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
             <X className="w-5 h-5" />
           </button>
@@ -63,7 +63,7 @@ export default function ModalNuevaAsignacion({ abierto, onClose, onCreada }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Estudiante (MatrÃ­cula)</label>
+            <label className="block text-sm font-medium mb-1">Estudiante (Matrícula)</label>
             <select
               required
               value={form.matricula_id}
@@ -73,7 +73,7 @@ export default function ModalNuevaAsignacion({ abierto, onClose, onCreada }) {
               <option value="">-- Seleccionar --</option>
               {matriculas.map((m) => (
                 <option key={m.id} value={m.id}>
-                  {m.nombre} {m.apellido} â€” {m.horario}
+                  {m.nombre} {m.apellido} {m.horario}
                 </option>
               ))}
             </select>
@@ -89,7 +89,7 @@ export default function ModalNuevaAsignacion({ abierto, onClose, onCreada }) {
               className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
             />
             <p className="text-xs text-gray-500 mt-1">
-              Se generarÃ¡n 8 clases consecutivas (saltando sÃ¡bados y domingos).
+              Se generarán 8 clases consecutivas (saltando sábados y domingos).
             </p>
           </div>
 

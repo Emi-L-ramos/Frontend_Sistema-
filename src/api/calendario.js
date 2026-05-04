@@ -23,7 +23,7 @@ export const listarInstructores = async () => {
     const data = await response.json();
     return data.results || data;
   } catch (error) {
-    console.error("Error en listarInstructores:", error);
+    console.error("Error en listar Instructores:", error);
     return [];
   }
 };
@@ -42,7 +42,7 @@ export const listarMatriculas = async () => {
     const data = await response.json();
     return data.results || data;
   } catch (error) {
-    console.error("Error en listarMatriculas:", error);
+    console.error("Error en listar Matriculas:", error);
     return [];
   }
 };
@@ -89,7 +89,7 @@ export const citasDeHoy = async () => {
     const data = await response.json();
     return data.results || data;
   } catch (error) {
-    console.error("Error en citasDeHoy:", error);
+    console.error("Error en citas De Hoy:", error);
     return [];
   }
 };
@@ -118,7 +118,7 @@ export const crearBloqueCitas = async (data) => {
     
     return await response.json();
   } catch (error) {
-    console.error("Error en crearBloqueCitas:", error);
+    console.error("Error en crear Bloque de Citas:", error);
     throw error;
   }
 };
@@ -138,7 +138,7 @@ export const eliminarCita = async (id) => {
     
     return true;
   } catch (error) {
-    console.error("Error en eliminarCita:", error);
+    console.error("Error en eliminar Cita:", error);
     throw error;
   }
 };
@@ -159,7 +159,7 @@ export const actualizarCita = async (id, data) => {
     
     return await response.json();
   } catch (error) {
-    console.error("Error en actualizarCita:", error);
+    console.error("Error en actualizar Cita:", error);
     throw error;
   }
 };
@@ -187,7 +187,7 @@ export const crearExamenManual = async (data) => {
     
     return await response.json();
   } catch (error) {
-    console.error("Error en crearExamenManual:", error);
+    console.error("Error en crear Examen Manual:", error);
     throw error;
   }
 };

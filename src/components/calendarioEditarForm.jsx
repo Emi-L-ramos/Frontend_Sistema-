@@ -54,7 +54,7 @@ export default function CalendarioEditarForm({ abierto, onClose, onActualizada, 
       await actualizarCita(cita.id, dataToSend);
       
       Swal.fire({
-        title: 'Â¡Actualizada!',
+        title: '¡Actualizada!',
         text: 'La clase ha sido reprogramada exitosamente',
         icon: 'success',
         timer: 2000,
@@ -89,9 +89,9 @@ export default function CalendarioEditarForm({ abierto, onClose, onActualizada, 
         </div>
 
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
-          {/* InformaciÃ³n actual */}
+          {/* Información actual */}
           <div className="bg-gray-50 p-3 rounded-lg mb-2">
-            <p className="text-xs text-gray-500 mb-1">InformaciÃ³n actual:</p>
+            <p className="text-xs text-gray-500 mb-1">Información actual:</p>
             <div className="text-sm space-y-1">
               <div><strong>Estudiante:</strong> {cita.estudiante_nombre || 'N/A'}</div>
               <div><strong>Instructor:</strong> {cita.instructor_nombre || 'N/A'}</div>
