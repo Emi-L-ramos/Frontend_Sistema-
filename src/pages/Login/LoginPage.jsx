@@ -27,17 +27,17 @@ function LoginPage() {
             if (response.ok) {
                 login(data, data.token);
                 Swal.fire({
-                    title: 'Â¡Bienvenido!',
-                    text: `Has iniciado sesiÃ³n como ${data.rol}`,
+                    title: '¡Bienvenido!',
+                    text: `Has iniciado sesión como ${data.rol}`,
                     icon: 'success',
                     timer: 2000
                 });
                 navigate('/dashboard');
             } else {
-                Swal.fire('Error', data.error || 'Credenciales invÃ¡lidas', 'error');
+                Swal.fire('Error', data.error || 'Credenciales inválidas', 'error');
             }
         } catch (error) {
-            Swal.fire('Error', 'Error de conexiÃ³n con el servidor', 'error');
+            Swal.fire('Error', 'Error de conexión con el servidor', 'error');
         } finally {
             setLoading(false);
         }
@@ -61,7 +61,7 @@ function LoginPage() {
                     />
                     <input
                         type="password"
-                        placeholder="ContraseÃ±a"
+                        placeholder="Contraseña"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         className="w-full p-3 border border-gray-300 rounded-lg mb-6 focus:outline-none focus:ring-2 focus:ring-blue-500"

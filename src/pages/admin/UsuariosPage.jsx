@@ -16,15 +16,13 @@ function UsuariosPage() {
         email: "",
         first_name: "",
         last_name: "",
-        rol: "consulta"
+        rol: ""
     });
 
     const roles = [
         { value: "admin", label: "Administrador", color: "bg-red-100 text-red-700" },
-        { value: "secretaria", label: "Secretaria", color: "bg-blue-100 text-blue-700" },
-        { value: "cajero", label: "Cajero", color: "bg-green-100 text-green-700" },
         { value: "instructor", label: "Instructor", color: "bg-purple-100 text-purple-700" },
-        { value: "consulta", label: "Solo Consulta", color: "bg-gray-100 text-gray-700" }
+        { value: "estudiante", label: "Estudiante", color: "bg-gray-100 text-gray-700" }
     ];
 
     // Cargar usuarios
@@ -49,7 +47,7 @@ function UsuariosPage() {
         e.preventDefault();
         
         if (form.password !== form.confirm_password) {
-            Swal.fire("Error", "Las contraseÃ±as no coinciden", "error");
+            Swal.fire("Error", "Las contraseñas no coinciden", "error");
             return;
         }
 
@@ -80,7 +78,7 @@ function UsuariosPage() {
             });
 
             if (response.ok) {
-                Swal.fire("Ã‰xito", editData ? "Usuario actualizado" : "Usuario creado", "success");
+                Swal.fire("Éxito", editData ? "Usuario actualizado" : "Usuario creado", "success");
                 fetchUsuarios();
                 setShowModal(false);
                 resetForm();
@@ -89,7 +87,7 @@ function UsuariosPage() {
                 Swal.fire("Error", Object.values(data).flat().join("\n"), "error");
             }
         } catch (error) {
-            Swal.fire("Error", "Error de conexiÃ³n", "error");
+            Swal.fire("Error", "Error de conexión", "error");
         }
     };
 
@@ -101,7 +99,7 @@ function UsuariosPage() {
         }
         
         const confirm = await Swal.fire({
-            title: "Â¿Eliminar?",
+            title: "¿Eliminar?",
             text: `Eliminar a ${username}?`,
             icon: "warning",
             showCancelButton: true
@@ -122,7 +120,7 @@ function UsuariosPage() {
     const resetForm = () => {
         setForm({
             username: "", password: "", confirm_password: "",
-            email: "", first_name: "", last_name: "", rol: "consulta"
+            email: "", first_name: "", last_name: "", rol: ""
         });
         setEditData(null);
     };
@@ -134,12 +132,12 @@ function UsuariosPage() {
     return (
         <div className="p-6">
             <div className="flex justify-between items-center mb-6">
-                <h1 className="text-3xl font-bold">GestiÃ³n de Usuarios</h1>
+                <h1 className="text-3xl font-bold">Gestión de Usuarios</h1>
                 <button
                     onClick={() => { resetForm(); setShowModal(true); }}
                     className=" text-blue-800 px-4 py-2 rounded-lg flex items-center gap-2 outline-2 outline-offset-2 outline-dashed hover:cursor-pointer hover:bg-green-200 hover:text-green-700"
                 >
-                    + Nuevo Usuario
+                    Nuevo Usuario
                 </button>
             </div>
 
@@ -192,7 +190,7 @@ function UsuariosPage() {
                             <input type="text" placeholder="Usuario" value={form.username}
                                 onChange={e => setForm({...form, username: e.target.value})}
                                 className="w-full p-2 border rounded mb-2" required />
-                            <input type="password" placeholder="ContraseÃ±a" value={form.password}
+                            <input type="password" placeholder="Contraseña" value={form.password}
                                 onChange={e => setForm({...form, password: e.target.value})}
                                 className="w-full p-2 border rounded mb-2" />
                             <input type="password" placeholder="Confirmar" value={form.confirm_password}
