@@ -33,7 +33,10 @@ function DashboardHome() {
     return MESES[mes] ?? item.mes;
   });
 
-  const totalGeneral = ganancias.reduce((acc, item) => acc + item.total, 0);
+  const mesActual = new Date().toISOString().slice(0, 7); // "2025-05"
+  const totalGeneral = ganancias
+  .filter((item) => item.mes === mesActual)
+  .reduce((acc, item) => acc + item.total, 0);
 
   const options = {
     chart: { type: "area", toolbar: { show: false }, zoom: { enabled: false } },
@@ -82,11 +85,6 @@ function DashboardHome() {
   return (
     <div className="p-6 space-y-6">
       <h1 className="text-black font-bold text-4xl">Dashboard</h1>
-      <p className="text-gray-500">
-        Período:{" "}
-        {resumen ? `${resumen.periodo_inicio} al ${resumen.periodo_fin}` : "Cargando..."}
-      </p>
-
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
         <div className="bg-white p-6 rounded-2xl shadow-sm flex justify-between items-center">

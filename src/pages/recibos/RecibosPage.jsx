@@ -179,11 +179,11 @@ function RecibosPage() {
             {/*Cards*/}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
                 <div className="bg-white p-3 md:p-4 rounded-xl shadow-sm border border-gray-100">
-                    <p className="text-gray-500 text-xs md:text-sm">Ingresos Totales</p>
-                    <h2 className="text-xl md:text-2xl font-bold text-green-600">C${totalIngresos.toFixed(2)}</h2>
+                    <p className="text-gray-500 text-xs md:text-sm">Ingresos Mensuales</p>
+                    <h2 className="text-xl md:text-2xl font-bold text-green-600">C${totalMes.toFixed(2)}</h2>
                 </div>
                 <div className="bg-white p-3 md:p-4 rounded-xl shadow-sm border border-gray-100">
-                    <p className="text-gray-500 text-xs md:text-sm">Recibos este mes</p>
+                    <p className="text-gray-500 text-xs md:text-sm">Recibos este Mes</p>
                     <h2 className="text-xl md:text-2xl font-bold text-blue-600">{recibosMes.length}</h2>
                     <p className="text-xs text-gray-400">Total: C${totalMes.toFixed(2)}</p>
                 </div>

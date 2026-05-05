@@ -68,11 +68,11 @@ function Dashboard() {
             )}
             
             {/* Sidebar */}
-            <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-white transform transition-transform md:relative md:translate-x-0 ${
+            <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-white transform transition-transform md:relative md:translate-x-0 flex flex-col h-screen ${
                 isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
             }`}>
-                
-                <div className="p-4 border-b border-gray-200">
+
+                <nav className="flex-1 mt-4 px-4 space-y-2 overflow-y-auto min-h-0">
                     <div className="flex items-center gap-3 flex-nowrap">
                         {/* LOGO */}
                         <img 
@@ -91,7 +91,7 @@ function Dashboard() {
                             </span>
                         </div>
                     </div>
-                </div>
+                </nav>
 
                 <nav className="mt-4 px-4 space-y-2 overflow-y-auto h-[calc(100vh-80px)]">
                     <button
@@ -223,7 +223,7 @@ function Dashboard() {
                 </nav>
 
                 {/* Footer con info del usuario */}
-                <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 bg-white">
+                <div className="p-4 border-t border-gray-200 bg-white">
                     <div className="flex items-center space-x-3">
                         <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">
                             {user?.username?.charAt(0).toUpperCase() || 'U'}
