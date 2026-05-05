@@ -438,27 +438,38 @@ function MatriculaPage() {
 
                     {/* BOTÓN NUEVA MATRÍCULA */}
                     <button
-                        onClick={() => {
-                            setEditData(null);
-                            setShowModal(true);
-                        }}
-                        className="flex items-center gap-2 text-black px-5 py-0 cursor-pointer rounded-3xl border border-gray-300 hover:bg-blue-300 hover:text-whitetransition h-11"
-                    >
-                        <FiUserPlus className="size-7"/>
-                        <span>Nueva Matrícula</span>
-                    </button>
+                            onClick={() => {
+                                setEditData(null);
+                                setShowModal(true);
+                            }}
+                            className="relative group overflow-hidden px-5 h-11 rounded-3xl hover:cursor-pointer 
+                            bg-green-500 text-white flex items-center gap-2 
+                            transition-all duration-300 hover:bg-green-500 justify-end"
+                            >
+                            {/* Rayo de luz */}
+                            <span className="absolute top-0 left-[-75%] w-[50%] h-full 
+                            bg-gradient-to-r from-transparent via-white/60 to-transparent 
+                            skew-x-12 
+                            group-hover:left-[125%] 
+                            transition-all duration-700"></span>
+
+                            {/* Contenido */}
+                            <span className="relative z-10 flex items-center gap-2">
+                                <FiUserPlus className="size-5" />
+                                Nueva Matrícula
+                            </span>
+                         </button>
                 </div>
 
             {/* TABLA */}
             <div className="max-h-[600px] overflow-y-auto w-full">
-                <div>
+                
                     <table className="w-full">
-                        <thead className="bg-gray-50">
+                        <thead className="bg-gray-50 justify-center">
                             <tr className="border-gray-300">
                                 <th className="p-3 w-[60px]">Código</th>
                                 <th className="p-3 w-[220px]">Nombre</th>
                                 <th className="p-3 w-[180px]">Cédula</th>
-                                <th className="p-3 w-[90px]">Edad</th>
                                 <th className="p-3 w-[90px]">Sexo</th>
                                 <th className="p-3 w-[150px]">Teléfono</th>
                                 <th className="p-3 w-[120px]">Categoría</th>
@@ -468,17 +479,15 @@ function MatriculaPage() {
                         </thead>
 
                         {/*Tabla que muestra los datos */}
-                        <tbody>
+                        <tbody className="justify-center text-center items-center">
                             {loading ? (
                                 <tr><td colSpan="9" className="p-6 text-center">Cargando...</td></tr>
                             ) : displayData.length > 0 ? (
                                 displayData.map(item => (
-                                    <tr key={item.id} className="hover:bg-blue-200 transition">
+                                    <tr key={item.id} className="hover:bg-blue-200 transition justify-center">
                                         <td className="px-2">{item.id}</td>
                                         <td className="px-2">{item.nombre} {item.apellido}</td>
                                         <td className="px-2">{item.cedula}</td>
-                                      
-                                        <td className="px-5">{item.edad}</td>
                                         <td className="px-5">{item.sexo}</td>
                                         <td className="px-7">{item.telefono_movil}</td>
                                         <td className="px-9  text-blue-800 font-bold ">{item.categoria}</td>
@@ -522,7 +531,7 @@ function MatriculaPage() {
                             )}
                         </tbody>
                     </table>
-                </div>
+                
             </div>
         </div>
     </div>

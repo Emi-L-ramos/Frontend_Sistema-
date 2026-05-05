@@ -54,8 +54,9 @@ function MatriculaForm({ initialData, onSave, onError }) {
   
 
     const TIPO_CURSO_OPTIONS = [
-        { value: 'Curso_regular', label: 'Curso Regular' },
-        { value: 'Reforzamiento', label: 'Reforzamiento' }
+        { value: 'Principiante', label: 'Principiante' },
+        { value: 'Intermedio', label: 'Intermedio' },
+        { value: 'Avanzado', label: 'Avanzado' }
     ];
 
     const CATEGORIA_OPTIONS = [
@@ -561,7 +562,30 @@ function MatriculaForm({ initialData, onSave, onError }) {
                     {serverErrors.tipo_curso && <p className="text-red-500 text-xs mt-1">{serverErrors.tipo_curso}</p>}
                 </div>
 
-                {formData.tipo_curso === 'Reforzamiento' && (
+                {formData.tipo_curso === 'Intermedio' && (
+                    <div>
+                        <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
+                        Horas de Reforzamiento <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                        name="horas_reforzamiento"
+                        value={formData.horas_reforzamiento}
+                        onChange={handleChange}
+                        className="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                        >
+                        <option value="">-- Seleccionar horas --</option>
+                        <option value="6">6 horas</option>
+                        <option value="7">7 horas</option>
+                        <option value="8">8 horas</option>
+                        <option value="9">9 horas</option>
+                        <option value="10">10 horas</option>
+                        </select>
+                    </div>
+                )}
+
+
+
+                {formData.tipo_curso === 'Avanzado' && (
                     <div>
                         <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
                         Horas de Reforzamiento <span className="text-red-500">*</span>
@@ -577,11 +601,7 @@ function MatriculaForm({ initialData, onSave, onError }) {
                         <option value="3">3 horas</option>
                         <option value="4">4 horas</option>
                         <option value="5">5 horas</option>
-                        <option value="6">6 horas</option>
-                        <option value="7">7 horas</option>
-                        <option value="8">8 horas</option>
-                        <option value="9">9 horas</option>
-                        <option value="10">10 horas</option>
+               
                         </select>
                     </div>
                 )}
