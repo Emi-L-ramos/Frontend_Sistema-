@@ -239,7 +239,7 @@ function MatriculaPage() {
         } else if (filtroEdad === "mayores50") {
             datosAImprimir = data.filter(item => parseInt(item.edad) > 50);
         } else {
-            datosAImprimir = filteredByAge; // Usar filteredByAge en lugar de displayData
+            datosAImprimir = filteredByAge; 
         }
 
         const ventanaImpresion = window.open('', '_blank');
@@ -451,7 +451,7 @@ function MatriculaPage() {
                     <table className="w-full">
                         <thead className="bg-gray-50">
                             <tr className="border-gray-300">
-                                <th className="p-3 w-[220px]">Código</th>
+                                <th className="p-3 w-[60px]">Código</th>
                                 <th className="p-3 w-[220px]">Nombre</th>
                                 <th className="p-3 w-[180px]">Cédula</th>
                                 <th className="p-3 w-[90px]">Edad</th>
