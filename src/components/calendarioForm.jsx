@@ -35,12 +35,14 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
           listarInstructores(),
           listarMatriculas()
         ]);
-        setInstructores(inst || []);
-        setMatriculas(mats || []);
+        console.log("Datos de instructores recibidos:", inst); // <-- ¡IMPORTANTE!
+        setInstructores(Array.isArray(inst) ? inst : []); // Asegura que sea un array
+        setMatriculas(Array.isArray(mats) ? mats : []);
       } catch (error) {
         console.error("Error:", error);
       }
     };
+
     cargarDatos();
     setForm({ instructor_id: "", matricula_id: "", fecha_inicio: "" });
     setFechasGeneradas([]);
@@ -154,6 +156,7 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
       return;
     }
     if (fechasGeneradas.length < 7) {
+
       setError("Debe crear el bloque de 7 clases teóricas");
       return;
     }
@@ -311,8 +314,9 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
               className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 bg-gray-50 hover:bg-white cursor-pointer"
             >
               <option value="">-- Seleccionar instructor --</option>
-              {instructores.map((i) => (
+                 {instructores.map((i) => (
                 <option key={i.id} value={i.id}>
+
                   {i.nombre || i.first_name || `Instructor ${i.id}`}
                 </option>
               ))}
@@ -395,6 +399,8 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
                 </div>
               )}
             </div>
+
+
             
             {estudianteSeleccionado && (
               <div className="mt-3 p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200">
