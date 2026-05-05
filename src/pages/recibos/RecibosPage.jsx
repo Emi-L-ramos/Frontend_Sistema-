@@ -205,7 +205,14 @@ function RecibosPage() {
                     <button onClick={exportarAExcel} className="bg-white text-black px-3 py-2 rounded-3xl flex items-center gap-2 hover:bg-blue-300 cursor-pointer text-sm">
                         <FiFileText size={16} /> Exportar Todo
                     </button>
-                    <button onClick={() => { setEditData(null); setShowModal(true); }} className="bg-white text-black px-3 py-2 rounded-3xl flex items-center gap-2 hover:bg-blue-300 cursor-pointer text-sm">
+                    <button onClick={() => { setEditData(null); setShowModal(true); }} className="relative group overflow-hidden px-5 h-11 rounded-3xl hover:cursor-pointer 
+                            bg-green-500 text-white flex items-center gap-2 
+                            transition-all duration-300 hover:bg-green-500 justify-end">
+                                <span className="absolute top-0 left-[-75%] w-[50%] h-full 
+                            bg-gradient-to-r from-transparent via-white/60 to-transparent 
+                            skew-x-12 
+                            group-hover:left-[125%] 
+                            transition-all duration-700"></span>
                         <FiPlus size={16} /> Nuevo Recibo
                     </button>
                 </div>
