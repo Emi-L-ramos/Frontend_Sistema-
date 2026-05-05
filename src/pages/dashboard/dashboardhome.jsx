@@ -38,23 +38,49 @@ function DashboardHome() {
   const options = {
     chart: { type: "area", toolbar: { show: false }, zoom: { enabled: false } },
     stroke: { curve: "smooth", width: 3 },
-    colors: ["#facc15"],
+    colors: ["#10b981", "#3b82f6"],
     fill: {
       type: "gradient",
       gradient: { shadeIntensity: 1, opacityFrom: 0.5, opacityTo: 0, stops: [0, 100] },
     },
     grid: { borderColor: "#e5e7eb", strokeDashArray: 4 },
     xaxis: { categories: categorias },
+    yaxis: [
+      {
+        title: { text: "Ganancias (C$)" },
+      },
+      {
+        opposite: true, 
+        title: { text: "Matriculados" },
+      }
+    ],
     tooltip: {
       theme: "dark",
-      y: { formatter: (val) => `C$${val.toLocaleString("es-NI")}` },
+      shared: true,
+      y: [
+        {
+          formatter: (value) => `C$ ${new Intl.NumberFormat('es-NI').format(value || 0)}`,
+        },
+        {
+          formatter: (value) => `${value || 0} estudiantes`,
+        },
+      ],
     },
   };
 
-  const series = [{ name: "Ganancias", data: ganancias.map((item) => item.total) }];
+  const series = [
+    { 
+      name: "Ganancias", 
+      data: ganancias.map((item) => item.total) 
+    },
+    { 
+      name: "Matriculados", 
+      data: ganancias.map((item) => item.matriculados ?? 0) 
+    }
+  ];
 
   return (
-    <div className="space-y-6">
+    <div className="p-6 space-y-6">
       <h1 className="text-black font-bold text-4xl">Dashboard</h1>
       <p className="text-gray-500">
         Período:{" "}
@@ -67,7 +93,7 @@ function DashboardHome() {
           <div>
             <p className="text-gray-500 text-sm">Estudiantes Matriculados</p>
             <h2 className="text-3xl font-bold">
-              {cargando ? "..." : resumen?.matriculados_periodo ?? 0}
+              {cargando ? "..." : resumen?.total_matriculados ?? 0}
             </h2>
             <p className="text-gray-400 text-sm">
               {cargando ? "" : `Total histórico: ${resumen?.total_matriculados ?? 0}`}
@@ -77,26 +103,25 @@ function DashboardHome() {
         </div>
         <div className="bg-white p-6 rounded-2xl shadow-sm flex justify-between items-center">
           <div>
-            <p className="text-gray-500 text-sm">Ingresos Totales</p>
-            <h2 className="text-3xl font-bold text-green-600">
-              {cargando ? "..." : `C$${(resumen?.ingresos_totales ?? 0).toLocaleString("es-NI")}`}
+            <p className="text-gray-500 text-sm">Estudiantes Activos</p>
+            <h2 className="text-3xl font-bold text-blue-600">
+              {cargando ? "..." : resumen?.estudiantes_activos ?? 0}
             </h2>
             <p className="text-gray-400 text-sm">
-              {cargando ? "" : `Este período: C$${(resumen?.ingresos_periodo ?? 0).toLocaleString("es-NI")}`}
+              {cargando ? "" : "Inscritos en el ciclo actual"}
             </p>
           </div>
-          <div className="bg-green-500 p-3 rounded-xl text-white text-xl">💰</div>
+          <div className="bg-green-500 p-3 rounded-xl text-white text-xl">🚗</div>
         </div>
 
         <div className="bg-white p-6 rounded-2xl shadow-sm flex justify-between items-center">
           <div>
-            <p className="text-gray-500 text-sm">Asistencia</p>
+            <p className="text-gray-500 text-sm">Egresados del Mes</p>
             <h2 className="text-3xl font-bold">
-              {cargando ? "..." : `${resumen?.asistencia ?? 0}%`}
+              {cargando ? "..." : `${resumen?.egresados_mes ?? 0}`}
             </h2>
-            <p className="text-gray-400 text-sm">Promedio general</p>
           </div>
-          <div className="bg-purple-500 p-3 rounded-xl text-white text-xl">📋</div>
+          <div className="bg-purple-500 p-3 rounded-xl text-white text-xl">🎓</div>
         </div>
 
       </div>
@@ -104,7 +129,7 @@ function DashboardHome() {
       <div className="bg-white rounded-2xl shadow-sm p-6">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-semibold">Ganancias Mensuales</h3>
-          <span className="text-yellow-500 font-bold text-lg">
+          <span className="text-green-600 font-bold text-lg">
             {cargando ? "..." : `C$${totalGeneral.toLocaleString("es-NI")}`}
           </span>
         </div>
@@ -115,7 +140,7 @@ function DashboardHome() {
           </div>
         ) : ganancias.length === 0 ? (
           <div className="h-[300px] flex items-center justify-center text-gray-400">
-            No hay recibos registrados aún
+            No hay datos registrados aún
           </div>
         ) : (
           <Chart options={options} series={series} type="area" height={300} />
