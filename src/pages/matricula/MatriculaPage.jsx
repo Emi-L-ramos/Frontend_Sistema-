@@ -449,9 +449,9 @@ function MatriculaPage() {
                 </div>
 
             {/* TABLA */}
-            <div className="max-h-[600px] overflow-y-auto overflow-x-hidden w-full">
+            <div className="max-h-[600px] overflow-y-auto w-full">
                 <div>
-                    <table className="table-fixed w-full">
+                    <table className="w-full">
                         <thead className="bg-gray-50">
                             <tr className="border-gray-300">
                                 <th className="p-3 w-[220px]">Código</th>
