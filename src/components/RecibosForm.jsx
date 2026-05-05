@@ -327,7 +327,7 @@ function RecibosForm({ onSave, initialData, matriculas = [] }) {
 
     // === BENEFICIO: monto libre, no se valida contra el total ===
     if (form.tipo_pago === "beneficio") {
-        if  
+        
         // No hay validaciones de monto. Se permite cualquier descuento.
     } else {
         // === Validaciones para COMPLETO y ANTICIPO ===

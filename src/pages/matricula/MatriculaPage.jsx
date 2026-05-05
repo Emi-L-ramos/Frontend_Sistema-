@@ -216,12 +216,13 @@ function MatriculaPage() {
     // Función para enviar WhatsApp
     const enviarWhatsApp = (matricula) => {
         const telefono = matricula.telefono_movil;
+        const driveLink = "https://drive.google.com/drive/folders/1Xo9n8s0l7mLh2j3k4n5o6p7q8r9s0t?usp=sharing"; // Reemplaza con tu enlace real
         if (!telefono) {
             alert("El estudiante no tiene número de teléfono registrado");
             return;
         }
         //Aqui configuramos un mensaje automatico para whatpsap
-        const mensaje = `Hola ${matricula.nombre} ${matricula.apellido || ''}, Tu matricula ha sido registrada exitosamente. Nos complaces comunicarte que te has inscrito en el curso  ${matricula.tipo_curso || ''} de vehiculo para la Categoria ${matricula.categoria}, esperamos que aprobechas al maximo tus clases como teori­ca y practica, ¡Si tienes alguna Consulta no dudes en Comunicarte con nosotros!, Material de estudio: ${driveLink}`;
+        const mensaje = `Hola ${matricula.nombre} ${matricula.apellido || ''}, Tu matricula ha sido registrada exitosamente. Nos complaces comunicarte que te has inscrito en el  ${matricula.tipo_curso || ''} de vehiculo para la Categoria ${matricula.categoria}, esperamos que aprobechas al maximo tus clases como teori­ca y practica, ¡Si tienes alguna Consulta no dudes en Comunicarte con nosotros!, Material de estudio: ${driveLink}`;
         const url = `https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`;
         window.open(url, '_blank');
     };
