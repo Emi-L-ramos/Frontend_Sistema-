@@ -25,7 +25,7 @@ function Dashboard() {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('dashboard');
 
-    // DepuraciÃ³n
+    // Depuración
     console.log("Usuario logueado:", user);
     console.log("Rol del usuario:", user?.rol);
     console.log("Â¿Es admin?", user?.rol === 'admin');
@@ -71,8 +71,8 @@ function Dashboard() {
             <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-white transform transition-transform md:relative md:translate-x-0 flex flex-col h-screen ${
                 isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
             }`}>
-
-                <nav className="flex-1 mt-4 px-4 space-y-2 overflow-y-auto min-h-0">
+                
+                <div className="p-4 border-b border-gray-200">
                     <div className="flex items-center gap-3 flex-nowrap">
                         {/* LOGO */}
                         <img 
@@ -91,9 +91,9 @@ function Dashboard() {
                             </span>
                         </div>
                     </div>
-                </nav>
+                </div>
 
-                <nav className="mt-4 px-4 space-y-2 overflow-y-auto h-[calc(100vh-80px)]">
+               <nav className="mt-4 px-4 space-y-2 overflow-y-auto flex-1">
                     <button
                         onClick={() => { setActiveTab('dashboard'); setIsSidebarOpen(false); }}
                         className={`w-full flex items-center p-3 space-x-3 rounded-xl transition ${
