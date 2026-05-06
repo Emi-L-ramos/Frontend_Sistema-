@@ -19,20 +19,28 @@ import { MdPersonOutline } from "react-icons/md";
 import { LuClipboardCheck } from "react-icons/lu";
 import { IoSchoolOutline } from "react-icons/io5";
 import { FaUsers } from "react-icons/fa";
+import InstructorHome from "./instructorhome";
+import EstudianteHome from "./estudianteshome";
+import { useNavigate } from 'react-router-dom';
 
 function Dashboard() {
-    const { user } = useAuth();
+    const { user, logout } = useAuth();
+    const navigate = useNavigate();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('dashboard');
 
     // Depuración
     console.log("Usuario logueado:", user);
     console.log("Rol del usuario:", user?.rol);
-    console.log("Â¿Es admin?", user?.rol === 'admin');
+    console.log("¿Es admin?", user?.rol === '');
 
     function renderContent() {
+        console.log("renderContent - activeTab:", activeTab, "rol:", user?.rol);
         switch (activeTab) {
             case 'dashboard':
+                if (user?.rol === 'admin') return <DashboardHome />;
+                if (user?.rol === 'instructor') return <InstructorHome />;
+                if (user?.rol === 'estudiante') return <EstudianteHome />;
                 return <DashboardHome />;
             case 'matricula':
                 return <MatriculaPage />;
@@ -172,7 +180,8 @@ function Dashboard() {
                         <TbCalendarTime size={'1.5rem'} />
                         <span>Calendario</span>
                     </button>
-
+                    
+                    {user?.rol !== 'estudiante' && (
                     <button
                         onClick={() => { setActiveTab('notas'); setIsSidebarOpen(false); }}
                         className={`w-full flex items-center p-3 space-x-3 rounded-xl transition ${
@@ -184,6 +193,7 @@ function Dashboard() {
                         <IoSchoolOutline size={'1.5rem'} />
                         <span>Notas</span>
                     </button>
+                    )}
 
                     <button
                         onClick={() => { setActiveTab('plan_studio'); setIsSidebarOpen(false); }}
@@ -197,6 +207,7 @@ function Dashboard() {
                         <span>Plan de Estudio</span>
                     </button>
 
+                    {user?.rol !== 'estudiante' && (
                     <button
                         onClick={() => { setActiveTab('asistencia'); setIsSidebarOpen(false); }}
                         className={`w-full flex items-center p-3 space-x-3 rounded-xl transition ${
@@ -208,6 +219,7 @@ function Dashboard() {
                         <LuClipboardCheck size={'1.5rem'} />
                         <span>Asistencia</span>
                     </button>
+                    )}
 
                     <button
                         onClick={() => { setActiveTab('perfil_estudiante'); setIsSidebarOpen(false); }}
@@ -221,6 +233,7 @@ function Dashboard() {
                         <span>Perfil del Estudiante</span>
                     </button>
                 </nav>
+                
 
                 {/* Footer con info del usuario */}
                 <div className="p-4 border-t border-gray-200 bg-white">
@@ -232,6 +245,15 @@ function Dashboard() {
                             <p className="text-sm font-medium text-gray-700">{user?.username || 'Usuario'}</p>
                             <p className="text-xs text-gray-500 capitalize">Rol: {user?.rol || 'sin rol'}</p>
                         </div>
+                        <button
+                            onClick={() => { logout(); navigate('/login'); }}
+                            className="text-gray-400 hover:text-red-500 transition"
+                            title="Cerrar sesión"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1" />
+                            </svg>
+                        </button>
                     </div>
                 </div>
             </aside>

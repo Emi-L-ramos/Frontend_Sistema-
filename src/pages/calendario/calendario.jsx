@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, Plus, Clock, User } from "lucide-react";
 import { listarCitas, citasDeHoy, listarInstructores } from "../../api/calendario";
 import CalendarioForm from "../../components/calendarioForm.jsx";
 import ModalExamenManual from "../../components/ModalExamenManual.jsx";
+import { useAuth } from "../../context/AuthContext";
 
 const MONTHS = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
 const DAYS = ["Dom","Lun","Mar","Mier","Jue","Vie","Sab"];
@@ -24,7 +25,8 @@ function buildMonthCells(year, month) {
 
 export default function Calendario() {
   const rol = localStorage.getItem("rol");
-  const esInstructor = rol === "instructor";
+  const { user } = useAuth();
+  const esInstructor = user?.rol === "instructor";
 
   const hoy = new Date();
   const [vy, setVy] = useState(hoy.getFullYear());
@@ -199,11 +201,12 @@ export default function Calendario() {
     );
   }
 
+  
   /* ============== VISTA ADMIN ============== */
   return (
     <div className="max-w-[1280px] mx-auto px-8 py-8">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold">Calendario de Instructores</h1>
+        <h1 className="text-3xl font-bold">Calendario</h1>
         <p className="text-sm text-gray-500 mt-1">Asignación de horarios y estudiantes</p>
       </div>
 
@@ -247,6 +250,7 @@ export default function Calendario() {
           </select>
         </div>
         <div className="flex gap-2">
+          {user?.rol !== 'estudiante' && (
           <button
             type="button"
             onClick={() => setModalNueva(true)}
@@ -254,6 +258,9 @@ export default function Calendario() {
           >
             <Plus className="w-4 h-4" /> Nueva Asignación
           </button>
+          )}
+          
+          {user?.rol !== 'estudiante' && (  
           <button
             type="button"
             onClick={() => setModalExamen(true)}
@@ -261,6 +268,7 @@ export default function Calendario() {
           >
             <Plus className="w-4 h-4" /> Examen Manual
           </button>
+          )}
         </div>
       </div>
 

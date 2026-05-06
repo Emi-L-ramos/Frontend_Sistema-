@@ -20,7 +20,7 @@ export const AuthProvider = ({ children }) => {
         const savedToken = localStorage.getItem('token');
         const savedUser = localStorage.getItem('user');
         
-        console.log("ðŸ” Cargando sesiÃ³n guardada:", { savedToken, savedUser });
+        console.log("Cargando sesión guardada:", { savedToken, savedUser });
         
         if (savedToken && savedUser) {
             setToken(savedToken);
@@ -48,7 +48,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem('user');
         setToken(null);
         setUser(null);
-        console.log("ðŸ” LOGOUT - SesiÃ³n cerrada");
+        console.log("LOGOUT - Sesión cerrada");
     };
 
     const tienePermiso = (permiso) => {
@@ -60,7 +60,7 @@ export const AuthProvider = ({ children }) => {
             'instructor': ['']
         };
         
-        const userRol = user?.rol || 'admin';
+        const userRol = user?.rol || '';
         return permisos[userRol]?.includes('*') || permisos[userRol]?.includes(permiso);
     };
 

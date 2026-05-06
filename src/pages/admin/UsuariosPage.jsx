@@ -6,6 +6,8 @@ import Swal from "sweetalert2";
 function UsuariosPage() {
     const { token, user: usuarioActual } = useAuth();
     const [usuarios, setUsuarios] = useState([]);
+    const [matriculas, setMatriculas] = useState([]);
+    const [busquedaMatricula, setBusquedaMatricula] = useState("");
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [editData, setEditData] = useState(null);
@@ -16,7 +18,8 @@ function UsuariosPage() {
         email: "",
         first_name: "",
         last_name: "",
-        rol: ""
+        rol: "",
+        matricula_id: ""
     });
 
     const roles = [
@@ -56,7 +59,8 @@ function UsuariosPage() {
             email: form.email,
             first_name: form.first_name,
             last_name: form.last_name,
-            rol: form.rol
+            rol: form.rol,
+            matricula_id: form.rol === 'estudiante' && form.matricula_id ? { matricula_id: parseInt(form.matricula_id) } : {}
         };
         
         if (form.password) userData.password = form.password;
@@ -120,13 +124,20 @@ function UsuariosPage() {
     const resetForm = () => {
         setForm({
             username: "", password: "", confirm_password: "",
-            email: "", first_name: "", last_name: "", rol: ""
+            email: "", first_name: "", last_name: "", rol: "", matricula_id: "", 
         });
         setEditData(null);
+        setBusquedaMatricula("");
     };
 
     useEffect(() => {
         fetchUsuarios();
+            fetch("http://127.0.0.1:8000/api/matricula/", {
+        headers: { "Authorization": `Token ${token}` }
+        })
+        .then(r => r.json())
+        .then(data => setMatriculas(Array.isArray(data) ? data : []))
+        .catch(console.error);
     }, []);
 
     return (
@@ -206,9 +217,49 @@ function UsuariosPage() {
                                 onChange={e => setForm({...form, last_name: e.target.value})}
                                 className="w-full p-2 border rounded mb-2" />
                             <select value={form.rol} onChange={e => setForm({...form, rol: e.target.value})}
-                                className="w-full p-2 border rounded mb-4">
+                                className="w-full p-2 border rounded mb-4" required>
+                                <option value="" disabled>Selecciona un rol</option>
                                 {roles.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
                             </select>
+
+                            {form.rol === 'estudiante' && (
+                                <div className="relative mb-4">
+                                    <input
+                                        type="text"
+                                        placeholder="Buscar matrícula por nombre o cédula..."
+                                        value={busquedaMatricula}
+                                        onChange={e => {
+                                            setBusquedaMatricula(e.target.value);
+                                            setForm({...form, matricula_id: ""});
+                                        }}
+                                        className="w-full p-2 border rounded"
+                                        required={!form.matricula_id}
+                                    />
+                                    {busquedaMatricula && !form.matricula_id && (
+                                        <div className="absolute z-10 w-full bg-white border rounded shadow-lg max-h-48 overflow-y-auto">
+                                            {matriculas
+                                                .filter(m =>
+                                                    `${m.nombre} ${m.apellido} ${m.cedula}`
+                                                    .toLowerCase()
+                                                    .includes(busquedaMatricula.toLowerCase())
+                                                )
+                                                .map(m => (
+                                                    <div
+                                                        key={m.id}
+                                                        onClick={() => {
+                                                            setForm({...form, matricula_id: m.id});
+                                                            setBusquedaMatricula(`${m.nombre} ${m.apellido} - ${m.cedula}`);
+                                                        }}
+                                                        className="p-2 hover:bg-blue-50 cursor-pointer text-sm"
+                                                    >
+                                                        {m.nombre} {m.apellido} - {m.cedula}
+                                                    </div>
+                                                ))
+                                            }
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                             <div className="flex justify-end gap-2">
                                 <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 border rounded">Cancelar</button>
                                 <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded">Guardar</button>
