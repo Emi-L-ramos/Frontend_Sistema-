@@ -21,17 +21,22 @@ function DashboardHome() {
       fetch("http://localhost:8000/api/dashboard/resumen/", { headers }).then(r => r.json()),
     ])
       .then(([dataGanancias, dataResumen]) => {
-        setGanancias(dataGanancias);
-        setResumen(dataResumen);
+        console.log("Ganancias:", dataGanancias);
+        console.log("Resumen:", dataResumen);
+
+        setGanancias(Array.isArray(dataGanancias) ? dataGanancias : []);
+        setResumen(dataResumen || {});
       })
       .catch(console.error)
       .finally(() => setCargando(false));
   }, []);
 
   const categorias = ganancias.map((item) => {
-    const [, mes] = item.mes.split("-");
+    if (!item.mes) return "";
+    const partes = item.mes.split("-");
+    const mes = partes[1];
     return MESES[mes] ?? item.mes;
-  });
+  });;
 
   const mesActual = new Date().toISOString().slice(0, 7); // "2025-05"
   const totalGeneral = ganancias
@@ -54,7 +59,7 @@ function DashboardHome() {
       },
       {
         opposite: true, 
-        title: { text: "Matriculados" },
+        title: { text: "Resumen" },
       }
     ],
     tooltip: {
@@ -71,16 +76,16 @@ function DashboardHome() {
     },
   };
 
-  const series = [
-    { 
-      name: "Ganancias", 
-      data: ganancias.map((item) => item.total) 
-    },
-    { 
-      name: "Matriculados", 
-      data: ganancias.map((item) => item.matriculados ?? 0) 
-    }
-  ];
+ const series = [
+  { 
+    name: "Ganancias", 
+    data: ganancias.map((item) => Number(item.total || 0)) 
+  },
+  { 
+    name: "Matriculados", 
+    data: ganancias.map((item) => Number(item.matriculados || 0)) 
+  }
+];
 
   return (
     <div className="p-6 space-y-6">
@@ -141,7 +146,12 @@ function DashboardHome() {
             No hay datos registrados aún
           </div>
         ) : (
-          <Chart options={options} series={series} type="area" height={300} />
+          <Chart 
+            options={options} 
+            series={series} 
+            type="area" 
+            height={300} 
+          />
         )}
       </div>
     </div>
