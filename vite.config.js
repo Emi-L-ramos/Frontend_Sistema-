@@ -7,4 +7,7 @@ export default defineConfig({
     react(),
     tailwindcss(), // Asegúrate de que esto esté aquí
   ],
+  server: {
+    open: true, // Esto abrirá automáticamente tu navegador al ejecutar npm run dev
+  },
 })

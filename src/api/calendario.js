@@ -29,20 +29,21 @@ export const listarInstructores = async () => {
 };
 
 // ============ MATRÍCULAS (Estudiantes) ============
+// ============ MATRÍCULAS (Estudiantes aprobados para calendario) ============
 export const listarMatriculas = async () => {
   try {
-    const response = await fetch(`${API_URL}/matricula/`, {
+    const response = await fetch(`${API_URL}/matricula/?estado=aprobado`, {
       headers: getHeaders()
     });
     
     if (!response.ok) {
-      throw new Error("Error al cargar matrículas");
+      throw new Error("Error al cargar matrículas aprobadas");
     }
     
     const data = await response.json();
     return data.results || data;
   } catch (error) {
-    console.error("Error en listar Matriculas:", error);
+    console.error("Error en listar Matriculas aprobadas:", error);
     return [];
   }
 };
@@ -103,7 +104,8 @@ export const crearBloqueCitas = async (data) => {
       body: JSON.stringify({
         instructor_id: parseInt(data.instructor_id),
         matricula_id: parseInt(data.matricula_id),
-        fecha_inicio: data.fecha_inicio
+        fecha_inicio: data.fecha_inicio,
+        horas_por_dia: parseInt(data.horas_por_dia || 2)
       })
     });
     
@@ -122,7 +124,6 @@ export const crearBloqueCitas = async (data) => {
     throw error;
   }
 };
-
 // Eliminar cita
 export const eliminarCita = async (id) => {
   try {
