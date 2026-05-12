@@ -10,6 +10,7 @@ import Asistencia from "../asistencia/asistencia";
 import PerfilEstudiante from "../perfil_studiante/perfil_estudiante";
 import UsuariosPage from "../admin/UsuariosPage";
 import EstudiantesPage from "../estudiantes/EstudiantesPage";
+import ReportePages from "../reportes/ReportesPages"
 
 import { LuLayoutDashboard } from "react-icons/lu";
 import { TbMenu2 } from "react-icons/tb";
@@ -25,6 +26,7 @@ import { PiStudent } from "react-icons/pi";
 import InstructorHome from "./instructorhome";
 import EstudianteHome from "./estudianteshome";
 import { useNavigate } from 'react-router-dom';
+import { FaSquarePollVertical } from "react-icons/fa6";
 
 function Dashboard() {
 
@@ -73,6 +75,9 @@ function Dashboard() {
                 }
 
                 return <DashboardHome />;
+
+            case 'reportes':
+                return <ReportePages />;    
 
             case 'estudiantes':
                 return <EstudiantesPage />;
@@ -161,7 +166,7 @@ function Dashboard() {
                             setActiveTab('dashboard');
                             setIsSidebarOpen(false);
                         }}
-                        className={`w-full flex items-center p-3 space-x-3 rounded-xl transition hover:cursor-pointer ${
+                        className={`w-full flex items-center p-3 space-x-3 rounded-xl transition hover:cursor-pointer  ${
                             activeTab === 'dashboard'
                                 ? 'bg-blue-100 text-blue-500 font-bold'
                                 : 'text-gray-600 hover:bg-blue-50'
@@ -169,6 +174,23 @@ function Dashboard() {
                     >
                         <LuLayoutDashboard size={'1.5rem'} />
                         <span>Dashboard</span>
+                    </button>
+
+
+                     <button
+                        onClick={() => {
+                            setActiveTab('reportes');
+                            setIsSidebarOpen(false);
+                        }}
+                        className={`w-full flex items-center p-3 space-x-3 rounded-xl transition hover:cursor-pointer  ${
+                            activeTab === 'reportes'
+                                ? 'bg-blue-100 text-blue-500 font-bold'
+                                : 'text-gray-600 hover:bg-blue-50'
+                        }`}
+                    >
+                        
+                        <FaSquarePollVertical size={'1.5rem'}/>
+                        <span>Repores</span>
                     </button>
 
                     {user?.rol === 'admin' && (
