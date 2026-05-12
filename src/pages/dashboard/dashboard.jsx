@@ -102,6 +102,9 @@ function Dashboard() {
                 </div>
 
                <nav className="mt-4 px-4 space-y-2 overflow-y-auto flex-1">
+                    <div className="pt-4 mt-4 border-t border-gray-200">
+                        <p className="text-xs text-gray-400 px-3 mb-2">REPORTES</p>
+                    </div>
                     <button
                         onClick={() => { setActiveTab('dashboard'); setIsSidebarOpen(false); }}
                         className={`w-full flex items-center p-3 space-x-3 rounded-xl transition ${
@@ -116,6 +119,9 @@ function Dashboard() {
                             
                     {user?.rol === 'admin' && (
                     <>
+                    <div className="pt-4 mt-4 border-t border-gray-200">
+                        <p className="text-xs text-gray-400 px-3 mb-2">GESTIÓN ADMINISTRATIVA</p>
+                    </div>
                     <button
                         onClick={() => { setActiveTab('matricula'); setIsSidebarOpen(false); }}
                         className={`w-full flex items-center p-3 space-x-3 rounded-xl transition ${
@@ -127,7 +133,6 @@ function Dashboard() {
                         <FiUserPlus size={'1.5rem'} />
                         <span>Matrículas</span>
                     </button>
-
                     <button
                         onClick={() => { setActiveTab('recibos'); setIsSidebarOpen(false); }}
                         className={`w-full flex items-center p-3 space-x-3 rounded-xl transition ${
@@ -137,7 +142,7 @@ function Dashboard() {
                         }`}
                     >
                         <HiOutlineDocumentCurrencyDollar size={'1.5rem'} />
-                        <span>Recibos</span>
+                        <span>Solvencia</span>
                     </button>
                     </>
                     )}
@@ -146,10 +151,6 @@ function Dashboard() {
                     {/* Solo admin puede ver usuarios */}
                     {user?.rol === 'admin' && (
                         <>
-                            <div className="pt-4 mt-4 border-t border-gray-200">
-                                <p className="text-xs text-gray-400 px-3 mb-2">ADMINISTRACIÓN</p>
-                            </div>
-                            
                             <button
                                 onClick={() => { setActiveTab('usuarios'); setIsSidebarOpen(false); }}
                                 className={`w-full flex items-center p-3 space-x-3 rounded-xl transition ${
