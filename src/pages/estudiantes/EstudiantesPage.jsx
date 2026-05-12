@@ -23,7 +23,7 @@ function EstudiantesPage() {
         correo_electronico: "",
         telefono_movil: "",
         nivel_educativo: "",
-        en_caso_de_emergencia: "",
+        nombre_emergencia: "",
         telefono_emergencia: "",
         activo: true,
     });
@@ -71,7 +71,7 @@ function EstudiantesPage() {
             correo_electronico: "",
             telefono_movil: "",
             nivel_educativo: "",
-            en_caso_de_emergencia: "",
+            nombre_emergencia: "",
             telefono_emergencia: "",
             activo: true,
         });
@@ -99,7 +99,7 @@ function EstudiantesPage() {
             correo_electronico: estudiante.correo_electronico || "",
             telefono_movil: estudiante.telefono_movil || "",
             nivel_educativo: estudiante.nivel_educativo || "",
-            en_caso_de_emergencia: estudiante.en_caso_de_emergencia || "",
+            nombre_emergencia: estudiante.nombre_emergencia || "",
             telefono_emergencia: estudiante.telefono_emergencia || "",
             activo: estudiante.activo ?? true,
         });
@@ -482,9 +482,9 @@ function EstudiantesPage() {
 
                                 <input
                                     type="text"
-                                    name="en_caso_de_emergencia"
+                                    name="nombre_emergencia"
                                     placeholder="Contacto de emergencia"
-                                    value={form.en_caso_de_emergencia}
+                                    value={form.nombre_emergencia}
                                     onChange={handleChange}
                                     className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     required

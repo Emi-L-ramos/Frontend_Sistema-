@@ -160,7 +160,7 @@ function RecibosPage() {
     return (
         <div className="h-full">
             <div className="mb-4">
-                <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Recibos de Pago</h1>
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Solvencia</h1>
                 <p className="text-sm text-gray-500">Gestión de pagos y recibos emitidos</p>
             </div>
 

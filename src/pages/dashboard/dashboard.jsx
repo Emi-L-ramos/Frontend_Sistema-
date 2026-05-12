@@ -171,63 +171,25 @@ function Dashboard() {
                         <span>Dashboard</span>
                     </button>
 
-                    {/* ADMIN */}
-                    {esAdmin && (
-                        <>
-
-                            <button
-                                onClick={() => {
-                                    setActiveTab('estudiantes');
-                                    setIsSidebarOpen(false);
-                                }}
-                                className={`w-full flex items-center p-3 space-x-3 rounded-xl transition hover:cursor-pointer ${
-                                     activeTab === 'estudiantes'
-                                        ? 'bg-blue-100 text-blue-500 font-bold'
-                                        : 'text-gray-600 hover:bg-blue-50'
-                                }`}
-                            >
-                                <PiStudent size={'1.5rem'}/>
-                                <span>Estudiantes</span>
-                            </button>
-                                </>
-                            )}
-
-
-                            <button
-                                onClick={() => {
-                                    setActiveTab('matricula');
-                                    setIsSidebarOpen(false);
-                                }}
-                                className={`w-full flex items-center p-3 space-x-3 rounded-xl transition hover:cursor-pointer ${
-                                    activeTab === 'matricula'
-                                        ? 'bg-blue-100 text-blue-500 font-bold'
-                                        : 'text-gray-600 hover:bg-blue-50'
-                                }`}
-                            >
-                                <FiUserPlus size={'1.5rem'} />
-                                <span>Matrículas</span>
-                            </button>
-
-                            <button
-                                onClick={() => {
-                                    setActiveTab('recibos');
-                                    setIsSidebarOpen(false);
-                                }}
-                                className={`w-full flex items-center p-3 space-x-3 rounded-xl transition hover:cursor-pointer ${
-                                    activeTab === 'recibos'
-                                        ? 'bg-blue-100 text-blue-500 font-bold'
-                                        : 'text-gray-600 hover:bg-blue-50'
-                                }`}
-                            >
-                                <HiOutlineDocumentCurrencyDollar size={'1.5rem'} />
-                                <span>Recibos</span>
-                            </button>
-
                     {user?.rol === 'admin' && (
                     <>
                     <div className="pt-4 mt-4 border-t border-gray-200">
                         <p className="text-xs text-gray-400 px-3 mb-2">GESTIÓN ADMINISTRATIVA</p>
                     </div>
+                    <button
+                        onClick={() => {
+                            setActiveTab('estudiantes');
+                            setIsSidebarOpen(false);
+                        }}
+                        className={`w-full flex items-center p-3 space-x-3 rounded-xl transition ${
+                            activeTab === 'estudiantes'
+                                ? 'bg-blue-100 text-blue-500 font-bold'
+                                : 'text-gray-600 hover:bg-blue-50'
+                        }`}
+                    >
+                        <PiStudent size={'1.5rem'} />
+                        <span>Estudiantes</span>
+                    </button>
                     <button
                         onClick={() => { setActiveTab('matricula'); setIsSidebarOpen(false); }}
                         className={`w-full flex items-center p-3 space-x-3 rounded-xl transition ${
@@ -444,7 +406,7 @@ function Dashboard() {
                 {/* MAIN */}
                 <main className="flex-1 overflow-y-auto p-2 md:p-4">
                     {renderContent()}
-                </main>s
+                </main>
 
             </div>
 

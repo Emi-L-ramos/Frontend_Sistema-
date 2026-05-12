@@ -344,6 +344,20 @@ function RecibosForm({ onSave, initialData }) {
         });
     };
 
+    useEffect(() => {
+        if (
+            form.tipo_pago === "anticipo" &&
+            saldoInfo &&
+            Number(saldoInfo.total_pagado || 0) > 0 &&
+            Number(saldoInfo.saldo_pendiente || 0) > 0
+        ) {
+            setForm((prev) => ({
+                ...prev,
+                monto_pagado: String(redondearMonto(saldoInfo.saldo_pendiente || 0)),
+            }));
+        }
+    }, [form.tipo_pago, saldoInfo]);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
@@ -430,13 +444,18 @@ function RecibosForm({ onSave, initialData }) {
         }
 
         if (monto > saldoPendiente) {
-            Swal.fire(
-                "Monto excedido",
-                `El monto no puede exceder el saldo pendiente: C$${Math.round(saldoPendiente)}.`,
-                "error"
-            );
-            setLoading(false);
-            return;
+            
+            const totalPagadoPrevio = Number(saldoInfo.total_pagos || 0);
+
+            if (totalPagadoPrevio > 0 && Math.round(monto) !== Math.round(saldoPendiente)) {
+                Swal.fire(
+                    "Monto incorrecto",
+                    `El segundo anticipo debe ser exactamente el saldo pendiente: C$${Math.round(saldoPendiente)}.`,
+                    "error"
+                );
+                setLoading(false);
+                return;
+            }
         }
     }
         const token = localStorage.getItem("token");
@@ -534,13 +553,33 @@ function RecibosForm({ onSave, initialData }) {
             ? Number(valorCursoActual?.cantidad_horas || form.cantidad || 0)
             : Number(form.horas_reforzamiento || 0);
 
-    const montoAnticipo = parseFloat(form.monto_pagado || 0);
+   const montoAnticipo = parseFloat(form.monto_pagado || 0);
+    const cantidadPagos = Number(saldoInfo?.cantidad_pagos || 0);
+    const totalPagadoPrevio = Number(saldoInfo?.total_pagado || 0);
+    const saldoPendienteBackend = Number(saldoInfo?.saldo_pendiente || 0);
+
+    const esSegundoAnticipo =
+        form.tipo_pago === "anticipo" &&
+        saldoInfo &&
+        Number(saldoInfo.total_pagado || 0) > 0 &&
+        Number(saldoInfo.saldo_pendiente || 0) > 0;
+
+    const saldoBase =
+        saldoInfo && saldoPendienteBackend > 0
+            ? saldoPendienteBackend
+            : totalCurso;
+
+    const montoMostrado =
+        form.tipo_pago === "beneficio"
+            ? 0
+            : montoAnticipo;
 
     const saldoPendienteLocal =
-        form.tipo_pago === "anticipo" && montoAnticipo > 0 && totalCurso > 0
-            ? redondearMonto(totalCurso - montoAnticipo)
-            : null;
-
+        saldoInfo
+            ? redondearMonto(saldoPendienteBackend)
+            : totalCurso > 0
+                ? redondearMonto(totalCurso - montoMostrado)
+                : null;
     return (
         <form onSubmit={handleSubmit} className="space-y-6">
             <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
@@ -578,13 +617,17 @@ function RecibosForm({ onSave, initialData }) {
                     <div className="mt-3 pt-3 border-t border-blue-200 grid grid-cols-3 gap-2 text-center text-sm">
                         <div>
                             <p className="text-gray-500">Total</p>
-                            <p className="font-bold text-gray-800">C$ {totalCurso}</p>
+                            <p className="font-bold text-gray-800">
+                                C$ {redondearMonto(saldoInfo?.monto_total || totalCurso)}
+                            </p>
                         </div>
 
                         <div>
-                            <p className="text-gray-500">Anticipo</p>
+                            <p className="text-gray-500">
+                                {Number(saldoInfo?.total_pagado || 0) > 0 ? "Pagado" : "Anticipo"}
+                            </p>
                             <p className="font-bold text-green-600">
-                                C$ {redondearMonto(montoAnticipo)}
+                                C$ {redondearMonto(Number(saldoInfo?.total_pagado || 0) || montoAnticipo)}
                             </p>
                         </div>
 
@@ -867,11 +910,11 @@ function RecibosForm({ onSave, initialData }) {
                         value={form.monto_pagado}
                         onChange={handleChange}
                         className={`w-full p-2 border rounded ${
-                            form.tipo_pago === "completo" || form.tipo_pago === "beneficio"
+                            form.tipo_pago === "completo" || form.tipo_pago === "beneficio" || esSegundoAnticipo
                                 ? "bg-gray-100"
                                 : ""
                         }`}
-                        readOnly={form.tipo_pago === "completo" || form.tipo_pago === "beneficio"}
+                        readOnly={form.tipo_pago === "completo" || form.tipo_pago === "beneficio" || esSegundoAnticipo}
                         required={form.tipo_pago !== "beneficio"}
                     />
                 </div>
