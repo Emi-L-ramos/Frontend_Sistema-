@@ -75,9 +75,6 @@ function MatriculaForm({ initialData, onSave, onError }) {
         }
     }, [initialData]);
 
-
-
-
     const cargarcategorias = async () => {
         try {
              

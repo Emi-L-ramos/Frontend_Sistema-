@@ -4,13 +4,13 @@ import DashboardHome from "./dashboardhome";
 import MatriculaPage from "../matricula/MatriculaPage";
 import RecibosPage from "../recibos/RecibosPage";
 import Calendario from "../calendario/calendario";
-import Notas from "../nota/notas";
+import NotasPages from "../nota/notas";
 import PlanStudio from "../plan_studio/plan_studio";
 import Asistencia from "../asistencia/asistencia";
 import PerfilEstudiante from "../perfil_studiante/perfil_estudiante";
 import UsuariosPage from "../admin/UsuariosPage";
 import EstudiantesPage from "../estudiantes/EstudiantesPage";
-import ReportePages from "../reportes/ReportesPages"
+import ReportesPages from "../reportes/ReportesPages";
 
 import { LuLayoutDashboard } from "react-icons/lu";
 import { TbMenu2 } from "react-icons/tb";
@@ -77,7 +77,8 @@ function Dashboard() {
                 return <DashboardHome />;
 
             case 'reportes':
-                return <ReportePages />;    
+                // Pasamos el rol actual al componente de reportes
+                 return <ReportesPages userRole={rol} />;
 
             case 'estudiantes':
                 return <EstudiantesPage />;
@@ -92,7 +93,7 @@ function Dashboard() {
                 return <Calendario />;
 
             case 'notas':
-                return <Notas />;
+                return <NotasPages userRole={rol} />;
 
             case 'plan_studio':
                 return <PlanStudio />;
@@ -176,22 +177,29 @@ function Dashboard() {
                         <span>Dashboard</span>
                     </button>
 
+                    {/* Cambiamos la lógica para permitir admin O instructor */}
+                        {(esAdmin || esInstructor) && (
+                            <>
+                                <button
+                                    onClick={() => {
+                                        setActiveTab('reportes');
+                                        setIsSidebarOpen(false);
+                                    }}
+                                    className={`w-full flex items-center p-3 space-x-3 rounded-xl transition hover:cursor-pointer ${
+                                        activeTab === 'reportes'
+                                            ? 'bg-blue-100 text-blue-500 font-bold'
+                                            : 'text-gray-600 hover:bg-blue-50'
+                                    }`}
+                                >
+                                    <FaSquarePollVertical size={'1.5rem'} />
+                                    <span>Reportes</span>
+                                </button>
+                            </>
+                        )}
 
-                     <button
-                        onClick={() => {
-                            setActiveTab('reportes');
-                            setIsSidebarOpen(false);
-                        }}
-                        className={`w-full flex items-center p-3 space-x-3 rounded-xl transition hover:cursor-pointer  ${
-                            activeTab === 'reportes'
-                                ? 'bg-blue-100 text-blue-500 font-bold'
-                                : 'text-gray-600 hover:bg-blue-50'
-                        }`}
-                    >
-                        
-                        <FaSquarePollVertical size={'1.5rem'}/>
-                        <span>Repores</span>
-                    </button>
+
+
+                    
 
                     {user?.rol === 'admin' && (
                     <>
@@ -237,6 +245,8 @@ function Dashboard() {
                     </>
                     )}
 
+
+                    
 
                     {/* Solo admin puede ver usuarios */}
                     {user?.rol === 'admin' && (
@@ -284,7 +294,7 @@ function Dashboard() {
                     </button>
 
                     {/* NOTAS */}
-                    {!esEstudiante && (
+                    {(esEstudiante || esAdmin || esInstructor) && (
                         <button
                             onClick={() => {
                                 setActiveTab('notas');
