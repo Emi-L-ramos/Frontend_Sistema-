@@ -28,22 +28,21 @@ export const listarInstructores = async () => {
   }
 };
 
-// ============ MATRÍCULAS (Estudiantes) ============
 // ============ MATRÍCULAS (Estudiantes aprobados para calendario) ============
 export const listarMatriculas = async () => {
   try {
-    const response = await fetch(`${API_URL}/matricula/?estado=aprobado`, {
+    const response = await fetch(`${API_URL}/matricula/?estado=matriculado`, {
       headers: getHeaders()
     });
     
     if (!response.ok) {
-      throw new Error("Error al cargar matrículas aprobadas");
+      throw new Error("Error al cargar Matrículas");
     }
     
     const data = await response.json();
     return data.results || data;
   } catch (error) {
-    console.error("Error en listar Matriculas aprobadas:", error);
+    console.error("Error en listar Matrículas:", error);
     return [];
   }
 };

@@ -24,9 +24,12 @@ function buildMonthCells(year, month) {
 }
 
 export default function Calendario() {
-  const rol = localStorage.getItem("rol");
   const { user } = useAuth();
-  const esInstructor = user?.rol === "instructor";
+
+  const rol = String(user?.rol || "").toLowerCase();
+  const esAdmin = rol === "admin";
+  const esInstructor = rol === "instructor";
+  const esEstudiante = rol === "estudiante";
 
   const hoy = new Date();
   const [vy, setVy] = useState(hoy.getFullYear());
@@ -245,12 +248,14 @@ export default function Calendario() {
           >
             <option value="all">Todos los instructores</option>
             {instructores.map((i) => (
-              <option key={i.id} value={i.id}>{i.nombre}</option>
+              <option key={i.id} value={i.id}>
+                {i.nombre_completo || `${i.nombre || ""} ${i.apellido || ""}`.trim() || `Instructor ${i.id}`}
+              </option>
             ))}
           </select>
         </div>
         <div className="flex gap-2">
-          {user?.rol !== 'estudiante' && (
+          {esAdmin && (
           <button
             type="button"
             onClick={() => setModalNueva(true)}
@@ -260,13 +265,13 @@ export default function Calendario() {
           </button>
           )}
           
-          {user?.rol !== 'estudiante' && (  
+          {esInstructor && (  
           <button
             type="button"
             onClick={() => setModalExamen(true)}
             className="inline-flex items-center gap-2 bg-orange-600 hover:bg-orange-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium"
           >
-            <Plus className="w-4 h-4" /> Examen Manual
+            <Plus className="w-4 h-4" /> Examen Policial
           </button>
           )}
         </div>

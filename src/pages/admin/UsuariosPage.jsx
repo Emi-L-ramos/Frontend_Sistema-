@@ -482,6 +482,7 @@ function UsuariosPage() {
                                     placeholder="Nombres"
                                     value={form.first_name}
                                     onChange={e => setForm({ ...form, first_name: e.target.value })}
+                                    required={form.rol === "instructor"}
                                     className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 />
 
@@ -490,6 +491,7 @@ function UsuariosPage() {
                                     placeholder="Apellidos"
                                     value={form.last_name}
                                     onChange={e => setForm({ ...form, last_name: e.target.value })}
+                                    required={form.rol === "instructor"}
                                     className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 />
                             </div>
