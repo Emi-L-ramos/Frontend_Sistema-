@@ -105,6 +105,9 @@ function NotasPages({ userRole }) {
 
 
         {rol === "instructor" && (
+
+
+
           <button
             onClick={() => setModalAbierto(true)}
             className="flex items-center justify-center gap-2 bg-blue-600 text-white px-5 py-3 rounded-xl font-semibold hover:bg-blue-700 transition"
@@ -145,9 +148,11 @@ function TablaAdmin({ notas }) {
             <Th>Estudiante</Th>
             <Th>Cédula</Th>
             <Th>Instructor</Th>
-            <Th>Plan de estudio</Th>
             <Th>Curso</Th>
             <Th>Modalidad</Th>
+            <Th>Nota práctica</Th>
+            <Th>Resultado</Th>
+            <Th>Comentario</Th>
           </tr>
         </thead>
 
@@ -157,13 +162,26 @@ function TablaAdmin({ notas }) {
               <TdBold>{nota.estudiante_nombre}</TdBold>
               <Td>{nota.estudiante_cedula}</Td>
               <Td>{nota.instructor_nombre}</Td>
-              <Td>{nota.plan_nombre}</Td>
+            
               <Td>
                 <Badge color="purple">{nota.tipo_curso}</Badge>
               </Td>
               <Td>
                 <Badge color="green">{nota.modalidad}</Badge>
               </Td>
+              <Td>
+                <Badge color={Number(nota.nota) >= 70 ? "green" : "red"}>
+                  {nota.nota}
+                </Badge>
+              </Td>
+
+              <Td>
+                <Badge color={Number(nota.nota) >= 70 ? "green" : "red"}>
+                  {Number(nota.nota) >= 70 ? "Aprobado" : "Reprobado"}
+                </Badge>
+              </Td>
+
+              <Td>{nota.comentario || "Sin comentario"}</Td>
             </tr>
           ))}
         </tbody>
@@ -180,11 +198,13 @@ function TablaInstructor({ notas }) {
       <table className="w-full min-w-[1100px]">
         <thead>
           <tr className="border-b border-slate-200">
-            <Th>Estudiante</Th>
+           <Th>Estudiante</Th>
             <Th>Cédula</Th>
-            <Th>Plan de estudio</Th>
             <Th>Curso</Th>
             <Th>Modalidad</Th>
+            <Th>Nota práctica</Th>
+            <Th>Resultado</Th>
+            <Th>Comentario</Th>
 
             {/*
             <Th>Nota</Th>
@@ -197,15 +217,21 @@ function TablaInstructor({ notas }) {
         <tbody>
           {notas.map((nota) => (
             <tr key={nota.id} className="border-b border-slate-200 hover:bg-slate-50 transition">
-              <TdBold>{nota.estudiante_nombre}</TdBold>
-              <Td>{nota.estudiante_cedula}</Td>
-              <Td>{nota.plan_nombre}</Td>
+
               <Td>
-                <Badge color="purple">{nota.tipo_curso}</Badge>
+                <Badge color={Number(nota.nota) >= 70 ? "green" : "red"}>
+                  {nota.nota}
+                </Badge>
               </Td>
+
               <Td>
-                <Badge color="green">{nota.modalidad}</Badge>
+                <Badge color={Number(nota.nota) >= 70 ? "green" : "red"}>
+                  {Number(nota.nota) >= 70 ? "Aprobado" : "Reprobado"}
+                </Badge>
               </Td>
+
+              <Td>{nota.comentario || "Sin comentario"}</Td>
+                        
 
               {/*
               <td className="px-6 py-7">
@@ -249,10 +275,8 @@ function TablaEstudiante({ notas }) {
         <thead>
           <tr className="border-b border-slate-200">
             <Th>Instructor</Th>
-            <Th>Plan de estudio</Th>
-            <Th>Curso</Th>
-            <Th>Modalidad</Th>
-
+          
+         
             {/*
             <Th>Nota</Th>
             <Th>Comentario</Th>
@@ -262,20 +286,29 @@ function TablaEstudiante({ notas }) {
 
         <tbody>
           {notas.map((nota) => (
-            <tr key={nota.id} className="border-b border-slate-200 hover:bg-slate-50 transition">
+            <tr
+              key={nota.id}
+              className="border-b border-slate-200 hover:bg-slate-50 transition"
+            >
               <TdBold>{nota.instructor_nombre}</TdBold>
-              <Td>{nota.plan_nombre}</Td>
+
               <Td>
                 <Badge color="purple">{nota.tipo_curso}</Badge>
               </Td>
+
               <Td>
-                <Badge color="green">{nota.modalidad}</Badge>
+                <Badge color={Number(nota.nota) >= 70 ? "green" : "red"}>
+                  {nota.nota}
+                </Badge>
               </Td>
 
-              {/*
-              <Td>{nota.nota}</Td>
-              <Td>{nota.comentario}</Td>
-              */}
+              <Td>
+                <Badge color={Number(nota.nota) >= 70 ? "green" : "red"}>
+                  {Number(nota.nota) >= 70 ? "Aprobado" : "Reprobado"}
+                </Badge>
+              </Td>
+
+              <Td>{nota.comentario || "Sin comentario"}</Td>
             </tr>
           ))}
         </tbody>
@@ -322,6 +355,7 @@ function Badge({ children, color }) {
   const colores = {
     purple: "bg-purple-100 text-purple-700",
     green: "bg-green-100 text-green-700",
+    red: "bg-red-100 text-red-700",
   };
 
   return (
