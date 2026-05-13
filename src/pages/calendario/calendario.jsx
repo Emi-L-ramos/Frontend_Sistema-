@@ -159,7 +159,7 @@ export default function Calendario() {
                       <div
                         key={a.id}
                         className={`rounded px-1.5 py-1 text-[11px] leading-tight ${
-                          parseInt(a.numero_clase) === 9
+                          a.es_examen
                             ? "bg-orange-300 text-orange-900"
                             : "bg-blue-300 text-blue-900"
                         }`}
@@ -186,7 +186,9 @@ export default function Calendario() {
                 </div>
                 <div>
                   <div className="font-medium text-sm">{c.estudiante_nombre}</div>
-                  <div className="text-sm text-gray-600 mt-0.5">Clase {c.numero_clase}/8</div>
+                  <div className="text-sm text-gray-600 mt-0.5">
+                  Clase {c.numero_clase}/{c.total_clases || clasesMes.filter(x => x.matricula === c.matricula && parseInt(x.numero_clase) !== 9).length}
+                </div>
                   <div className="text-xs text-gray-400 mt-0.5">Horario: {c.horario}</div>
                 </div>
               </div>
@@ -356,7 +358,9 @@ export default function Calendario() {
                 </div>
                 <div className="text-sm text-gray-500 mt-1">Instructor: {a.instructor_nombre}</div>
                 <div className={`text-xs mt-1 font-semibold ${parseInt(a.numero_clase) === 9 ? "text-red-500" : "text-gray-400"}`}>
-                    {parseInt(a.numero_clase) === 9 ? "ðŸŽ“ EXAMEN" : `Clase ${a.numero_clase}/8`}
+                    {a.es_examen
+                      ? "🎓 EXAMEN POLICIAL"
+                      : `Clase ${a.numero_clase}/${citas.filter(x => x.matricula === a.matricula && !x.es_examen).length}`}
                   </div>
               </div>
             ))}
