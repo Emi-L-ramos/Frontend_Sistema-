@@ -35,7 +35,7 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
           listarInstructores(),
           listarMatriculas()
         ]);
-        console.log("Datos de instructores recibidos:", inst); // <-- ¡IMPORTANTE!
+        console.log("Datos de instructores recibidos:", inst); 
         setInstructores(Array.isArray(inst) ? inst : []); // Asegura que sea un array
         setMatriculas(Array.isArray(mats) ? mats : []);
       } catch (error) {
@@ -57,33 +57,53 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
   }, [abierto]);
 
   const estudiantesFiltrados = useMemo(() => {
-    if (!busquedaEstudiante.trim()) return matriculas;
-    const busqueda = busquedaEstudiante.toLowerCase();
-    return matriculas.filter(est => 
-      est.nombre?.toLowerCase().includes(busqueda) ||
-      est.apellido?.toLowerCase().includes(busqueda) ||
-      est.cedula?.includes(busqueda) ||
-      `${est.nombre} ${est.apellido}`.toLowerCase().includes(busqueda)
-    );
+      const matriculasValidas = matriculas.filter(
+          (mat) => String(mat.estado || "").toLowerCase() === "matriculado"
+      );
+
+      if (!busquedaEstudiante.trim()) return matriculasValidas;
+
+      const busqueda = busquedaEstudiante.toLowerCase();
+
+      return matriculasValidas.filter((mat) => {
+          const texto = `
+              ${mat.estudiante_nombre || ""}
+              ${mat.estudiante_cedula || ""}
+              ${mat.tipo_curso || ""}
+              ${mat.horario || ""}
+          `.toLowerCase();
+
+          return texto.includes(busqueda);
+      });
   }, [matriculas, busquedaEstudiante]);
 
     const generarFechas = (fechaInicio) => {
-      if (!fechaInicio) return [];
-      const tipo = estudianteSeleccionado?.tipo_curso;
-     const numClases = tipo === "Reforzamiento"
-      ? Math.floor((estudianteSeleccionado?.horas_clases || 16) / horasPorDia)
-      : Math.floor(16 / horasPorDia);
+      if (!fechaInicio || !estudianteSeleccionado) return [];
+
+      const modalidad = String(estudianteSeleccionado.modalidad || "").toLowerCase();
+      const tipoCurso = String(estudianteSeleccionado.tipo_curso || "").toLowerCase();
+
+      const horasTotales =
+        tipoCurso === "intermedio" || tipoCurso === "avanzado"
+          ? Number(estudianteSeleccionado.horas_reforzamiento || 0)
+          : 16;
+
+      const numClases = Math.ceil(horasTotales / horasPorDia);
+
       const fechas = [];
-      let fecha = new Date(fechaInicio);
-      let clasesCreadas = 0;
-      while (clasesCreadas < numClases) {
+      let fecha = new Date(fechaInicio + "T00:00:00");
+
+      while (fechas.length < numClases) {
         const dia = fecha.getDay();
-        const permitido = tipo === "Reforzamiento"
-          ? (dia === 0 || dia === 6)
-          : (dia >= 1 && dia <= 5);
+        const esFinSemana = dia === 0 || dia === 6;
+
+        const permitido =
+          modalidad === "extraordinario"
+            ? esFinSemana
+            : !esFinSemana;
+
         if (permitido) {
           fechas.push(new Date(fecha));
-          clasesCreadas++;
         }
         fecha.setDate(fecha.getDate() + 1);
       }
@@ -101,13 +121,21 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
     }
   };
 
-  const seleccionarEstudiante = (estudiante) => {
-    console.log("tipo_curso recibido:", estudiante.tipo_curso);
-    setEstudianteSeleccionado(estudiante);
-    setForm({ ...form, matricula_id: estudiante.id });
-    setBusquedaEstudiante(`${estudiante.nombre} ${estudiante.apellido || ''} - ${estudiante.cedula || 'Sin cédula'}`);
-    setMostrarDropdownEstudiante(false);
-    actualizarFechaMinima(estudiante);
+  const seleccionarEstudiante = (matricula) => {
+      if (String(matricula.estado || "").toLowerCase() !== "matriculado") {
+          setError("Solo se pueden asignar clases a estudiantes con matrícula pagada.");
+          return;
+      }
+
+      setEstudianteSeleccionado(matricula);
+      setForm({ ...form, matricula_id: matricula.id });
+
+      setBusquedaEstudiante(
+          `${matricula.estudiante_nombre || "Sin nombre"} - ${matricula.estudiante_cedula || "Sin cédula"}`
+      );
+
+      setMostrarDropdownEstudiante(false);
+      actualizarFechaMinima(matricula);
   };
 
   const limpiarEstudiante = () => {
@@ -119,16 +147,21 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
   };
 
   const seleccionarFecha = (fecha) => {
-  const tipo = estudianteSeleccionado?.tipo_curso;
+  const modalidad = String(estudianteSeleccionado?.modalidad || "").toLowerCase();
   const dia = fecha.getDay();
-  const permitido = tipo === "Reforzamiento"
-    ? (dia === 0 || dia === 6)
-    : (dia >= 1 && dia <= 5);
+  const esFinSemana = dia === 0 || dia === 6;
+
+  const permitido =
+    modalidad === "extraordinario"
+      ? esFinSemana
+      : !esFinSemana;
 
   if (!permitido) {
-    setError(tipo === "Reforzamiento"
-      ? "Modalidad Extraordinaria: solo sábados y domingos"
-      : "Modalidad Regular: solo lunes a viernes");
+    setError(
+      modalidad === "extraordinario"
+        ? "Modalidad extraordinaria: solo se permite sábado y domingo."
+        : "Modalidad ordinaria: solo se permite lunes a viernes."
+    );
     return;
   }
 
@@ -316,8 +349,7 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
               <option value="">-- Seleccionar instructor --</option>
                  {instructores.map((i) => (
                 <option key={i.id} value={i.id}>
-
-                  {i.nombre || i.first_name || `Instructor ${i.id}`}
+                  {i.nombre_completo || `${i.nombre || ""} ${i.apellido || ""}`.trim() || `Instructor ${i.id}`}
                 </option>
               ))}
             </select>
@@ -347,7 +379,7 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
                   onFocus={() => {
                     setMostrarDropdownEstudiante(true);
                     if (estudianteSeleccionado && busquedaEstudiante === "") {
-                      setBusquedaEstudiante(`${estudianteSeleccionado.nombre} ${estudianteSeleccionado.apellido || ''} - ${estudianteSeleccionado.cedula || 'Sin cédula'}`);
+                      setBusquedaEstudiante(`${estudianteSeleccionado.estudiante_nombre || "Sin nombre"} ${estudianteSeleccionado.estudiante_apellido || ''} - ${estudianteSeleccionado.estudiante_cedula || "Sin cédula"}`);
                     }
                   }}
                   onBlur={() => {
@@ -385,9 +417,9 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
                       >
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="font-medium text-gray-800 text-sm">{est.nombre} {est.apellido || ''}</p>
+                            <p className="font-medium text-gray-800 text-sm">{est.estudiante_nombre || "Sin nombre"}</p>
                             <p className="text-xs text-gray-500">
-                              Cedula: {est.cedula || 'N/A'} | Horario: {est.horario || 'No definido'}
+                              Cédula: {est.estudiante_cedula || "N/A"} | Horario: {est.horario || "No definido"} | Curso: {est.tipo_curso || "N/A"}
                               {est.f_matricula && <span className="ml-2">Matrícula: {new Date(est.f_matricula).toLocaleDateString()}</span>}
                             </p>
                           </div>
@@ -411,10 +443,10 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
                     </div>
                     <div>
                       <p className="text-sm font-semibold text-green-800">
-                        {estudianteSeleccionado.nombre} {estudianteSeleccionado.apellido || ''}
+                        {estudianteSeleccionado.estudiante_nombre || "Sin nombre"}
                       </p>
                       <p className="text-xs text-green-600">
-                        Cédula: {estudianteSeleccionado.cedula || 'N/A'} | Horario: {estudianteSeleccionado.horario || '8:00 AM - 10:00 AM'}
+                        Cédula: {estudianteSeleccionado.estudiante_cedula || "N/A"} | Horario: {estudianteSeleccionado.horario || "No definido"} | Curso: {estudianteSeleccionado.tipo_curso || "N/A"}
                         {estudianteSeleccionado.f_matricula && (
                           <span className="ml-2">Matrícula: {new Date(estudianteSeleccionado.f_matricula).toLocaleDateString()}</span>
                         )}
@@ -450,12 +482,6 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
               Seleccionar Fecha de Inicio
               <span className="text-red-500">*</span>
             </label>
-            
-            {fechaMinima && (
-              <div className="mb-2 text-xs text-orange-600 bg-orange-50 p-2 rounded-lg">
-                Fecha mínima permitida: {formatearFecha(fechaMinimaStr)}
-              </div>
-            )}
             
             <div className="relative">
               <div 
@@ -495,32 +521,36 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
                       const hoy = new Date().toISOString().split('T')[0];
                       const esHoy = fechaStr === hoy;
                       const esSeleccionada = fechaStr === form.fecha_inicio;
-                      const tipoCurso = estudianteSeleccionado?.tipo_curso;
+                      const modalidad = String(estudianteSeleccionado?.modalidad || "").toLowerCase();
                       const diaNum = dia.fecha.getDay();
-                      const esFinSemana = tipoCurso === "Reforzamiento"
-                        ? (diaNum >= 1 && diaNum <= 5)
-                        : (diaNum === 0 || diaNum === 6);
+                      const esFinSemana = diaNum === 0 || diaNum === 6;
+
+                      const fechaBloqueada =
+                        modalidad === "extraordinario"
+                          ? !esFinSemana
+                          : esFinSemana;
+
                       const esPasado = fechaMinima && dia.fecha < fechaMinima;
                                             
                       return (
                         <button
                           key={idx}
                           type="button"
-                          onClick={() => !esPasado && !esFinSemana && seleccionarFecha(dia.fecha)}
-                          disabled={esPasado || esFinSemana}
+                          onClick={() => !esPasado && !fechaBloqueada && seleccionarFecha(dia.fecha)}
+                          disabled={esPasado || fechaBloqueada}
                           className={`
                             relative py-3 rounded-xl text-sm font-medium transition-all duration-200
                             ${!dia.isCurrentMonth ? 'text-gray-300' : 'text-gray-700'}
                             ${esHoy && dia.isCurrentMonth ? 'ring-2 ring-purple-300' : ''}
                             ${esSeleccionada ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md scale-105' : ''}
-                            ${!esSeleccionada && !esPasado && !esFinSemana && dia.isCurrentMonth ? 'hover:bg-purple-100 hover:scale-105 cursor-pointer' : ''}
-                            ${esFinSemana && dia.isCurrentMonth ? 'bg-red-50 text-red-300 cursor-not-allowed' : ''}
+                            ${!esSeleccionada && !esPasado && !fechaBloqueada && dia.isCurrentMonth ? 'hover:bg-purple-100 hover:scale-105 cursor-pointer' : ''}
+                            ${fechaBloqueada && dia.isCurrentMonth ? 'bg-red-50 text-red-300 cursor-not-allowed' : ''}
                             ${esPasado && dia.isCurrentMonth ? 'bg-gray-100 text-gray-300 cursor-not-allowed line-through' : ''}
                           `}
                         >
                           {dia.day}
                           {esPasado && dia.isCurrentMonth && <span className="absolute -top-1 -right-1 text-[8px]">❌</span>}
-                          {esFinSemana && dia.isCurrentMonth && <span className="absolute -top-1 -right-1 text-[8px]">📅</span>}
+                          {fechaBloqueada && dia.isCurrentMonth && <span className="absolute -top-1 -right-1 text-[8px]">📅</span>}
                         </button>
                       );
                     })}
@@ -528,7 +558,11 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
                   
                   <div className="px-4 pb-3 pt-2 border-t border-gray-100 flex gap-3 text-xs">
                     <div className="flex items-center gap-1"><div className="w-3 h-3 bg-purple-600 rounded-full"></div><span className="text-gray-500">Seleccionada</span></div>
-                    <div className="flex items-center gap-1"><div className="w-3 h-3 bg-red-100 rounded-full border border-red-200"></div><span className="text-gray-500">{estudianteSeleccionado?.tipo_curso === "Reforzamiento" ? "Entre semana" : "Fin de semana"}</span></div>
+                    <span className="text-gray-500">
+                      {String(estudianteSeleccionado?.modalidad || "").toLowerCase() === "extraordinario"
+                        ? "Lunes a viernes bloqueado"
+                        : "Sábado y domingo bloqueado"}
+                    </span>
                     <div className="flex items-center gap-1"><div className="w-3 h-3 bg-gray-100 rounded-full border border-gray-200"></div><span className="text-gray-500">No disponible</span></div>
                   </div>
                 </div>
@@ -576,9 +610,7 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
                   Resumen del Bloque
                 </h4>
                 <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
-                  <div className="flex items-center gap-1"><div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div><span>7 clases Prácticas automáticas</span></div>
-                  <div className="flex items-center gap-1"><div className="w-1.5 h-1.5 bg-orange-500 rounded-full"></div><span>1 examen manual (opcional)</span></div>
-                  <div className="flex items-center gap-1"><div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div><span>Sin clases fines de semana</span></div>
+                  <div className="flex items-center gap-1"><div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div><span>Clases Prácticas automáticas</span></div>
                   <div className="flex items-center gap-1"><div className="w-1.5 h-1.5 bg-purple-500 rounded-full"></div><span>Duración: {horarioClase}</span></div>
                 </div>
               </div>
