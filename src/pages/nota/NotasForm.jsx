@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Search, X } from "lucide-react";
 import axios from "../../api/axios";
+import Swal from "sweetalert2";
 
 function NotasForm({ open, onClose, onNotaGuardada }) {
   const [busqueda, setBusqueda] = useState("");
@@ -23,31 +24,117 @@ function NotasForm({ open, onClose, onNotaGuardada }) {
   }, [open]);
 
   const obtenerMatriculas = async () => {
-    try {
-      const response = await axios.get("/matricula/");
+  try {
+    const response = await axios.get("/calendario/");
 
-      const matriculados = response.data.filter(
-        (m) =>
-          String(m.estado || "").toLowerCase() === "matriculado"
+    const datos = Array.isArray(response.data)
+      ? response.data
+      : response.data.results || [];
+
+    const matriculasUnicas = [];
+
+    datos.forEach((clase) => {
+      const yaExiste = matriculasUnicas.some(
+        (m) => m.id === clase.matricula
       );
 
-      setMatriculas(matriculados);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+      if (!yaExiste) {
+        matriculasUnicas.push({
+          id: clase.matricula,
+          estudiante_nombre: clase.estudiante_nombre,
+          estudiante_cedula: clase.estudiante_cedula,
+          tipo_curso: clase.tipo_curso,
+          modalidad: clase.modalidad,
+          horario: clase.horario,
+          estudiante_id: clase.estudiante_id,
+        });
+      }
+    });
+
+    setMatriculas(matriculasUnicas);
+  } catch (err) {
+    console.log("ERROR CARGANDO ESTUDIANTES ASIGNADOS:", err);
+    setError("No se pudieron cargar los estudiantes asignados.");
+  }
+};
 
   const estudiantesFiltrados = useMemo(() => {
     return matriculas.filter((m) => {
       const texto = `
-        ${m.nombre || ""}
-        ${m.apellido || ""}
-        ${m.cedula || ""}
+        ${m.estudiante_nombre || ""}
+        ${m.estudiante_cedula || ""}
       `.toLowerCase();
 
       return texto.includes(busqueda.toLowerCase());
     });
   }, [matriculas, busqueda]);
+
+  // Función para verificar si el plan de estudio está completo
+  const verificarPlanCompleto = async (estudianteId) => {
+    try {
+      // Mostrar loading mientras se verifica
+      Swal.fire({
+        title: 'Verificando plan de estudio...',
+        text: 'Por favor espere',
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+
+      // Usar el endpoint que ya tienes
+      const response = await axios.get(`/dashboard-plan/estudiante-progreso/`);
+      
+      Swal.close();
+      
+      // Buscar el progreso del estudiante específico
+      const progresoEstudiante = response.data.find(
+        progreso => progreso.estudiante_id === estudianteId || 
+                    progreso.estudiante_nombre?.includes(seleccionado?.estudiante_nombre)
+      );
+      
+      // Si no encontramos el estudiante en el progreso
+      if (!progresoEstudiante) {
+        await Swal.fire({
+          title: 'Plan de estudio incompleto',
+          text: 'El estudiante no ha completado todo el plan de estudio. Debe finalizar todos los módulos antes de registrar la nota del examen práctico.',
+          icon: 'warning',
+          confirmButtonText: 'Entendido',
+          confirmButtonColor: '#f59e0b',
+        });
+        return false;
+      }
+      
+      // Verificar si puede presentar el examen según tu API
+      if (!progresoEstudiante.puede_presentar_examen) {
+        await Swal.fire({
+          title: 'Plan de estudio incompleto',
+          text: 'El estudiante no ha completado todo el plan de estudio. Debe finalizar todos los módulos antes de registrar la nota del examen práctico.',
+          icon: 'warning',
+          confirmButtonText: 'Entendido',
+          confirmButtonColor: '#f59e0b',
+        });
+        return false;
+      }
+      
+      // Todo está completo
+      return true;
+      
+    } catch (error) {
+      console.error("Error verificando progreso:", error);
+      Swal.close();
+      
+      await Swal.fire({
+        title: 'Error',
+        text: 'No se pudo verificar el progreso del plan de estudio. Por favor, intenta de nuevo.',
+        icon: 'error',
+        confirmButtonText: 'Cerrar',
+        confirmButtonColor: '#ef4444',
+      });
+      
+      return false;
+    }
+  };
 
   const seleccionarEstudiante = (m) => {
     setSeleccionado(m);
@@ -58,7 +145,7 @@ function NotasForm({ open, onClose, onNotaGuardada }) {
     });
 
     setBusqueda(
-      `${m.nombre || ""} ${m.apellido || ""} - ${m.cedula || ""}`
+      `${m.estudiante_nombre || ""} - ${m.estudiante_cedula || ""}`
     );
   };
 
@@ -77,6 +164,14 @@ function NotasForm({ open, onClose, onNotaGuardada }) {
       return;
     }
 
+    // Verificar si el plan de estudio está completo ANTES de guardar
+    const planCompleto = await verificarPlanCompleto(seleccionado?.estudiante_id);
+    
+    if (!planCompleto) {
+      // Si el plan no está completo, no continuar con el guardado
+      return;
+    }
+
     try {
       setGuardando(true);
 
@@ -84,6 +179,17 @@ function NotasForm({ open, onClose, onNotaGuardada }) {
         matricula: formData.matricula,
         nota: formData.nota,
         comentario: formData.comentario,
+      });
+
+      // SweetAlert de éxito
+      await Swal.fire({
+        title: '¡Nota registrada!',
+        text: 'La nota del examen práctico ha sido registrada exitosamente.',
+        icon: 'success',
+        confirmButtonText: 'Aceptar',
+        confirmButtonColor: '#10b981',
+        timer: 2000,
+        timerProgressBar: true,
       });
 
       if (onNotaGuardada) {
@@ -100,17 +206,32 @@ function NotasForm({ open, onClose, onNotaGuardada }) {
       setSeleccionado(null);
 
       onClose();
-    } catch (err) {
-      console.error(err);
 
+    } catch (err) {
       if (err.response?.data) {
         const errores = Object.values(err.response.data)
           .flat()
           .join(" ");
 
         setError(errores);
+        
+        await Swal.fire({
+          title: 'Error al guardar',
+          text: errores || 'Ocurrió un error al registrar la nota.',
+          icon: 'error',
+          confirmButtonColor: '#ef4444',
+          confirmButtonText: 'Cerrar'
+        });
       } else {
         setError("Error registrando la nota.");
+        
+        await Swal.fire({
+          title: 'Error',
+          text: 'Error al conectar con el servidor.',
+          icon: 'error',
+          confirmButtonColor: '#ef4444',
+          confirmButtonText: 'Cerrar'
+        });
       }
     } finally {
       setGuardando(false);
@@ -142,7 +263,6 @@ function NotasForm({ open, onClose, onNotaGuardada }) {
         </div>
 
         <form onSubmit={guardarNota} className="space-y-5">
-
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-2">
               Buscar estudiante
@@ -173,7 +293,6 @@ function NotasForm({ open, onClose, onNotaGuardada }) {
 
             {busqueda && !seleccionado && (
               <div className="mt-2 border border-slate-200 rounded-xl overflow-hidden max-h-56 overflow-y-auto">
-
                 {estudiantesFiltrados.length === 0 && (
                   <div className="p-4 text-sm text-slate-500">
                     No se encontraron estudiantes.
@@ -188,11 +307,11 @@ function NotasForm({ open, onClose, onNotaGuardada }) {
                     className="w-full text-left px-4 py-3 hover:bg-slate-50 border-b border-slate-100 last:border-b-0"
                   >
                     <div className="font-semibold text-slate-800">
-                      {m.nombre} {m.apellido}
+                      {m.estudiante_nombre}
                     </div>
 
                     <div className="text-sm text-slate-500">
-                      {m.cedula}
+                      {m.estudiante_cedula}
                     </div>
                   </button>
                 ))}
@@ -202,7 +321,6 @@ function NotasForm({ open, onClose, onNotaGuardada }) {
 
           {seleccionado && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50 border border-slate-200 rounded-2xl p-4">
-
               <div>
                 <p className="text-xs text-slate-500 mb-1">
                   Curso

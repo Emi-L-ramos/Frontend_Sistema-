@@ -12,6 +12,9 @@ import UsuariosPage from "../admin/UsuariosPage";
 import EstudiantesPage from "../estudiantes/EstudiantesPage";
 import ReportesPages from "../reportes/ReportesPages";
 
+// Dashboard.jsx - Actualizar importaciones
+import VerPlanEstudio from "../plan_studio/VerPlanEstudio";
+import PlanEstudioForm from "../plan_studio/PlanEstudioForm";
 import { LuLayoutDashboard } from "react-icons/lu";
 import { TbMenu2 } from "react-icons/tb";
 import { HiOutlineDocumentCurrencyDollar } from "react-icons/hi2";
@@ -96,8 +99,8 @@ function Dashboard() {
                 return <NotasPages userRole={rol} />;
 
             case 'plan_studio':
-                return <PlanStudio />;
-
+                    // Redirigir según el rol
+                return <PlanStudio userRole={rol} />;
             case 'asistencia':
                 return <Asistencia />;
 
@@ -106,6 +109,15 @@ function Dashboard() {
 
             case 'usuarios':
                 return <UsuariosPage />;
+
+            case "plan_studio":
+                return <PlanStudio />;
+
+            case "ver_plan":
+                return <VerPlanEstudio />;
+
+            case "nuevo_plan":
+                return <PlanEstudioForm />;    
 
             default:
                 return <DashboardHome />;
@@ -132,7 +144,7 @@ function Dashboard() {
             >
 
                 {/* HEADER */}
-                <div className="p-4 border-b border-gray-200">
+                <div className="p-4  border-gray-200">
 
                     <div className="flex items-center gap-3 flex-nowrap">
 
@@ -245,8 +257,7 @@ function Dashboard() {
                     </>
                     )}
 
-
-                    
+          
 
                     {/* Solo admin puede ver usuarios */}
                     {user?.rol === 'admin' && (
@@ -267,6 +278,9 @@ function Dashboard() {
                             </button>
                         </>
                     )}
+
+                   
+
 
                     {/* GESTIÓN ACADÉMICA */}
                     <div className="pt-4 mt-4 border-t border-gray-200">

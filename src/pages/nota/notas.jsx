@@ -76,9 +76,12 @@ function NotasPages({ userRole }) {
       </div>
 
       <div className="flex flex-col md:flex-row gap-4 mb-8">
-        <div className="flex items-center bg-white border border-slate-200 rounded-xl px-4 h-14 w-full md:max-w-xl">
-          <Search className="text-slate-400" size={20} />
 
+        
+
+        {(rol === "admin" || rol === "instructor") && (
+          <div className="flex items-center bg-white border border-slate-200 rounded-xl px-4 h-14 w-full md:max-w-xl">
+          <Search className="text-slate-400" size={20} />
           <input
             type="text"
             placeholder={
@@ -90,7 +93,14 @@ function NotasPages({ userRole }) {
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
           />
+          
         </div>
+        )}
+        
+
+
+
+
 
         <select
           value={filtroTipo}
@@ -105,8 +115,6 @@ function NotasPages({ userRole }) {
 
 
         {rol === "instructor" && (
-
-
 
           <button
             onClick={() => setModalAbierto(true)}
@@ -198,25 +206,33 @@ function TablaInstructor({ notas }) {
       <table className="w-full min-w-[1100px]">
         <thead>
           <tr className="border-b border-slate-200">
-           <Th>Estudiante</Th>
+            <Th>Estudiante</Th>
             <Th>Cédula</Th>
             <Th>Curso</Th>
             <Th>Modalidad</Th>
             <Th>Nota práctica</Th>
             <Th>Resultado</Th>
             <Th>Comentario</Th>
-
-            {/*
-            <Th>Nota</Th>
-            <Th>Comentario</Th>
-            <Th>Acción</Th>
-            */}
           </tr>
         </thead>
 
         <tbody>
           {notas.map((nota) => (
-            <tr key={nota.id} className="border-b border-slate-200 hover:bg-slate-50 transition">
+            <tr
+              key={nota.id}
+              className="border-b border-slate-200 hover:bg-slate-50 transition"
+            >
+              <TdBold>{nota.estudiante_nombre}</TdBold>
+
+              <Td>{nota.estudiante_cedula}</Td>
+
+              <Td>
+                <Badge color="purple">{nota.tipo_curso}</Badge>
+              </Td>
+
+              <Td>
+                <Badge color="green">{nota.modalidad}</Badge>
+              </Td>
 
               <Td>
                 <Badge color={Number(nota.nota) >= 70 ? "green" : "red"}>
@@ -231,33 +247,6 @@ function TablaInstructor({ notas }) {
               </Td>
 
               <Td>{nota.comentario || "Sin comentario"}</Td>
-                        
-
-              {/*
-              <td className="px-6 py-7">
-                <input
-                  type="number"
-                  min="0"
-                  max="100"
-                  defaultValue={nota.nota || ""}
-                  className="w-24 h-11 border border-slate-300 rounded-xl px-3 outline-none"
-                />
-              </td>
-
-              <td className="px-6 py-7">
-                <input
-                  type="text"
-                  defaultValue={nota.comentario || ""}
-                  className="w-full h-11 border border-slate-300 rounded-xl px-3 outline-none"
-                />
-              </td>
-
-              <td className="px-6 py-7">
-                <button className="px-5 py-2 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700">
-                  Guardar
-                </button>
-              </td>
-              */}
             </tr>
           ))}
         </tbody>

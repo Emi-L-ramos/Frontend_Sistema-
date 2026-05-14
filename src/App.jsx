@@ -9,6 +9,9 @@ import UsuariosPage from "./pages/admin/UsuariosPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Asistencia from "./pages/asistencia/Asistencia";
 import PerfilEstudiante from "./pages/perfil_studiante/perfil_estudiante";
+import PlanStudio from "./pages/plan_studio/plan_studio";
+import PlanEstudioForm from "./pages/plan_studio/PlanEstudioForm";
+import VerPlanEstudio from "./pages/plan_studio/VerPlanEstudio";
 
 import "./App.css";
 
@@ -39,15 +42,38 @@ function App() {
                         </ProtectedRoute>
                     } />
                     
-                                        <Route
-                        path="/dashboard/perfiles"
-                        element={
+
+                    <Route path="/dashboard/perfiles" element={
                             <ProtectedRoute>
                                 <PerfilEstudiante />
                             </ProtectedRoute>
                         }
                     />
 
+                    <Route path="/dashboard/usuarios" element={
+                        <ProtectedRoute rolesPermitidos={['admin']}>
+                            <UsuariosPage />
+                        </ProtectedRoute>
+                    } />
+
+                    <Route path="/dashboard/plan-estudio" element={
+                        <ProtectedRoute rolesPermitidos={['admin']}>
+                            <Dashboard />
+                        </ProtectedRoute>
+                    } />
+
+                    <Route path="/dashboard/plan-estudio/ver" element={
+                        <ProtectedRoute rolesPermitidos={['admin']}>
+                            <VerPlanEstudio />
+                        </ProtectedRoute>
+                    } />
+
+                    <Route path="/dashboard/plan-estudio/nuevo" element={
+                        <ProtectedRoute rolesPermitidos={['admin']}>
+                            <PlanEstudioForm />
+                        </ProtectedRoute>
+                    } />
+                                        
                     <Route path="*" element={<Navigate to="/login" />} />
                 </Routes>
             </Router>
