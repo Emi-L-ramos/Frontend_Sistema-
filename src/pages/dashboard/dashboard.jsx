@@ -25,7 +25,7 @@ import { FaUsers } from "react-icons/fa";
 import { PiStudent } from "react-icons/pi";
 import InstructorHome from "./instructorhome";
 import EstudianteHome from "./estudianteshome";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { FaSquarePollVertical } from "react-icons/fa6";
 
 function Dashboard() {
@@ -71,7 +71,7 @@ function Dashboard() {
                 }
 
                 if (esEstudiante) {
-                    return <EstudianteHome />;
+                    return <EstudianteHome setActiveTab={setActiveTab} />;
                 }
 
                 return <DashboardHome />;
@@ -358,7 +358,7 @@ function Dashboard() {
                         }`}
                     >
                         <MdPersonOutline size={'1.5rem'} />
-                        <span>Perfil del Estudiante</span>
+                        <span>Perfiles</span>
                     </button>
 
                 </nav>

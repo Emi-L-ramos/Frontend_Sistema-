@@ -11,6 +11,7 @@ export default function CalendarioEditarForm({ abierto, onClose, onActualizada, 
     hora_inicio: "",
     hora_fin: "",
     instructor_id: "",
+    aplicar_a: "solo",
   });
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState("");
@@ -29,6 +30,7 @@ export default function CalendarioEditarForm({ abierto, onClose, onActualizada, 
       hora_inicio: cita.hora_inicio?.slice(0, 5) || "",
       hora_fin: cita.hora_fin?.slice(0, 5) || "",
       instructor_id: cita.instructor || "",
+      aplicar_a: "solo",
     });
     setError("");
   }, [abierto, cita]);
@@ -45,9 +47,10 @@ export default function CalendarioEditarForm({ abierto, onClose, onActualizada, 
         fecha: form.fecha,
         hora_inicio: form.hora_inicio,
         hora_fin: form.hora_fin,
+        aplicar_a: form.aplicar_a,
       };
       
-      if (form.instructor_id && form.instructor_id !== cita.instructor) {
+      if (form.instructor_id) {
         dataToSend.instructor = parseInt(form.instructor_id);
       }
 
@@ -119,6 +122,28 @@ export default function CalendarioEditarForm({ abierto, onClose, onActualizada, 
                   <option key={i.id} value={i.id}>{i.nombre}</option>
                 ))}
             </select>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Aplicar cambio
+              </label>
+
+              <select
+                value={form.aplicar_a}
+                onChange={(e) =>
+                  setForm({ ...form, aplicar_a: e.target.value })
+                }
+                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="solo">
+                  Solo esta clase
+                </option>
+
+                <option value="pendientes">
+                  Todas las clases pendientes
+                </option>
+              </select>
+            </div>
           </div>
 
           {/* Nueva fecha */}

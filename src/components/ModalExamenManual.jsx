@@ -6,12 +6,13 @@ export default function ModalExamenManual({ abierto, onClose, onCreada }) {
   const [instructores, setInstructores] = useState([]);
   const [matriculas, setMatriculas] = useState([]);
   const [form, setForm] = useState({
-    instructor_id: "",
-    matricula_id: "",
-    fecha: "",
-    hora_inicio: "",
-    hora_fin: "",
-  });
+  matricula_id: "",
+  fecha: "",
+  hora_inicio: "14:00",
+  hora_fin: "16:00",
+});
+
+  const [busqueda, setBusqueda] = useState("");
   const [error, setError] = useState("");
   const [cargando, setCargando] = useState(false);
 
@@ -19,7 +20,7 @@ export default function ModalExamenManual({ abierto, onClose, onCreada }) {
     if (!abierto) return;
     listarInstructores().then(setInstructores).catch(() => {});
     listarMatriculas().then(setMatriculas).catch(() => {});
-    setForm({ instructor_id: "", matricula_id: "", fecha: "", hora_inicio: "", hora_fin: "" });
+    setForm({ matricula_id: "", fecha: "", hora_inicio: "14:00", hora_fin: "16:00" });
     setError("");
   }, [abierto]);
 
@@ -29,10 +30,8 @@ export default function ModalExamenManual({ abierto, onClose, onCreada }) {
     e.preventDefault();
     setError("");
 
-    if (!form.instructor_id) return setError("Debe seleccionar un instructor");
-    if (!form.matricula_id) return setError("Debe seleccionar un estudiante");
-    if (!form.fecha) return setError("Debe indicar la fecha del examen");
-    if (!form.hora_inicio || !form.hora_fin) return setError("Debe indicar la hora de inicio y fin");
+    if (!form.matricula_id) return setError("Debe seleccionar un Estudiante");
+    if (!form.fecha) return setError("Debe indicar la fecha del Examen");
 
     setCargando(true);
     try {
@@ -51,8 +50,7 @@ export default function ModalExamenManual({ abierto, onClose, onCreada }) {
       <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
         <div className="flex items-center justify-between p-5 border-b bg-gradient-to-r from-orange-500 to-orange-600 text-black rounded-t-xl">
           <div>
-            <h3 className="text-lg font-semibold">Examen</h3>
-            <p className="text-xs text-orange-100">Programa la clase 9 (examen final)</p>
+            <h3 className="text-lg font-semibold">Examen Policial</h3>
           </div>
           <button onClick={onClose} className="text-black hover:text-black">
             <X className="w-5 h-5" />
@@ -60,38 +58,53 @@ export default function ModalExamenManual({ abierto, onClose, onCreada }) {
         </div>
 
         <form onSubmit={submit} className="p-5 space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Instructor</label>
-            <select
-              required
-              value={form.instructor_id}
-              onChange={(e) => setForm({ ...form, instructor_id: e.target.value })}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-            >
-              <option value="">-- Seleccionar --</option>
-              {instructores.map((i) => (
-                <option key={i.id} value={i.id}>
-                  {i.nombre || i.username}
-                </option>
-              ))}
-            </select>
-          </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Estudiante</label>
-            <select
-              required
-              value={form.matricula_id}
-              onChange={(e) => setForm({ ...form, matricula_id: e.target.value })}
+            <label className="block text-sm font-medium mb-1">
+              Buscar estudiante
+            </label>
+
+            <input
+              type="text"
+              placeholder="Buscar por nombre o cédula..."
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
               className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-            >
-              <option value="">-- Seleccionar --</option>
-              {matriculas.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.nombre} {m.apellido} {m.cedula}
-                </option>
-              ))}
-            </select>
+            />
+
+            {busqueda.trim() && (
+            <div className="mt-2 border border-gray-200 rounded-md max-h-48 overflow-y-auto">
+              {matriculas
+                .filter((m) => {
+                  const texto = `${m.estudiante_nombre || ""} ${m.estudiante_cedula || ""}`.toLowerCase();
+
+                  return texto.includes(busqueda.toLowerCase());
+                })
+                .map((m) => (
+                  <button
+                    type="button"
+                    key={m.id}
+                    onClick={() => {
+                      setForm({
+                        ...form,
+                        matricula_id: m.id,
+                      });
+
+                      setBusqueda(
+                        `${m.estudiante_nombre} - ${m.estudiante_cedula}`
+                      );
+                    }}
+                    className={`w-full text-left px-3 py-2 text-sm hover:bg-orange-50 border-b last:border-b-0 ${
+                      Number(form.matricula_id) === m.id
+                        ? "bg-orange-100"
+                        : ""
+                    }`}
+                  >
+                    {m.estudiante_nombre} - {m.estudiante_cedula}
+                  </button>
+                ))}
+            </div>
+          )}
           </div>
 
           <div>
@@ -108,24 +121,8 @@ export default function ModalExamenManual({ abierto, onClose, onCreada }) {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-sm font-medium mb-1">Hora inicio</label>
-              <input
-                type="time"
-                required
-                value={form.hora_inicio}
-                onChange={(e) => setForm({ ...form, hora_inicio: e.target.value })}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-              />
-                <input
-                type="time"
-                required
-                value={form.hora_fin}
-                onChange={(e) => setForm({ ...form, hora_fin: e.target.value })}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-              />
-            </div>
+          <div className="bg-orange-50 border border-orange-200 rounded-md p-3 text-sm text-orange-800">
+            Horario fijo del Examen Policial: <strong>2:00 PM - 4:00 PM</strong>
           </div>
 
           {error && (

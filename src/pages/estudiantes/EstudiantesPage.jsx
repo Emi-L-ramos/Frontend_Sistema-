@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import Swal from "sweetalert2";
+import { Plus } from "lucide-react";
 
 function EstudiantesPage() {
     const { token } = useAuth();
@@ -228,9 +229,14 @@ function EstudiantesPage() {
 
                 <button
                     onClick={abrirCrear}
-                    className="bg-blue-600 text-white px-5 py-3 rounded-2xl shadow hover:bg-blue-700 transition"
+                    className="relative group overflow-hidden px-20 h-11 rounded-3xl bg-green-500 text-white flex items-center gap-2 transition-all duration-300 hover:bg-green-600 justify-end hover:cursor-pointer"
                 >
-                    Nuevo Estudiante
+                    <span className="absolute top-0 left-[-75%] w-[50%] h-full bg-gradient-to-r from-transparent via-white/60 to-transparent skew-x-12 group-hover:left-[125%] transition-all duration-700"></span>
+
+                    <span className="relative z-10 flex items-center gap-2">
+                        <Plus className="size-5" />
+                        Nuevo Estudiante
+                    </span>
                 </button>
             </div>
 

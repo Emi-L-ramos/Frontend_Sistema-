@@ -19,7 +19,6 @@ function UsuariosPage() {
         username: "",
         password: "",
         confirm_password: "",
-        email: "",
         first_name: "",
         last_name: "",
         rol: "",
@@ -96,9 +95,6 @@ function UsuariosPage() {
                     admin: "bg-red-100 text-red-700",
                     instructor: "bg-green-100 text-green-700",
                     estudiante: "bg-blue-100 text-blue-700",
-                    secretaria: "bg-yellow-100 text-yellow-700",
-                    cajero: "bg-purple-100 text-purple-700",
-                    consulta: "bg-gray-100 text-gray-700",
                 };
 
                 const rolesFormateados = (Array.isArray(data) ? data : []).map(r => {
@@ -146,7 +142,6 @@ function UsuariosPage() {
             username: "",
             password: "",
             confirm_password: "",
-            email: "",
             first_name: "",
             last_name: "",
             rol: "",
@@ -167,7 +162,6 @@ function UsuariosPage() {
 
         const userData = {
             username: form.username,
-            email: form.email,
             first_name: form.first_name,
             last_name: form.last_name,
             rol: form.rol,
@@ -276,14 +270,18 @@ function UsuariosPage() {
                     </p>
                 </div>
 
-                <button
+               <button
                     onClick={() => {
                         resetForm();
                         setShowModal(true);
                     }}
-                    className="bg-blue-600 text-white px-5 py-3 rounded-2xl shadow hover:bg-blue-700 transition flex items-center justify-center gap-2"
+                    className="relative group overflow-hidden px-20 h-11 rounded-3xl bg-green-500 text-white flex items-center gap-2 transition-all duration-300 hover:bg-green-600 justify-end hover:cursor-pointer"
                 >
-                    Nuevo Usuario
+                    <span className="absolute top-0 left-[-75%] w-[50%] h-full bg-gradient-to-r from-transparent via-white/60 to-transparent skew-x-12 group-hover:left-[125%] transition-all duration-700"></span>
+
+                    <span className="relative z-10 flex items-center gap-2">
+                        Nuevo Usuario
+                    </span>
                 </button>
             </div>
 
@@ -323,7 +321,6 @@ function UsuariosPage() {
                                                 <tr className="bg-white text-gray-500 text-sm border-gray-300">
                                                     <th className="p-4 text-left">Usuario</th>
                                                     <th className="p-4 text-left">Nombre completo</th>
-                                                    <th className="p-4 text-left">Email</th>
                                                     <th className="p-4 text-left">Rol</th>
                                                     <th className="p-4 text-center">Acciones</th>
                                                 </tr>
@@ -356,10 +353,6 @@ function UsuariosPage() {
                                                                     : "-"}
                                                             </td>
 
-                                                            <td className="p-4 text-gray-600">
-                                                                {u.email || "-"}
-                                                            </td>
-
                                                             <td className="p-4">
                                                                 <span className={`px-3 py-1 rounded-full text-xs font-bold ${roleInfo.color}`}>
                                                                     {roleInfo.label}
@@ -377,7 +370,6 @@ function UsuariosPage() {
                                                                                 username: u.username || "",
                                                                                 password: "",
                                                                                 confirm_password: "",
-                                                                                email: u.email || "",
                                                                                 first_name: u.first_name || "",
                                                                                 last_name: u.last_name || "",
                                                                                 rol: rolUsuario,
@@ -467,14 +459,6 @@ function UsuariosPage() {
                                     required={!editData && form.password}
                                 />
                             </div>
-
-                            <input
-                                type="email"
-                                placeholder="Email"
-                                value={form.email}
-                                onChange={e => setForm({ ...form, email: e.target.value })}
-                                className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <input

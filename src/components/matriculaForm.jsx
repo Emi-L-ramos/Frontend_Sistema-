@@ -10,7 +10,6 @@ function MatriculaForm({ initialData, onSave, onError }) {
 
     const [formData, setFormData] = useState({
         estudiante: "",
-        estado: "pendiente",
         modalidad: "",
         horario: "",
         tipo_curso: "",
@@ -59,7 +58,6 @@ function MatriculaForm({ initialData, onSave, onError }) {
         if (initialData) {
             setFormData({
                 estudiante: initialData.estudiante || "",
-                estado: initialData.estado || "pendiente",
                 modalidad: initialData.modalidad || "",
                 horario: initialData.horario || "",
                 tipo_curso: initialData.tipo_curso || "",
@@ -244,7 +242,6 @@ function MatriculaForm({ initialData, onSave, onError }) {
 
         const dataToSend = {
             estudiante: parseInt(formData.estudiante),
-            estado: initialData ? formData.estado : "pendiente",
             modalidad: formData.modalidad,
             horario: formData.horario,
             tipo_curso: formData.tipo_curso,
@@ -447,25 +444,6 @@ function MatriculaForm({ initialData, onSave, onError }) {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {initialData && (
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Estado
-                        </label>
-                        <select
-                            name="estado"
-                            value={formData.estado}
-                            onChange={handleChange}
-                            className="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                            <option value="pendiente">Pendiente</option>
-                            <option value="aprobado">Aprobado</option>
-                            <option value="finalizado">Finalizado</option>
-                            <option value="cancelado">Cancelado</option>
-                        </select>
-                    </div>
-                )}
-
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                         Modalidad <span className="text-red-500">*</span>

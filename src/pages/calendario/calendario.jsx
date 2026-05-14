@@ -2,11 +2,23 @@ import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Plus, Clock, User } from "lucide-react";
 import { listarCitas, citasDeHoy, listarInstructores } from "../../api/calendario";
 import CalendarioForm from "../../components/calendarioForm.jsx";
+import CalendarioEditarForm from "../../components/calendarioEditarForm.jsx";
 import ModalExamenManual from "../../components/ModalExamenManual.jsx";
 import { useAuth } from "../../context/AuthContext";
 
 const MONTHS = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
 const DAYS = ["Dom","Lun","Mar","Mier","Jue","Vie","Sab"];
+const INSTRUCTOR_COLORS = {
+  1: "bg-blue-300 text-blue-900",
+  2: "bg-sky-300 text-sky-900",
+  3: "bg-stone-300 text-stone-900",
+  4: "bg-indigo-300 text-indigo-900",
+  5: "bg-slate-300 text-slate-900",
+  6: "bg-emerald-300 text-emerald-900",
+  7: "bg-teal-300 text-teal-900",
+  8: "bg-zinc-300 text-zinc-900",
+  9: "bg-gray-300 text-gray-900",
+};
 
 function buildMonthCells(year, month) {
   const firstDay = new Date(year, month, 1).getDay();
@@ -40,6 +52,8 @@ export default function Calendario() {
   const [hoyCitas, setHoyCitas] = useState([]);
   const [modalNueva, setModalNueva] = useState(false);
   const [modalExamen, setModalExamen] = useState(false);
+  const [modalEditar, setModalEditar] = useState(false);
+  const [citaSeleccionada, setCitaSeleccionada] = useState(null);
   const [diaSeleccionado, setDiaSeleccionado] = useState(null);
 
   const cargar = async () => {
@@ -101,33 +115,69 @@ export default function Calendario() {
   const en7DiasStr = en7Dias.toISOString().slice(0, 10);
 
   const examenesProximos = citas
-    .filter((c) => parseInt(c.numero_clase) === 9 && c.fecha >= hoyStr && c.fecha <= en7DiasStr)
+    .filter((c) => c.es_examen && c.fecha >= hoyStr && c.fecha <= en7DiasStr)
     .sort((a, b) => a.fecha.localeCompare(b.fecha));
 
   /* ============== VISTA INSTRUCTOR ============== */
   if (esInstructor) {
     return (
-      <div className="max-w-[1100px] mx-auto p-8">
-        <h1 className="text-2xl font-bold mb-6">Mi Calendario</h1>
+      <div className="max-w-[1400px] mx-auto p-8">
+
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-bold">Mi Calendario</h1>
+
+          <button
+            type="button"
+            onClick={() => setModalExamen(true)}
+            className="relative group overflow-hidden px-20 h-11 rounded-3xl bg-green-500 text-white flex items-center gap-2 transition-all duration-300 hover:bg-green-600 justify-end hover:cursor-pointer"
+          >
+            <span className="absolute top-0 left-[-75%] w-[50%] h-full bg-gradient-to-r from-transparent via-white/60 to-transparent skew-x-12 group-hover:left-[125%] transition-all duration-700"></span>
+
+            <span className="relative z-10 flex items-center gap-2">
+              <Plus className="size-5" />
+              Examen Policial
+            </span>
+          </button>
+        </div>
 
         {examenesProximos.length > 0 && (
           <div className="mb-4 bg-amber-50 border border-amber-300 rounded-xl p-4">
-            <h3 className="text-amber-800 font-semibold text-sm mb-2">Exámenes próximos (próximos 7 días)</h3>
+            <h3 className="text-amber-800 font-semibold text-sm mb-2">
+              Exámenes próximos (próximos 7 días)
+            </h3>
+
             <ul className="space-y-1">
               {examenesProximos.map((ex) => {
                 const fechaEx = new Date(ex.fecha + "T00:00:00");
                 const esHoy = ex.fecha === hoyStr;
+
                 const etiqueta = esHoy
                   ? "HOY"
-                  : fechaEx.toLocaleDateString("es-ES", { weekday: "short", day: "numeric", month: "short" });
+                  : fechaEx.toLocaleDateString("es-ES", {
+                      weekday: "short",
+                      day: "numeric",
+                      month: "short",
+                    });
+
                 return (
                   <li key={ex.id} className="flex items-center gap-3 text-sm text-amber-900">
-                    <span className={`font-bold text-xs px-2 py-0.5 rounded-full ${esHoy ? "bg-red-500 text-white" : "bg-amber-200 text-amber-800"}`}>
+                    <span
+                      className={`font-bold text-xs px-2 py-0.5 rounded-full ${
+                        esHoy
+                          ? "bg-red-500 text-white"
+                          : "bg-amber-200 text-amber-800"
+                      }`}
+                    >
                       {etiqueta}
                     </span>
-                    <span className="font-medium">{ex.estudiante_nombre}</span>
-                    <span className="text-amber-600">{ex.hora_inicio?.slice(0,5)} — {ex.hora_fin?.slice(0,5)}</span>
-                    <span className="text-amber-500 text-xs">· {ex.instructor_nombre}</span>
+
+                    <span className="font-medium">
+                      {ex.estudiante_nombre}
+                    </span>
+
+                    <span className="text-amber-600">
+                      {ex.hora_inicio?.slice(0,5)} — {ex.hora_fin?.slice(0,5)}
+                    </span>
                   </li>
                 );
               })}
@@ -135,77 +185,363 @@ export default function Calendario() {
           </div>
         )}
 
-        <div className="bg-white border border-gray-200 rounded-xl p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold">{MONTHS[vm]} {vy}</h2>
-            <div className="flex gap-1">
-              <button type="button" onClick={goPrev} className="p-2 rounded-md hover:bg-gray-100"><ChevronLeft className="w-4 h-4" /></button>
-              <button type="button" onClick={goNext} className="p-2 rounded-md hover:bg-gray-100"><ChevronRight className="w-4 h-4" /></button>
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-6">
+          <div className="bg-white border border-gray-200 rounded-xl p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold">
+                {MONTHS[vm]} {vy}
+              </h2>
+
+              <div className="flex gap-1">
+                <button
+                  type="button"
+                  onClick={goPrev}
+                  className="p-2 rounded-md hover:bg-gray-100"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={goNext}
+                  className="p-2 rounded-md hover:bg-gray-100"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-7 gap-2 mb-2">
+              {DAYS.map((d) => (
+                <div
+                  key={d}
+                  className="text-center text-xs text-gray-500 py-2 font-medium"
+                >
+                  {d}
+                </div>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-7 gap-1 sm:gap-2">
+              {cells.map((c, idx) => {
+                if (!c) return <div key={idx} />;
+
+                const dia = citas.filter((a) => a.fecha === c.dateStr);
+
+                return (
+                  <div
+                    key={idx}
+                    onClick={() => setDiaSeleccionado(c.dateStr)}
+                    className={`min-h-[72px] sm:min-h-[100px] rounded-lg border p-1.5 sm:p-2 cursor-pointer transition-colors ${
+                      diaSeleccionado === c.dateStr
+                        ? "border-blue-400 bg-blue-50"
+                        : "border-gray-200 bg-white hover:bg-gray-50"
+                    }`}
+                  >
+                    <div className="text-sm font-medium mb-1.5">
+                      {c.day}
+                    </div>
+
+                    <div className="space-y-1">
+                      {dia.map((a) => (
+                        <div
+                          key={a.id}
+                          className={`rounded px-1 py-0.5 text-[9px] sm:text-[11px] leading-tight max-w-full overflow-hidden ${
+                            a.es_examen
+                              ? "bg-orange-300 text-orange-900"
+                              : INSTRUCTOR_COLORS[a.instructor] || "bg-gray-300 text-gray-900"
+                          }`}
+                        >
+                          <div className="font-medium truncate hidden sm:block">
+                            {a.estudiante_nombre}
+                          </div>
+
+                          <div className="opacity-80 text-[9px] sm:text-[11px] truncate max-w-full">
+                            {a.hora_inicio?.slice(0, 5)}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
-          <div className="grid grid-cols-7 gap-2 mb-2">
-            {DAYS.map((d) => <div key={d} className="text-center text-xs text-gray-500 py-2 font-medium">{d}</div>)}
-          </div>
-          <div className="grid grid-cols-7 gap-2">
-            {cells.map((c, idx) => {
-              if (!c) return <div key={idx} />;
-              const dia = citas.filter((a) => a.fecha === c.dateStr);
-              return (
-                <div key={idx} className="min-h-[100px] rounded-lg border border-gray-200 bg-white p-2">
-                  <div className="text-sm font-medium mb-1.5">{c.day}</div>
-                  <div className="space-y-1">
-                    {dia.map((a) => (
-                      <div
-                        key={a.id}
-                        className={`rounded px-1.5 py-1 text-[11px] leading-tight ${
-                          a.es_examen
-                            ? "bg-orange-300 text-orange-900"
-                            : "bg-blue-300 text-blue-900"
-                        }`}
-                      >
-                        <div className="font-medium truncate">{a.estudiante_nombre}</div>
-                        <div className="opacity-80">{a.hora_inicio?.slice(0, 5)}</div>
-                      </div>
-                    ))}
+          <div className="lg:col-span-2 bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+            <h2 className="text-lg font-bold mb-4">
+              {diaSeleccionado
+                ? `Clases del ${new Date(diaSeleccionado + "T00:00:00").toLocaleDateString("es-ES", {
+                    weekday: "long",
+                    day: "numeric",
+                    month: "long",
+                  })}`
+                : "Selecciona un día del calendario"}
+            </h2>
+
+            <div className="space-y-3">
+              {(diaSeleccionado
+                ? citas.filter((a) => a.fecha === diaSeleccionado)
+                : []
+              ).length === 0 && (
+                <p className="text-sm text-gray-400">
+                  No hay clases seleccionadas para mostrar.
+                </p>
+              )}
+
+              {(diaSeleccionado
+                ? citas.filter((a) => a.fecha === diaSeleccionado)
+                : []
+              ).map((a) => (
+                <div
+                  key={a.id}
+                  className={`rounded-lg p-4 border ${
+                    a.es_examen
+                      ? "border-orange-100 bg-orange-50"
+                      : "border-emerald-100 bg-emerald-50"
+                  }`}
+                >
+                  <div className="flex items-center gap-2 text-sm font-semibold mb-2">
+                    <Clock className="w-4 h-4" />
+                    {a.hora_inicio?.slice(0, 5)} - {a.hora_fin?.slice(0, 5)}
+                  </div>
+
+                  <div className="flex items-center gap-2 text-sm">
+                    <User className="w-4 h-4 text-gray-400" />
+                    {a.estudiante_nombre}
+                  </div>
+
+                  <div className="text-sm text-gray-500 mt-1">
+                    {a.es_examen
+                      ? "🎓 Examen Policial"
+                      : `Clase ${a.numero_clase}/${citas.filter(x => x.matricula === a.matricula && !x.es_examen).length}`}
                   </div>
                 </div>
-              );
-            })}
+              ))}
+            </div>
           </div>
+
+          <div className="bg-white border border-gray-200 rounded-xl p-6 h-fit">
+            <h3 className="text-base font-semibold mb-4">
+              Clases programadas este mes
+            </h3>
+
+            {clasesMes.length === 0 && (
+              <p className="text-sm text-gray-400">
+                No tienes clases este mes.
+              </p>
+            )}
+
+            {clasesMes.map((c) => (
+              <div
+                key={c.id}
+                className="flex items-start justify-between gap-4 py-4 border-b border-gray-100 last:border-b-0"
+              >
+                <div className="flex items-start gap-3">
+
+                  <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-700">
+                    <User className="w-5 h-5" />
+                  </div>
+
+                  <div>
+                    <div className="font-medium text-sm">
+                      {c.estudiante_nombre}
+                    </div>
+
+                    <div className="text-sm text-gray-600 mt-0.5">
+                      {c.es_examen
+                        ? "🎓 Examen Policial"
+                        : `Clase ${c.numero_clase}/${citas.filter(x => x.matricula === c.matricula && !x.es_examen).length}`}
+                    </div>
+
+                    <div className="text-xs text-gray-400 mt-0.5">
+                      Horario: {c.horario}
+                    </div>
+                  </div>
+
+                </div>
+
+                <div className="text-right">
+                  <div className="text-sm">
+                    {c.fecha}
+                  </div>
+
+                  <div className="text-sm text-gray-500 mt-0.5 flex items-center gap-1 justify-end">
+                    <Clock className="w-3 h-3" />
+                    {c.hora_inicio?.slice(0, 5)} — {c.hora_fin?.slice(0, 5)}
+                  </div>
+                </div>
+              </div>
+            ))}
+
+          </div>
+
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-xl p-6 mt-6">
-          <h3 className="text-base font-semibold mb-4">Clases programadas este mes</h3>
-          {clasesMes.length === 0 && <p className="text-sm text-gray-400">No tienes clases este mes.</p>}
-          {clasesMes.map((c) => (
-            <div key={c.id} className="flex items-start justify-between gap-4 py-4 border-b border-gray-100 last:border-b-0">
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-700">
-                  <User className="w-5 h-5" />
-                </div>
-                <div>
-                  <div className="font-medium text-sm">{c.estudiante_nombre}</div>
-                  <div className="text-sm text-gray-600 mt-0.5">
-                  Clase {c.numero_clase}/{c.total_clases || clasesMes.filter(x => x.matricula === c.matricula && parseInt(x.numero_clase) !== 9).length}
-                </div>
-                  <div className="text-xs text-gray-400 mt-0.5">Horario: {c.horario}</div>
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="text-sm">{c.fecha}</div>
-                <div className="text-sm text-gray-500 mt-0.5 flex items-center gap-1 justify-end">
-                  <Clock className="w-3 h-3" />
-                  {c.hora_inicio?.slice(0, 5)} — {c.hora_fin?.slice(0, 5)}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+        <ModalExamenManual
+          abierto={modalExamen}
+          onClose={() => setModalExamen(false)}
+          onCreada={cargar}
+        />
+
       </div>
     );
   }
 
+  /* ============== VISTA ESTUDIANTE ============== */
+  if (esEstudiante) {
+    return (
+      <div className="max-w-[1400px] mx-auto p-8">
+
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold">Mi Calendario</h1>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-6">
+          <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold">
+                {MONTHS[vm]} {vy}
+              </h2>
+              <div className="flex gap-1">
+                <button
+                  type="button"
+                  onClick={goPrev}
+                  className="p-2 rounded-md hover:bg-gray-100"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={goNext}
+                  className="p-2 rounded-md hover:bg-gray-100"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+
+              </div>
+            </div>
+
+            <div className="grid grid-cols-7 gap-2 mb-2">
+              {DAYS.map((d) => (
+                <div
+                  key={d}
+                  className="text-center text-sm text-gray-500 py-2"
+                >
+                  {d}
+                </div>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-7 gap-1 sm:gap-2">
+
+              {cells.map((c, idx) => {
+
+                if (!c) return <div key={idx} />;
+
+                const dia = citas.filter((a) => a.fecha === c.dateStr);
+
+                return (
+                  <div
+                    key={idx}
+                    onClick={() => setDiaSeleccionado(c.dateStr)}
+                    className={`min-h-[100px] rounded-lg border p-2 cursor-pointer transition-colors ${
+                      diaSeleccionado === c.dateStr
+                        ? "border-blue-400 bg-blue-50"
+                        : "border-gray-200 bg-white hover:bg-gray-50"
+                    }`}
+                  >
+                    <div className="text-sm font-medium mb-1">
+                      {c.day}
+                    </div>
+
+                    <div className="space-y-1">
+                      {dia.map((a) => (
+                        <div
+                          key={a.id}
+                          className={`text-[11px] px-1.5 py-1 rounded truncate ${
+                            a.es_examen
+                              ? "bg-orange-300 text-orange-900"
+                              : INSTRUCTOR_COLORS[a.instructor] || "bg-gray-300 text-gray-900"
+                          }`}
+                        >
+                          {a.es_examen
+                            ? `Examen · ${a.hora_inicio?.slice(0, 5)}`
+                            : `Clase ${a.numero_clase} · ${a.hora_inicio?.slice(0, 5)}`}
+                        </div>
+                      ))}
+                    </div>
+
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm h-fit">
+
+            <h2 className="text-lg font-bold mb-4">
+              {diaSeleccionado
+                ? `Actividades del ${new Date(diaSeleccionado + "T00:00:00").toLocaleDateString("es-ES", {
+                    weekday: "long",
+                    day: "numeric",
+                    month: "long",
+                  })}`
+                : "Mis próximas actividades"}
+            </h2>
+
+            <div className="space-y-3">
+
+              {(diaSeleccionado
+                ? citas.filter((a) => a.fecha === diaSeleccionado)
+                : clasesMes
+              ).length === 0 && (
+                <p className="text-sm text-gray-400">
+                  No tienes actividades programadas.
+                </p>
+              )}
+
+              {(diaSeleccionado
+                ? citas.filter((a) => a.fecha === diaSeleccionado)
+                : clasesMes
+              ).map((a) => (
+
+                <div
+                  key={a.id}
+                  className={`rounded-lg p-4 border ${
+                    a.es_examen
+                      ? "border-orange-100 bg-orange-50"
+                      : "border-emerald-100 bg-emerald-50"
+                  }`}
+                >
+
+                  <div className="flex items-center gap-2 text-sm font-semibold mb-2">
+                    <Clock className="w-4 h-4" />
+                    {a.hora_inicio?.slice(0, 5)} - {a.hora_fin?.slice(0, 5)}
+                  </div>
+
+                  <div className="text-sm">
+                    {a.es_examen
+                      ? "🎓 Examen Policial"
+                      : `Clase ${a.numero_clase}/${citas.filter(x => x.matricula === a.matricula && !x.es_examen).length}`}
+                  </div>
+
+                  <div className="text-sm text-gray-500 mt-1">
+                    Instructor: {a.instructor_nombre || "Sin instructor"}
+                  </div>
+
+                </div>
+              ))}
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+    );
+  }
   
   /* ============== VISTA ADMIN ============== */
   return (
@@ -259,11 +595,16 @@ export default function Calendario() {
         <div className="flex gap-2">
           {esAdmin && (
           <button
-            type="button"
-            onClick={() => setModalNueva(true)}
-            className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium"
+              type="button"
+              onClick={() => setModalNueva(true)}
+              className="relative group overflow-hidden px-20 h-11 rounded-3xl bg-green-500 text-white flex items-center gap-2 transition-all duration-300 hover:bg-green-600 justify-end hover:cursor-pointer"
           >
-            <Plus className="w-4 h-4" /> Nueva Asignación
+              <span className="absolute top-0 left-[-75%] w-[50%] h-full bg-gradient-to-r from-transparent via-white/60 to-transparent skew-x-12 group-hover:left-[125%] transition-all duration-700"></span>
+
+              <span className="relative z-10 flex items-center gap-2">
+                  <Plus className="size-5" />
+                  Nueva Asignación
+              </span>
           </button>
           )}
           
@@ -279,7 +620,7 @@ export default function Calendario() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-6">
         <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold">{MONTHS[vm]} {vy}</h2>
@@ -291,7 +632,7 @@ export default function Calendario() {
           <div className="grid grid-cols-7 gap-2 mb-2">
             {DAYS.map((d) => <div key={d} className="text-center text-sm text-gray-500 py-2">{d}</div>)}
           </div>
-          <div className="grid grid-cols-7 gap-2">
+          <div className="grid grid-cols-7 gap-1 sm:gap-2">
             {cells.map((c, idx) => {
               if (!c) return <div key={idx} />;
               const dia = citas.filter((a) => a.fecha === c.dateStr);
@@ -312,10 +653,10 @@ export default function Calendario() {
                     {visibles.map((a) => (
                       <div
                         key={a.id}
-                        className={`text-[11px] px-1.5 py-0.5 rounded truncate ${
-                          parseInt(a.numero_clase) === 9
-                            ? "bg-orange-300 text-gre-900"
-                            : "bg-blue-300 text-blue-900"
+                        className={`text-[10px] sm:text-[11px] px-1 py-0.5 rounded truncate ${
+                          a.es_examen
+                            ? "bg-orange-300 text-orange-900"
+                            : INSTRUCTOR_COLORS[a.instructor] || "bg-gray-300 text-gray-900"
                         }`}
                       >
                         {a.hora_inicio?.slice(0, 5)} Â· {a.estudiante_nombre}
@@ -326,6 +667,40 @@ export default function Calendario() {
                 </div>
               );
             })}
+          </div>
+          <div className="mt-6 border-t pt-4">
+            <h3 className="text-sm font-semibold text-gray-700 mb-3">
+              Leyenda de instructores
+            </h3>
+            <div className="flex flex-wrap gap-3">
+
+              {instructores.map((inst) => (
+                <div
+                  key={inst.id}
+                  className="flex items-center gap-2 text-sm"
+                >
+                  <div
+                    className={`w-4 h-4 rounded-full ${
+                      INSTRUCTOR_COLORS[inst.id] || "bg-gray-300"
+                    }`}
+                  />
+
+                  <span className="text-gray-700">
+                    {inst.nombre} {inst.apellido}
+                  </span>
+                </div>
+              ))}
+
+              <div className="flex items-center gap-2 text-sm">
+                <div className="w-4 h-4 rounded-full bg-orange-300" />
+
+                <span className="text-gray-700">
+                  Examen Policial
+                </span>
+              </div>
+
+            </div>
+
           </div>
         </div>
 
@@ -343,10 +718,17 @@ export default function Calendario() {
               <p className="text-sm text-gray-400">No hay clases este día.</p>
             )}
             {(diaSeleccionado
-              ? citas.filter((a) => a.fecha === diaSeleccionado)
-              : hoyCitas
-            ).map((a) => (
-              <div key={a.id} className="rounded-lg p-4 border border-emerald-100 bg-emerald-50">
+                ? citas.filter((a) => a.fecha === diaSeleccionado)
+                : hoyCitas
+              ).map((a) => (
+                <div
+                  key={a.id}
+                  onClick={() => {
+                    setCitaSeleccionada(a);
+                    setModalEditar(true);
+                  }}
+                  className="rounded-lg p-4 border border-emerald-100 bg-emerald-50 cursor-pointer hover:shadow-md transition"
+                >
                 <div className="flex items-center gap-2 text-sm font-semibold text-green-800 mb-2">
                   
                   <Clock className="w-4 h-4" />
@@ -377,6 +759,13 @@ export default function Calendario() {
         abierto={modalExamen}
         onClose={() => setModalExamen(false)}
         onCreada={cargar}
+      />
+
+      <CalendarioEditarForm
+        abierto={modalEditar}
+        onClose={() => setModalEditar(false)}
+        onActualizada={cargar}
+        cita={citaSeleccionada}
       />
     </div>
   );

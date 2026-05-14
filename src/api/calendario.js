@@ -147,7 +147,7 @@ export const eliminarCita = async (id) => {
 export const actualizarCita = async (id, data) => {
   try {
     const response = await fetch(`${API_URL}/calendario/${id}/`, {
-      method: "PUT",
+      method: "PATCH",
       headers: getHeaders(),
       body: JSON.stringify(data)
     });

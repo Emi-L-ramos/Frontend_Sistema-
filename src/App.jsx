@@ -8,6 +8,7 @@ import RecibosPage from "./pages/recibos/RecibosPage";
 import UsuariosPage from "./pages/admin/UsuariosPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Asistencia from "./pages/asistencia/Asistencia";
+import PerfilEstudiante from "./pages/perfil_studiante/perfil_estudiante";
 
 import "./App.css";
 
@@ -38,12 +39,15 @@ function App() {
                         </ProtectedRoute>
                     } />
                     
-                    <Route path="/dashboard/usuarios" element={
-                        <ProtectedRoute rolesPermitidos={['admin']}>
-                            <UsuariosPage />
-                        </ProtectedRoute>
-                    } />
-                    
+                                        <Route
+                        path="/dashboard/perfiles"
+                        element={
+                            <ProtectedRoute>
+                                <PerfilEstudiante />
+                            </ProtectedRoute>
+                        }
+                    />
+
                     <Route path="*" element={<Navigate to="/login" />} />
                 </Routes>
             </Router>
