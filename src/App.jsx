@@ -12,6 +12,8 @@ import PerfilEstudiante from "./pages/perfil_studiante/perfil_estudiante";
 import PlanStudio from "./pages/plan_studio/plan_studio";
 import PlanEstudioForm from "./pages/plan_studio/PlanEstudioForm";
 import VerPlanEstudio from "./pages/plan_studio/VerPlanEstudio";
+import ExamenTeoricoPage from "./pages/examen_teorico/ExamenTeoricoPage";
+import ExamenTeoricoEstudiante from "./pages/examen_teorico/ExamenTeoricoEstudiante";
 
 import "./App.css";
 
@@ -35,6 +37,15 @@ function App() {
                             <MatriculaPage />
                         </ProtectedRoute>
                     } />
+
+                    <Route
+                        path="/dashboard/examen-teorico"
+                        element={
+                            <ProtectedRoute rolesPermitidos={['admin']}>
+                            <ExamenTeoricoPage />
+                            </ProtectedRoute>
+                        }
+                        />
                     
                     <Route path="/dashboard/recibos" element={
                         <ProtectedRoute rolesPermitidos={['admin', 'secretaria', 'cajero']}>
@@ -61,6 +72,25 @@ function App() {
                             <Dashboard />
                         </ProtectedRoute>
                     } />
+
+
+                    <Route
+                        path="/dashboard/plan-estudio/editar/:id"
+                        element={
+                            <ProtectedRoute rolesPermitidos={['admin']}>
+                            <PlanEstudioForm />
+                            </ProtectedRoute>
+                        }
+                        />
+
+                    <Route
+                        path="/dashboard/mi-examen-teorico"
+                        element={
+                            <ProtectedRoute rolesPermitidos={['estudiante']}>
+                            <ExamenTeoricoEstudiante />
+                            </ProtectedRoute>
+                        }
+                        />
 
                     <Route path="/dashboard/plan-estudio/ver" element={
                         <ProtectedRoute rolesPermitidos={['admin']}>

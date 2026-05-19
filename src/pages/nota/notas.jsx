@@ -45,13 +45,41 @@ function NotasPages({ userRole }) {
     });
   }, [notas, busqueda, filtroTipo]);
 
+  const notasAgrupadas = useMemo(() => {
+    const agrupadas = {};
+
+    notasFiltradas.forEach((nota) => {
+      const matriculaId = nota.matricula;
+
+      if (!agrupadas[matriculaId]) {
+        agrupadas[matriculaId] = {
+          ...nota,
+          nota_practica: null,
+          nota_teorica: null,
+          comentario_practico: "",
+          comentario_teorico: "",
+        };
+      }
+
+      if (nota.tipo_nota === "practico") {
+        agrupadas[matriculaId].nota_practica = nota.nota;
+        agrupadas[matriculaId].comentario_practico = nota.comentario;
+      }
+
+      if (nota.tipo_nota === "teorico") {
+        agrupadas[matriculaId].nota_teorica = nota.nota;
+        agrupadas[matriculaId].comentario_teorico = nota.comentario;
+      }
+    });
+
+    return Object.values(agrupadas);
+  }, [notasFiltradas]);
+
   return (
     <div className="p-6 bg-slate-50 min-h-screen">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-slate-800">
-            Notas
-          </h1>
+          <h1 className="text-3xl font-bold text-slate-800">Notas</h1>
 
           {rol === "admin" && (
             <p className="text-slate-500 mt-2">
@@ -71,36 +99,21 @@ function NotasPages({ userRole }) {
             </p>
           )}
         </div>
-
-        
       </div>
 
       <div className="flex flex-col md:flex-row gap-4 mb-8">
-
-        
-
         {(rol === "admin" || rol === "instructor") && (
           <div className="flex items-center bg-white border border-slate-200 rounded-xl px-4 h-14 w-full md:max-w-xl">
-          <Search className="text-slate-400" size={20} />
-          <input
-            type="text"
-            placeholder={
-              rol === "estudiante"
-                ? "Buscar por instructor, plan o curso..."
-                : "Buscar por estudiante, cédula, instructor o plan..."
-            }
-            className="w-full h-full outline-none ml-3 bg-transparent text-slate-700"
-            value={busqueda}
-            onChange={(e) => setBusqueda(e.target.value)}
-          />
-          
-        </div>
+            <Search className="text-slate-400" size={20} />
+            <input
+              type="text"
+              placeholder="Buscar por estudiante, cédula, instructor o plan..."
+              className="w-full h-full outline-none ml-3 bg-transparent text-slate-700"
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+            />
+          </div>
         )}
-        
-
-
-
-
 
         <select
           value={filtroTipo}
@@ -113,30 +126,22 @@ function NotasPages({ userRole }) {
           <option value="Avanzado">Avanzado</option>
         </select>
 
-
         {rol === "instructor" && (
-
           <button
             onClick={() => setModalAbierto(true)}
             className="flex items-center justify-center gap-2 bg-blue-600 text-white px-5 py-3 rounded-xl font-semibold hover:bg-blue-700 transition"
           >
             <Plus size={20} />
-            Agregar nota
+            Agregar nota práctica
           </button>
         )}
       </div>
 
-      {rol === "admin" && (
-        <TablaAdmin notas={notasFiltradas} />
-      )}
+      {rol === "admin" && <TablaAdmin notas={notasAgrupadas} />}
 
-      {rol === "instructor" && (
-        <TablaInstructor notas={notasFiltradas} />
-      )}
+      {rol === "instructor" && <TablaInstructor notas={notasAgrupadas} />}
 
-      {rol === "estudiante" && (
-        <TablaEstudiante notas={notasFiltradas} />
-      )}
+      {rol === "estudiante" && <TablaEstudiante notas={notasAgrupadas} />}
 
       <NotasForm
         open={modalAbierto}
@@ -150,7 +155,7 @@ function NotasPages({ userRole }) {
 function TablaAdmin({ notas }) {
   return (
     <ContenedorTabla>
-      <table className="w-full min-w-[1100px]">
+      <table className="w-full min-w-[1200px]">
         <thead>
           <tr className="border-b border-slate-200">
             <Th>Estudiante</Th>
@@ -159,38 +164,16 @@ function TablaAdmin({ notas }) {
             <Th>Curso</Th>
             <Th>Modalidad</Th>
             <Th>Nota práctica</Th>
-            <Th>Resultado</Th>
+            <Th>Resultado práctica</Th>
+            <Th>Nota teórica</Th>
+            <Th>Resultado teórico</Th>
             <Th>Comentario</Th>
           </tr>
         </thead>
 
         <tbody>
           {notas.map((nota) => (
-            <tr key={nota.id} className="border-b border-slate-200 hover:bg-slate-50 transition">
-              <TdBold>{nota.estudiante_nombre}</TdBold>
-              <Td>{nota.estudiante_cedula}</Td>
-              <Td>{nota.instructor_nombre}</Td>
-            
-              <Td>
-                <Badge color="purple">{nota.tipo_curso}</Badge>
-              </Td>
-              <Td>
-                <Badge color="green">{nota.modalidad}</Badge>
-              </Td>
-              <Td>
-                <Badge color={Number(nota.nota) >= 70 ? "green" : "red"}>
-                  {nota.nota}
-                </Badge>
-              </Td>
-
-              <Td>
-                <Badge color={Number(nota.nota) >= 70 ? "green" : "red"}>
-                  {Number(nota.nota) >= 70 ? "Aprobado" : "Reprobado"}
-                </Badge>
-              </Td>
-
-              <Td>{nota.comentario || "Sin comentario"}</Td>
-            </tr>
+            <FilaNota key={nota.matricula} nota={nota} mostrarEstudiante />
           ))}
         </tbody>
       </table>
@@ -211,43 +194,16 @@ function TablaInstructor({ notas }) {
             <Th>Curso</Th>
             <Th>Modalidad</Th>
             <Th>Nota práctica</Th>
-            <Th>Resultado</Th>
+            <Th>Resultado práctica</Th>
+            <Th>Nota teórica</Th>
+            <Th>Resultado teórico</Th>
             <Th>Comentario</Th>
           </tr>
         </thead>
 
         <tbody>
           {notas.map((nota) => (
-            <tr
-              key={nota.id}
-              className="border-b border-slate-200 hover:bg-slate-50 transition"
-            >
-              <TdBold>{nota.estudiante_nombre}</TdBold>
-
-              <Td>{nota.estudiante_cedula}</Td>
-
-              <Td>
-                <Badge color="purple">{nota.tipo_curso}</Badge>
-              </Td>
-
-              <Td>
-                <Badge color="green">{nota.modalidad}</Badge>
-              </Td>
-
-              <Td>
-                <Badge color={Number(nota.nota) >= 70 ? "green" : "red"}>
-                  {nota.nota}
-                </Badge>
-              </Td>
-
-              <Td>
-                <Badge color={Number(nota.nota) >= 70 ? "green" : "red"}>
-                  {Number(nota.nota) >= 70 ? "Aprobado" : "Reprobado"}
-                </Badge>
-              </Td>
-
-              <Td>{nota.comentario || "Sin comentario"}</Td>
-            </tr>
+            <FilaNota key={nota.matricula} nota={nota} mostrarEstudiante />
           ))}
         </tbody>
       </table>
@@ -260,51 +216,106 @@ function TablaInstructor({ notas }) {
 function TablaEstudiante({ notas }) {
   return (
     <ContenedorTabla>
-      <table className="w-full min-w-[900px]">
+      <table className="w-full min-w-[950px]">
         <thead>
           <tr className="border-b border-slate-200">
             <Th>Instructor</Th>
-          
-         
-            {/*
-            <Th>Nota</Th>
+            <Th>Curso</Th>
+            <Th>Modalidad</Th>
+            <Th>Nota práctica</Th>
+            <Th>Resultado práctica</Th>
+            <Th>Nota teórica</Th>
+            <Th>Resultado teórico</Th>
             <Th>Comentario</Th>
-            */}
           </tr>
         </thead>
 
         <tbody>
           {notas.map((nota) => (
-            <tr
-              key={nota.id}
-              className="border-b border-slate-200 hover:bg-slate-50 transition"
-            >
-              <TdBold>{nota.instructor_nombre}</TdBold>
-
-              <Td>
-                <Badge color="purple">{nota.tipo_curso}</Badge>
-              </Td>
-
-              <Td>
-                <Badge color={Number(nota.nota) >= 70 ? "green" : "red"}>
-                  {nota.nota}
-                </Badge>
-              </Td>
-
-              <Td>
-                <Badge color={Number(nota.nota) >= 70 ? "green" : "red"}>
-                  {Number(nota.nota) >= 70 ? "Aprobado" : "Reprobado"}
-                </Badge>
-              </Td>
-
-              <Td>{nota.comentario || "Sin comentario"}</Td>
-            </tr>
+            <FilaNota key={nota.matricula} nota={nota} mostrarInstructor />
           ))}
         </tbody>
       </table>
 
       {notas.length === 0 && <MensajeVacio />}
     </ContenedorTabla>
+  );
+}
+
+function FilaNota({ nota, mostrarEstudiante, mostrarInstructor }) {
+  const comentario =
+    nota.comentario_practico ||
+    nota.comentario_teorico ||
+    nota.comentario ||
+    "Sin comentario";
+
+  return (
+    <tr className="border-b border-slate-200 hover:bg-slate-50 transition">
+      {mostrarEstudiante && (
+        <>
+          <TdBold>{nota.estudiante_nombre || "Sin estudiante"}</TdBold>
+          <Td>{nota.estudiante_cedula || "Sin cédula"}</Td>
+        </>
+      )}
+
+      {mostrarInstructor && (
+        <TdBold>{nota.instructor_nombre || "Sin instructor"}</TdBold>
+      )}
+
+      {mostrarEstudiante && (
+        <Td>{nota.instructor_nombre || "Sin instructor"}</Td>
+      )}
+
+      <Td>
+        <Badge color="purple">{nota.tipo_curso || "Sin curso"}</Badge>
+      </Td>
+
+      <Td>
+        <Badge color="green">{nota.modalidad || "Sin modalidad"}</Badge>
+      </Td>
+
+      <Td>
+        <NotaBadge nota={nota.nota_practica} />
+      </Td>
+
+      <Td>
+        <ResultadoBadge nota={nota.nota_practica} />
+      </Td>
+
+      <Td>
+        <NotaBadge nota={nota.nota_teorica} textoEspera="En espera" />
+      </Td>
+
+      <Td>
+        <ResultadoBadge nota={nota.nota_teorica} textoEspera="Pendiente de examen" />
+      </Td>
+
+      <Td>{comentario}</Td>
+    </tr>
+  );
+}
+
+function NotaBadge({ nota, textoEspera = "En espera" }) {
+  if (nota === null || nota === undefined || nota === "") {
+    return <Badge color="gray">{textoEspera}</Badge>;
+  }
+
+  return (
+    <Badge color={Number(nota) >= 70 ? "green" : "red"}>
+      {nota}
+    </Badge>
+  );
+}
+
+function ResultadoBadge({ nota, textoEspera = "Pendiente" }) {
+  if (nota === null || nota === undefined || nota === "") {
+    return <Badge color="gray">{textoEspera}</Badge>;
+  }
+
+  return (
+    <Badge color={Number(nota) >= 70 ? "green" : "red"}>
+      {Number(nota) >= 70 ? "Aprobado" : "Reprobado"}
+    </Badge>
   );
 }
 
@@ -345,10 +356,15 @@ function Badge({ children, color }) {
     purple: "bg-purple-100 text-purple-700",
     green: "bg-green-100 text-green-700",
     red: "bg-red-100 text-red-700",
+    gray: "bg-slate-100 text-slate-600",
   };
 
   return (
-    <span className={`px-4 py-1.5 rounded-full text-sm font-semibold ${colores[color]}`}>
+    <span
+      className={`px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap ${
+        colores[color] || colores.gray
+      }`}
+    >
       {children}
     </span>
   );

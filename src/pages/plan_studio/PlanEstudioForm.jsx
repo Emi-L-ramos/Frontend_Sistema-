@@ -1,28 +1,33 @@
 import { useEffect, useState } from "react";
 import { Plus, Trash2, Save, ArrowLeft } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import axios from "../../api/axios";
+import Swal from "sweetalert2";
 
-function PlanEstudioForm(initialData, onSave, OnError, onClose) {
+function PlanEstudioForm() {
   const navigate = useNavigate();
+  const { id } = useParams();
+
+  const editando = Boolean(id);
 
   const [tiposCurso, setTiposCurso] = useState([]);
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState("");
   const [mensaje, setMensaje] = useState("");
+  const [cargandoPlan, setCargandoPlan] = useState(editando);
 
   const [formData, setFormData] = useState({
     nombre: "",
     tipo_curso: "",
-    descripcion: "",
+    activo: true,
     temas: [
       {
         titulo: "",
-        descripcion: "",
+        activo: true,
         subtemas: [
           {
             titulo: "",
-            descripcion: "",
+            activo: true,
           },
         ],
       },
@@ -32,6 +37,12 @@ function PlanEstudioForm(initialData, onSave, OnError, onClose) {
   useEffect(() => {
     obtenerTiposCurso();
   }, []);
+
+  useEffect(() => {
+    if (editando) {
+      obtenerPlan();
+    }
+  }, [id]);
 
   const obtenerTiposCurso = async () => {
     try {
@@ -48,10 +59,62 @@ function PlanEstudioForm(initialData, onSave, OnError, onClose) {
     }
   };
 
+  const obtenerPlan = async () => {
+    try {
+      setCargandoPlan(true);
+
+      const response = await axios.get(`/plan-estudio/${id}/`);
+      const plan = response.data;
+
+      setFormData({
+        nombre: plan.nombre || "",
+        tipo_curso: plan.tipo_curso || "",
+        activo: plan.activo ?? true,
+        temas:
+          plan.temas && plan.temas.length > 0
+            ? plan.temas.map((tema) => ({
+                titulo: tema.titulo || "",
+                activo: tema.activo ?? true,
+                subtemas:
+                  tema.subtemas && tema.subtemas.length > 0
+                    ? tema.subtemas.map((subtema) => ({
+                        titulo: subtema.titulo || "",
+                        activo: subtema.activo ?? true,
+                      }))
+                    : [
+                        {
+                          titulo: "",
+                          activo: true,
+                        },
+                      ],
+              }))
+            : [
+                {
+                  titulo: "",
+                  activo: true,
+                  subtemas: [
+                    {
+                      titulo: "",
+                      activo: true,
+                    },
+                  ],
+                },
+              ],
+      });
+    } catch (error) {
+      console.error("Error cargando plan:", error.response?.data || error);
+      setError("No se pudo cargar el plan de estudio.");
+    } finally {
+      setCargandoPlan(false);
+    }
+  };
+
   const handlePlanChange = (e) => {
+    const { name, value, type, checked } = e.target;
+
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      [name]: type === "checkbox" ? checked : value,
     });
   };
 
@@ -85,11 +148,11 @@ function PlanEstudioForm(initialData, onSave, OnError, onClose) {
         ...formData.temas,
         {
           titulo: "",
-          descripcion: "",
+          activo: true,
           subtemas: [
             {
               titulo: "",
-              descripcion: "",
+              activo: true,
             },
           ],
         },
@@ -113,7 +176,7 @@ function PlanEstudioForm(initialData, onSave, OnError, onClose) {
 
     nuevosTemas[indexTema].subtemas.push({
       titulo: "",
-      descripcion: "",
+      activo: true,
     });
 
     setFormData({
@@ -135,6 +198,26 @@ function PlanEstudioForm(initialData, onSave, OnError, onClose) {
     });
   };
 
+  const limpiarFormulario = () => {
+    setFormData({
+      nombre: "",
+      tipo_curso: "",
+      activo: true,
+      temas: [
+        {
+          titulo: "",
+          activo: true,
+          subtemas: [
+            {
+              titulo: "",
+              activo: true,
+            },
+          ],
+        },
+      ],
+    });
+  };
+
   const guardarPlan = async (e) => {
     e.preventDefault();
 
@@ -151,41 +234,70 @@ function PlanEstudioForm(initialData, onSave, OnError, onClose) {
       return;
     }
 
-    const temasValidos = formData.temas.every((tema) =>
-      tema.titulo.trim()
-    );
+    if (formData.temas.length === 0) {
+      setError("Debe agregar al menos un tema.");
+      return;
+    }
+
+    const temasValidos = formData.temas.every((tema) => tema.titulo.trim());
 
     if (!temasValidos) {
       setError("Todos los temas deben tener un título.");
       return;
     }
 
+    const subtemasValidos = formData.temas.every((tema) =>
+      tema.subtemas.every((subtema) => subtema.titulo.trim())
+    );
+
+    if (!subtemasValidos) {
+      setError("Todos los subtemas deben tener un título.");
+      return;
+    }
+
+    const payload = {
+      ...formData,
+      temas: formData.temas.map((tema, indexTema) => ({
+        titulo: tema.titulo.trim(),
+        orden: indexTema + 1,
+        activo: tema.activo ?? true,
+        subtemas: tema.subtemas.map((subtema, indexSubtema) => ({
+          titulo: subtema.titulo.trim(),
+          orden: indexSubtema + 1,
+          activo: subtema.activo ?? true,
+        })),
+      })),
+    };
+
     try {
       setGuardando(true);
 
-      await axios.post("/plan-estudio/", formData);
+      if (editando) {
+        await axios.put(`/plan-estudio/${id}/`, payload);
 
-      setMensaje("Plan de estudio registrado correctamente.");
+        await Swal.fire({
+          icon: "success",
+          title: "Plan actualizado",
+          text: "El plan de estudio fue actualizado correctamente.",
+          confirmButtonColor: "#16a34a",
 
-      setFormData({
-        nombre: "",
-        tipo_curso: "",
-        descripcion: "",
-        temas: [
-          {
-            titulo: "",
-            descripcion: "",
-            subtemas: [
-              {
-                titulo: "",
-                descripcion: "",
-              },
-            ],
-          },
-        ],
-      });
+        });
+        navigate("/dashboard/plan-estudio/ver");
+      } else {
+        await axios.post("/plan-estudio/", payload);
+
+        setMensaje("Plan de estudio registrado correctamente.");
+        await Swal.fire({
+          icon: "success",
+          title: "Plan Registrado",
+          text: "El plan de estudio Registrado correctamente.",
+          confirmButtonColor: "#16a34a",
+        });
+        limpiarFormulario();
+        navigate("/dashboard/plan-estudio/ver");
+      }
     } catch (error) {
-      console.error("Error guardando plan:", error);
+      console.error("Error guardando plan:", error.response?.data || error);
 
       if (error.response?.data) {
         setError(JSON.stringify(error.response.data));
@@ -197,28 +309,40 @@ function PlanEstudioForm(initialData, onSave, OnError, onClose) {
     }
   };
 
+  if (cargandoPlan) {
+    return (
+      <div className="min-h-screen bg-slate-50 p-6">
+        <div className="max-w-6xl mx-auto bg-white border border-slate-200 rounded-3xl p-6 text-slate-500">
+          Cargando plan de estudio...
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 p-6">
       <div className="max-w-6xl mx-auto bg-white border border-slate-200 rounded-3xl p-6">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-8 gap-4">
           <div>
             <h1 className="text-3xl font-bold text-slate-900">
-              Nuevo Plan de Estudio
+              {editando ? "Editar Plan de Estudio" : "Nuevo Plan de Estudio"}
             </h1>
 
             <p className="text-slate-500 mt-2">
-              Registra el plan según el nivel del curso, agregando temas y subtemas.
+              {editando
+                ? "Modifica el plan, sus temas y subtemas."
+                : "Registra el plan según el nivel del curso, agregando temas y subtemas."}
             </p>
           </div>
 
           <button
-              type="button"
-               onClick={() => navigate("/dashboard/plan-estudio")}
-              className="flex items-center gap-2 px-4 py-3 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100"
-            >
-              <ArrowLeft size={18} />
-              Volver
-            </button>
+            type="button"
+            onClick={() => navigate("/dashboard/plan-estudio/ver")}
+            className="flex items-center gap-2 px-4 py-3 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100"
+          >
+            <ArrowLeft size={18} />
+            Volver
+          </button>
         </div>
 
         <form onSubmit={guardarPlan} className="space-y-6">
@@ -260,21 +384,6 @@ function PlanEstudioForm(initialData, onSave, OnError, onClose) {
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-2">
-              Descripción general
-            </label>
-
-            <textarea
-              name="descripcion"
-              value={formData.descripcion}
-              onChange={handlePlanChange}
-              rows="3"
-              placeholder="Descripción del plan de estudio..."
-              className="w-full border border-slate-300 rounded-xl px-4 py-3 outline-none resize-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500"
-            />
-          </div>
-
           <div className="border-t border-slate-200 pt-6">
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-xl font-bold text-slate-800">
@@ -313,23 +422,14 @@ function PlanEstudioForm(initialData, onSave, OnError, onClose) {
                     )}
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+                  <div className="mb-5">
                     <input
                       type="text"
                       name="titulo"
                       value={tema.titulo}
                       onChange={(e) => handleTemaChange(indexTema, e)}
                       placeholder="Título del tema"
-                      className="h-12 border border-slate-300 rounded-xl px-4 outline-none"
-                    />
-
-                    <input
-                      type="text"
-                      name="descripcion"
-                      value={tema.descripcion}
-                      onChange={(e) => handleTemaChange(indexTema, e)}
-                      placeholder="Descripción del tema"
-                      className="h-12 border border-slate-300 rounded-xl px-4 outline-none"
+                      className="w-full h-12 border border-slate-300 rounded-xl px-4 outline-none"
                     />
                   </div>
 
@@ -351,7 +451,7 @@ function PlanEstudioForm(initialData, onSave, OnError, onClose) {
                     {tema.subtemas.map((subtema, indexSubtema) => (
                       <div
                         key={indexSubtema}
-                        className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-3"
+                        className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3"
                       >
                         <input
                           type="text"
@@ -361,17 +461,6 @@ function PlanEstudioForm(initialData, onSave, OnError, onClose) {
                             handleSubtemaChange(indexTema, indexSubtema, e)
                           }
                           placeholder="Título del subtema"
-                          className="h-11 border border-slate-300 rounded-xl px-4 outline-none bg-white"
-                        />
-
-                        <input
-                          type="text"
-                          name="descripcion"
-                          value={subtema.descripcion}
-                          onChange={(e) =>
-                            handleSubtemaChange(indexTema, indexSubtema, e)
-                          }
-                          placeholder="Descripción del subtema"
                           className="h-11 border border-slate-300 rounded-xl px-4 outline-none bg-white"
                         />
 
@@ -413,7 +502,13 @@ function PlanEstudioForm(initialData, onSave, OnError, onClose) {
               className="flex items-center gap-2 px-6 py-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-60"
             >
               <Save size={20} />
-              {guardando ? "Guardando..." : "Guardar plan"}
+              {guardando
+                ? editando
+                  ? "Actualizando..."
+                  : "Guardando..."
+                : editando
+                ? "Actualizar plan"
+                : "Guardar plan"}
             </button>
           </div>
         </form>

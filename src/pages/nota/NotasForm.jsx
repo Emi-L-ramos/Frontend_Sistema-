@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Search, X } from "lucide-react";
+import { Search, X, CheckCircle2 } from "lucide-react";
 import axios from "../../api/axios";
 import Swal from "sweetalert2";
 
@@ -7,6 +7,7 @@ function NotasForm({ open, onClose, onNotaGuardada }) {
   const [busqueda, setBusqueda] = useState("");
   const [matriculas, setMatriculas] = useState([]);
   const [seleccionado, setSeleccionado] = useState(null);
+  const [verificando, setVerificando] = useState(false);
 
   const [formData, setFormData] = useState({
     matricula: "",
@@ -19,122 +20,70 @@ function NotasForm({ open, onClose, onNotaGuardada }) {
 
   useEffect(() => {
     if (open) {
-      obtenerMatriculas();
+      obtenerMatriculasConProgreso();
     }
   }, [open]);
 
-  const obtenerMatriculas = async () => {
-  try {
-    const response = await axios.get("/calendario/");
-
-    const datos = Array.isArray(response.data)
-      ? response.data
-      : response.data.results || [];
-
-    const matriculasUnicas = [];
-
-    datos.forEach((clase) => {
-      const yaExiste = matriculasUnicas.some(
-        (m) => m.id === clase.matricula
-      );
-
-      if (!yaExiste) {
-        matriculasUnicas.push({
-          id: clase.matricula,
-          estudiante_nombre: clase.estudiante_nombre,
-          estudiante_cedula: clase.estudiante_cedula,
-          tipo_curso: clase.tipo_curso,
-          modalidad: clase.modalidad,
-          horario: clase.horario,
-          estudiante_id: clase.estudiante_id,
+  // Obtener estudiantes que han completado el plan
+  const obtenerMatriculasConProgreso = async () => {
+    try {
+      setVerificando(true);
+      
+      const response = await axios.get("/progreso-tema/verificar-plan-completado/");
+      
+      const datos = response.data || [];
+      
+      const matriculasCompletadas = datos.filter(
+        item => item.plan_completado === true
+      ).map(item => ({
+        id: item.matricula_id,
+        estudiante_nombre: item.estudiante_nombre,
+        estudiante_cedula: item.estudiante_cedula,
+        tipo_curso: item.tipo_curso,
+        plan_nombre: item.plan_nombre,
+        porcentaje: item.porcentaje,
+        estudiante_id: item.estudiante_id,
+        fecha_inscripcion: item.fecha_inscripcion,
+      }));
+      
+      setMatriculas(matriculasCompletadas);
+      
+      if (matriculasCompletadas.length === 0) {
+        Swal.fire({
+          title: 'Sin estudiantes disponibles',
+          text: 'No hay estudiantes que hayan completado el plan de estudio para registrar notas prácticas.',
+          icon: 'info',
+          confirmButtonText: 'Entendido',
+          confirmButtonColor: '#3b82f6',
         });
       }
-    });
-
-    setMatriculas(matriculasUnicas);
-  } catch (err) {
-    console.log("ERROR CARGANDO ESTUDIANTES ASIGNADOS:", err);
-    setError("No se pudieron cargar los estudiantes asignados.");
-  }
-};
+      
+    } catch (err) {
+      console.log("ERROR CARGANDO ESTUDIANTES:", err);
+      setError("No se pudieron cargar los estudiantes que completaron el plan.");
+      
+      Swal.fire({
+        title: 'Error',
+        text: 'No se pudieron cargar los estudiantes. Verifica la conexión.',
+        icon: 'error',
+        confirmButtonText: 'Cerrar',
+      });
+    } finally {
+      setVerificando(false);
+    }
+  };
 
   const estudiantesFiltrados = useMemo(() => {
     return matriculas.filter((m) => {
       const texto = `
         ${m.estudiante_nombre || ""}
         ${m.estudiante_cedula || ""}
+        ${m.plan_nombre || ""}
       `.toLowerCase();
 
       return texto.includes(busqueda.toLowerCase());
     });
   }, [matriculas, busqueda]);
-
-  // Función para verificar si el plan de estudio está completo
-  const verificarPlanCompleto = async (estudianteId) => {
-    try {
-      // Mostrar loading mientras se verifica
-      Swal.fire({
-        title: 'Verificando plan de estudio...',
-        text: 'Por favor espere',
-        allowOutsideClick: false,
-        didOpen: () => {
-          Swal.showLoading();
-        }
-      });
-
-      // Usar el endpoint que ya tienes
-      const response = await axios.get(`/dashboard-plan/estudiante-progreso/`);
-      
-      Swal.close();
-      
-      // Buscar el progreso del estudiante específico
-      const progresoEstudiante = response.data.find(
-        progreso => progreso.estudiante_id === estudianteId || 
-                    progreso.estudiante_nombre?.includes(seleccionado?.estudiante_nombre)
-      );
-      
-      // Si no encontramos el estudiante en el progreso
-      if (!progresoEstudiante) {
-        await Swal.fire({
-          title: 'Plan de estudio incompleto',
-          text: 'El estudiante no ha completado todo el plan de estudio. Debe finalizar todos los módulos antes de registrar la nota del examen práctico.',
-          icon: 'warning',
-          confirmButtonText: 'Entendido',
-          confirmButtonColor: '#f59e0b',
-        });
-        return false;
-      }
-      
-      // Verificar si puede presentar el examen según tu API
-      if (!progresoEstudiante.puede_presentar_examen) {
-        await Swal.fire({
-          title: 'Plan de estudio incompleto',
-          text: 'El estudiante no ha completado todo el plan de estudio. Debe finalizar todos los módulos antes de registrar la nota del examen práctico.',
-          icon: 'warning',
-          confirmButtonText: 'Entendido',
-          confirmButtonColor: '#f59e0b',
-        });
-        return false;
-      }
-      
-      // Todo está completo
-      return true;
-      
-    } catch (error) {
-      console.error("Error verificando progreso:", error);
-      Swal.close();
-      
-      await Swal.fire({
-        title: 'Error',
-        text: 'No se pudo verificar el progreso del plan de estudio. Por favor, intenta de nuevo.',
-        icon: 'error',
-        confirmButtonText: 'Cerrar',
-        confirmButtonColor: '#ef4444',
-      });
-      
-      return false;
-    }
-  };
 
   const seleccionarEstudiante = (m) => {
     setSeleccionado(m);
@@ -164,75 +113,82 @@ function NotasForm({ open, onClose, onNotaGuardada }) {
       return;
     }
 
-    // Verificar si el plan de estudio está completo ANTES de guardar
-    const planCompleto = await verificarPlanCompleto(seleccionado?.estudiante_id);
-    
-    if (!planCompleto) {
-      // Si el plan no está completo, no continuar con el guardado
+    const notaNum = parseFloat(formData.nota);
+    if (notaNum < 0 || notaNum > 100) {
+      setError("La nota debe estar entre 0 y 100.");
       return;
     }
 
     try {
       setGuardando(true);
 
+      // Verificar nuevamente antes de guardar
+      const verificarResponse = await axios.get(`/progreso-tema/${formData.matricula}/plan-completado/`);
+      
+      if (!verificarResponse.data.plan_completado) {
+        await Swal.fire({
+          title: 'Plan de estudio incompleto',
+          text: 'El estudiante no ha completado todo el plan de estudio. No se puede registrar la nota.',
+          icon: 'warning',
+          confirmButtonText: 'Entendido',
+          confirmButtonColor: '#f59e0b',
+        });
+        return;
+      }
+
+      // Guardar la nota (el backend actualizará automáticamente el estado de la matrícula)
       await axios.post("/notas/", {
         matricula: formData.matricula,
         nota: formData.nota,
         comentario: formData.comentario,
       });
 
-      // SweetAlert de éxito
       await Swal.fire({
         title: '¡Nota registrada!',
-        text: 'La nota del examen práctico ha sido registrada exitosamente.',
+        text: `La nota ${formData.nota}/100 ha sido registrada exitosamente. El estudiante ha finalizado el curso.`,
         icon: 'success',
         confirmButtonText: 'Aceptar',
         confirmButtonColor: '#10b981',
-        timer: 2000,
-        timerProgressBar: true,
       });
 
       if (onNotaGuardada) {
         onNotaGuardada();
       }
 
+      // Limpiar formulario
       setFormData({
         matricula: "",
         nota: "",
         comentario: "",
       });
-
       setBusqueda("");
       setSeleccionado(null);
-
+      
+      // Recargar la lista
+      obtenerMatriculasConProgreso();
+      
       onClose();
 
     } catch (err) {
+      let mensajeError = "Error al registrar la nota.";
+      
       if (err.response?.data) {
-        const errores = Object.values(err.response.data)
-          .flat()
-          .join(" ");
-
-        setError(errores);
-        
-        await Swal.fire({
-          title: 'Error al guardar',
-          text: errores || 'Ocurrió un error al registrar la nota.',
-          icon: 'error',
-          confirmButtonColor: '#ef4444',
-          confirmButtonText: 'Cerrar'
-        });
-      } else {
-        setError("Error registrando la nota.");
-        
-        await Swal.fire({
-          title: 'Error',
-          text: 'Error al conectar con el servidor.',
-          icon: 'error',
-          confirmButtonColor: '#ef4444',
-          confirmButtonText: 'Cerrar'
-        });
+        if (typeof err.response.data === 'object') {
+          const errores = Object.values(err.response.data).flat();
+          mensajeError = errores.join(" ");
+        } else {
+          mensajeError = err.response.data;
+        }
       }
+      
+      setError(mensajeError);
+      
+      await Swal.fire({
+        title: 'Error al guardar',
+        text: mensajeError,
+        icon: 'error',
+        confirmButtonColor: '#ef4444',
+      });
     } finally {
       setGuardando(false);
     }
@@ -242,7 +198,7 @@ function NotasForm({ open, onClose, onNotaGuardada }) {
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl p-6">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl p-6 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-2xl font-bold text-slate-800">
@@ -250,7 +206,7 @@ function NotasForm({ open, onClose, onNotaGuardada }) {
             </h2>
 
             <p className="text-slate-500 mt-1 text-sm">
-              Registro del examen práctico del estudiante.
+              Estudiantes que han completado el plan de estudio.
             </p>
           </div>
 
@@ -265,7 +221,7 @@ function NotasForm({ open, onClose, onNotaGuardada }) {
         <form onSubmit={guardarNota} className="space-y-5">
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-2">
-              Buscar estudiante
+              Buscar estudiante (solo muestra planes completados)
             </label>
 
             <div className="relative">
@@ -280,22 +236,28 @@ function NotasForm({ open, onClose, onNotaGuardada }) {
                 onChange={(e) => {
                   setBusqueda(e.target.value);
                   setSeleccionado(null);
-
                   setFormData({
                     ...formData,
                     matricula: "",
                   });
                 }}
                 placeholder="Nombre o cédula..."
-                className="w-full h-12 border border-slate-300 rounded-xl pl-11 pr-4 outline-none"
+                className="w-full h-12 border border-slate-300 rounded-xl pl-11 pr-4 outline-none focus:ring-2 focus:ring-purple-100 focus:border-purple-500"
               />
             </div>
 
-            {busqueda && !seleccionado && (
+            {verificando && (
+              <div className="mt-2 p-4 text-center text-slate-500">
+                <div className="inline-block animate-spin rounded-full h-5 w-5 border-b-2 border-purple-500 mr-2"></div>
+                Cargando estudiantes...
+              </div>
+            )}
+
+            {busqueda && !seleccionado && !verificando && (
               <div className="mt-2 border border-slate-200 rounded-xl overflow-hidden max-h-56 overflow-y-auto">
                 {estudiantesFiltrados.length === 0 && (
                   <div className="p-4 text-sm text-slate-500">
-                    No se encontraron estudiantes.
+                    No hay estudiantes con plan completado.
                   </div>
                 )}
 
@@ -304,14 +266,26 @@ function NotasForm({ open, onClose, onNotaGuardada }) {
                     key={m.id}
                     type="button"
                     onClick={() => seleccionarEstudiante(m)}
-                    className="w-full text-left px-4 py-3 hover:bg-slate-50 border-b border-slate-100 last:border-b-0"
+                    className="w-full text-left px-4 py-3 hover:bg-slate-50 border-b border-slate-100 last:border-b-0 transition"
                   >
-                    <div className="font-semibold text-slate-800">
-                      {m.estudiante_nombre}
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-semibold text-slate-800">
+                          {m.estudiante_nombre}
+                        </div>
+                        <div className="text-sm text-slate-500">
+                          {m.estudiante_cedula}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
+                          {m.porcentaje}%
+                        </span>
+                        <CheckCircle2 className="w-4 h-4 text-green-500" />
+                      </div>
                     </div>
-
-                    <div className="text-sm text-slate-500">
-                      {m.estudiante_cedula}
+                    <div className="text-xs text-slate-400 mt-1">
+                      Plan: {m.plan_nombre} - {m.tipo_curso}
                     </div>
                   </button>
                 ))}
@@ -320,34 +294,25 @@ function NotasForm({ open, onClose, onNotaGuardada }) {
           </div>
 
           {seleccionado && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50 border border-slate-200 rounded-2xl p-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-2xl p-4">
               <div>
                 <p className="text-xs text-slate-500 mb-1">
-                  Curso
+                  Estudiante
                 </p>
-
                 <p className="font-semibold text-slate-800">
-                  {seleccionado.tipo_curso}
+                  {seleccionado.estudiante_nombre}
+                </p>
+                <p className="text-xs text-slate-500">
+                  Cédula: {seleccionado.estudiante_cedula}
                 </p>
               </div>
-
               <div>
                 <p className="text-xs text-slate-500 mb-1">
-                  Modalidad
+                  Plan completado
                 </p>
-
-                <p className="font-semibold text-slate-800">
-                  {seleccionado.modalidad}
-                </p>
-              </div>
-
-              <div>
-                <p className="text-xs text-slate-500 mb-1">
-                  Horario
-                </p>
-
-                <p className="font-semibold text-slate-800">
-                  {seleccionado.horario}
+                <p className="font-semibold text-green-700 flex items-center gap-2">
+                  <CheckCircle2 className="w-5 h-5" />
+                  {seleccionado.plan_nombre} - {seleccionado.porcentaje}%
                 </p>
               </div>
             </div>
@@ -355,13 +320,14 @@ function NotasForm({ open, onClose, onNotaGuardada }) {
 
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-2">
-              Nota práctica
+              Nota práctica (0 - 100)
             </label>
 
             <input
               type="number"
               min="0"
               max="100"
+              step="0.01"
               value={formData.nota}
               onChange={(e) =>
                 setFormData({
@@ -370,7 +336,7 @@ function NotasForm({ open, onClose, onNotaGuardada }) {
                 })
               }
               placeholder="0 - 100"
-              className="w-full h-12 border border-slate-300 rounded-xl px-4 outline-none"
+              className="w-full h-12 border border-slate-300 rounded-xl px-4 outline-none focus:ring-2 focus:ring-purple-100 focus:border-purple-500"
             />
           </div>
 
@@ -388,8 +354,8 @@ function NotasForm({ open, onClose, onNotaGuardada }) {
                 })
               }
               rows="4"
-              placeholder="Comentario del instructor..."
-              className="w-full border border-slate-300 rounded-xl px-4 py-3 outline-none resize-none"
+              placeholder="Observaciones del examen práctico..."
+              className="w-full border border-slate-300 rounded-xl px-4 py-3 outline-none resize-none focus:ring-2 focus:ring-purple-100 focus:border-purple-500"
             />
           </div>
 
@@ -403,17 +369,17 @@ function NotasForm({ open, onClose, onNotaGuardada }) {
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-3 rounded-xl border border-slate-300 text-slate-700 font-semibold hover:bg-slate-100"
+              className="px-5 py-3 rounded-xl border border-slate-300 text-slate-700 font-semibold hover:bg-slate-100 transition"
             >
               Cancelar
             </button>
 
             <button
               type="submit"
-              disabled={guardando}
-              className="px-5 py-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-60"
+              disabled={guardando || !seleccionado}
+              className="px-5 py-3 rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold hover:from-green-700 hover:to-emerald-700 disabled:opacity-60 transition"
             >
-              {guardando ? "Guardando..." : "Guardar nota"}
+              {guardando ? "Guardando..." : "Registrar nota práctica"}
             </button>
           </div>
         </form>
@@ -422,4 +388,7 @@ function NotasForm({ open, onClose, onNotaGuardada }) {
   );
 }
 
+
 export default NotasForm;
+
+ 

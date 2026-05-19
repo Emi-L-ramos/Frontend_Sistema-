@@ -8,6 +8,18 @@ export default defineConfig({
     tailwindcss(), 
   ],
   server: {
-    open: true, // Esto abrirá automáticamente tu navegador al ejecutar npm run dev
+    port: 5173,
+    open: true,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      },
+      '/ws': {
+        target: 'ws://localhost:8000',
+        ws: true,
+        changeOrigin: true,
+      },
+    },
   },
 })
