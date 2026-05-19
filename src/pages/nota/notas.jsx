@@ -191,9 +191,10 @@ function TablaInstructor({ notas }) {
           <tr className="border-b border-slate-200">
             <Th>Estudiante</Th>
             <Th>Cédula</Th>
-            <Th>Curso</Th>
+            <Th>Instructor</Th>
+            <Th>Tipo Curso</Th>
             <Th>Modalidad</Th>
-            <Th>Nota práctica</Th>
+             <Th>Nota Practica</Th>
             <Th>Resultado práctica</Th>
             <Th>Nota teórica</Th>
             <Th>Resultado teórico</Th>
@@ -221,7 +222,7 @@ function TablaEstudiante({ notas }) {
           <tr className="border-b border-slate-200">
             <Th>Instructor</Th>
             <Th>Curso</Th>
-            <Th>Modalidad</Th>
+            <Th>Modalidad</Th> 
             <Th>Nota práctica</Th>
             <Th>Resultado práctica</Th>
             <Th>Nota teórica</Th>
@@ -301,7 +302,7 @@ function NotaBadge({ nota, textoEspera = "En espera" }) {
   }
 
   return (
-    <Badge color={Number(nota) >= 70 ? "green" : "red"}>
+    <Badge color={Number(nota) >= 80 ? "green" : "red"}>
       {nota}
     </Badge>
   );
@@ -313,8 +314,8 @@ function ResultadoBadge({ nota, textoEspera = "Pendiente" }) {
   }
 
   return (
-    <Badge color={Number(nota) >= 70 ? "green" : "red"}>
-      {Number(nota) >= 70 ? "Aprobado" : "Reprobado"}
+    <Badge color={Number(nota) >= 80 ? "green" : "red"}>
+      {Number(nota) >= 80 ? "Aprobado" : "Reprobado"}
     </Badge>
   );
 }

@@ -2,6 +2,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { X, Calendar, User, BookOpen, ChevronRight, AlertCircle, Clock, Search, ChevronLeft, ChevronDown, Plus, Trash2 } from "lucide-react";
 import { crearBloqueCitas, listarInstructores, listarMatriculas, crearExamenManual } from "../api/calendario";
+import Swal from "sweetalert2";
 
 export default function CalendarioForm({ abierto, onClose, onCreada }) {
   const [instructores, setInstructores] = useState([]);
@@ -13,6 +14,7 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
   const [mostrarCalendario, setMostrarCalendario] = useState(false);
   const [mostrarCalendarioSelector, setMostrarCalendarioSelector] = useState(false);
   const [fechaMinima, setFechaMinima] = useState(null);
+  // const navigate = useNavigate();
   
   const [mostrarExamenManual, setMostrarExamenManual] = useState(false);
   const [examenManual, setExamenManual] = useState({
@@ -214,6 +216,14 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
       setMostrarExamenManual(false);
       setExamenManual({ fecha: "", hora_inicio: "08:00", hora_fin: "10:00" });
       setError("Examen programado exitosamente");
+      await Swal.fire({
+                    icon: "success",
+                    title: "Examen Registrado",
+                    text: "Examen Programado Exitosamente",
+                    confirmButtonColor: "#16a34a",
+                  });
+        
+
       setTimeout(() => setError(""), 3000);
     } catch (err) {
       setError(err.message || "Error al programar el examen");
@@ -287,12 +297,27 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
             hora_inicio: examenManual.hora_inicio,
             hora_fin: examenManual.hora_fin
           });
-          setError("Bloque de clases y examen creados exitosamente");
+          // setError("Bloque de clases y examen creados exitosamente");
+            await Swal.fire({
+                    icon: "success",
+                    title: "Bloque Registrado",
+                    text: "Bloque y Examen creado exitosamente.",
+                    confirmButtonColor: "#16a34a",
+                  });
         } catch (examError) {
           setError("Bloque creado, pero hubo un error al crear el examen");
         }
       } else {
-        setError("Bloque de clases creado exitosamente");
+        // setError("Bloque de clases creado exitosamente");
+          await Swal.fire({
+                  icon: "success",
+                  title: "Horario Registrado",
+                  text: "Horario asignado Correctamente.",
+                  confirmButtonColor: "#16a34a",
+                });
+                // navigate("/dashboard/calandario");
+
+
       }
       setTimeout(() => {
         onCreada?.();
