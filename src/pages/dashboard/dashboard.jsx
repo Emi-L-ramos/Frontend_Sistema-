@@ -11,6 +11,7 @@ import PerfilEstudiante from "../perfil_studiante/perfil_estudiante";
 import UsuariosPage from "../admin/UsuariosPage";
 import EstudiantesPage from "../estudiantes/EstudiantesPage";
 import ReportesPages from "../reportes/ReportesPages";
+import InstructoresPage from "../instructores/InstructoresPage";
 
 // Dashboard.jsx - Actualizar importaciones
 import VerPlanEstudio from "../plan_studio/VerPlanEstudio";
@@ -109,6 +110,9 @@ function Dashboard() {
 
             case 'usuarios':
                 return <UsuariosPage />;
+            
+            case 'instructores':
+                return <InstructoresPage />;
 
             case "plan_studio":
                 return <PlanStudio />;
@@ -279,8 +283,28 @@ function Dashboard() {
                         </>
                     )}
 
+<<<<<<< HEAD
                    
 
+=======
+                    {/* INSTRUCTORES */}
+                    {esAdmin && (
+                        <button
+                            onClick={() => {
+                                setActiveTab('instructores');
+                                setIsSidebarOpen(false);
+                            }}
+                            className={`w-full flex items-center p-3 space-x-3 rounded-xl transition hover:cursor-pointer ${
+                                activeTab === 'instructores'
+                                    ? 'bg-blue-100 text-blue-500 font-bold'
+                                    : 'text-gray-600 hover:bg-blue-50'
+                            }`}
+                        >
+                            <MdPersonOutline size={'1.5rem'} />
+                            <span>Instructores</span>
+                        </button>
+                    )}
+>>>>>>> ba97acb1f8754d6027ae7c9497f65c48700cd72c
 
                     {/* GESTIÓN ACADÉMICA */}
                     <div className="pt-4 mt-4 border-t border-gray-200">

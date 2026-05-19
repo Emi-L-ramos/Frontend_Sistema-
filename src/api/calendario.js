@@ -47,6 +47,25 @@ export const listarMatriculas = async () => {
   }
 };
 
+// ============ MATRÍCULAS ASIGNADAS AL INSTRUCTOR ============
+export const listarMatriculasInstructor = async () => {
+  try {
+    const response = await fetch(`${API_URL}/matricula/asignadas-instructor/`, {
+      headers: getHeaders()
+    });
+
+    if (!response.ok) {
+      throw new Error("Error al cargar estudiantes asignados al instructor");
+    }
+
+    const data = await response.json();
+    return data.results || data;
+  } catch (error) {
+    console.error("Error en listar Matriculas Instructor:", error);
+    return [];
+  }
+};
+
 // ============ CITAS / CALENDARIO ============
 export const listarCitas = async (params = {}) => {
   try {

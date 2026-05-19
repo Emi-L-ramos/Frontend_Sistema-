@@ -9,11 +9,15 @@ import UsuariosPage from "./pages/admin/UsuariosPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Asistencia from "./pages/asistencia/Asistencia";
 import PerfilEstudiante from "./pages/perfil_studiante/perfil_estudiante";
+<<<<<<< HEAD
 import PlanStudio from "./pages/plan_studio/plan_studio";
 import PlanEstudioForm from "./pages/plan_studio/PlanEstudioForm";
 import VerPlanEstudio from "./pages/plan_studio/VerPlanEstudio";
 import ExamenTeoricoPage from "./pages/examen_teorico/ExamenTeoricoPage";
 import ExamenTeoricoEstudiante from "./pages/examen_teorico/ExamenTeoricoEstudiante";
+=======
+import InstructoresPage from "./pages/instructores/InstructoresPage";
+>>>>>>> ba97acb1f8754d6027ae7c9497f65c48700cd72c
 
 import "./App.css";
 
@@ -33,7 +37,7 @@ function App() {
                     } />
                     
                     <Route path="/dashboard/matricula" element={
-                        <ProtectedRoute rolesPermitidos={['admin', 'secretaria']}>
+                        <ProtectedRoute rolesPermitidos={['admin']}>
                             <MatriculaPage />
                         </ProtectedRoute>
                     } />
@@ -48,12 +52,15 @@ function App() {
                         />
                     
                     <Route path="/dashboard/recibos" element={
-                        <ProtectedRoute rolesPermitidos={['admin', 'secretaria', 'cajero']}>
+                        <ProtectedRoute rolesPermitidos={['admin']}>
                             <RecibosPage />
                         </ProtectedRoute>
                     } />
                     
+<<<<<<< HEAD
 
+=======
+>>>>>>> ba97acb1f8754d6027ae7c9497f65c48700cd72c
                     <Route path="/dashboard/perfiles" element={
                             <ProtectedRoute>
                                 <PerfilEstudiante />
@@ -61,6 +68,7 @@ function App() {
                         }
                     />
 
+<<<<<<< HEAD
                     <Route path="/dashboard/usuarios" element={
                         <ProtectedRoute rolesPermitidos={['admin']}>
                             <UsuariosPage />
@@ -104,6 +112,15 @@ function App() {
                         </ProtectedRoute>
                     } />
                                         
+=======
+                    <Route path="/dashboard/instructores" element={
+                            <ProtectedRoute rolesPermitidos={['admin']}>
+                                <InstructoresPage />
+                            </ProtectedRoute>
+                        }
+                    />
+
+>>>>>>> ba97acb1f8754d6027ae7c9497f65c48700cd72c
                     <Route path="*" element={<Navigate to="/login" />} />
                 </Routes>
             </Router>

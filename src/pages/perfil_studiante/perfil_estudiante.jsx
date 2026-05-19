@@ -1,328 +1,371 @@
-import { useEffect, useState } from "react";
-import Swal from "sweetalert2";
+import { useEffect, useMemo, useState } from "react";
 
 function PerfilEstudiante() {
     const token = localStorage.getItem("token");
 
-    const [instructores, setInstructores] = useState([]);
-    const [categorias, setCategorias] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [modal, setModal] = useState(false);
-    const [editData, setEditData] = useState(null);
+    const [rol, setRol] = useState("");
+    const [miPerfil, setMiPerfil] = useState(null);
+    const [instructor, setInstructor] = useState(null);
+    const [instructores, setInstructores] = useState([]);
+    const [estudiantes, setEstudiantes] = useState([]);
+    const [busqueda, setBusqueda] = useState("");
+    const [perfilSeleccionado, setPerfilSeleccionado] = useState(null);
 
-    const [form, setForm] = useState({
-        nombre: "",
-        apellido: "",
-        numero_telefono: "",
-        direccion: "",
-        categoria_vehiculo: "",
-        experiencia: "",
-        edad: "",
-        foto: null,
-    });
-
-    const cargarInstructores = async () => {
+    const cargarPerfiles = async () => {
         try {
-            const response = await fetch("http://127.0.0.1:8000/api/instructores/", {
-                headers: { Authorization: `Token ${token}` },
+            setLoading(true);
+
+            const response = await fetch("http://127.0.0.1:8000/api/perfiles/", {
+                headers: {
+                    Authorization: `Token ${token}`,
+                },
             });
 
+            if (!response.ok) {
+                throw new Error(`Error ${response.status}`);
+            }
+
             const data = await response.json();
-            setInstructores(Array.isArray(data) ? data : []);
+
+            setRol((data.rol || "").toLowerCase());
+            setMiPerfil(data.mi_perfil || null);
+            setInstructor(data.instructor || null);
+            setInstructores(data.instructores || []);
+            setEstudiantes(data.estudiantes || []);
         } catch (error) {
-            console.error(error);
+            console.error("Error cargando perfiles:", error);
+            setRol("");
+            setMiPerfil(null);
+            setInstructor(null);
+            setInstructores([]);
+            setEstudiantes([]);
         } finally {
             setLoading(false);
         }
     };
 
-    const cargarCategorias = async () => {
-        try {
-            const response = await fetch("http://127.0.0.1:8000/api/categorias/", {
-                headers: { Authorization: `Token ${token}` },
-            });
-
-            const data = await response.json();
-            setCategorias(Array.isArray(data) ? data : []);
-        } catch (error) {
-            console.error(error);
-        }
-    };
-
     useEffect(() => {
-        cargarInstructores();
-        cargarCategorias();
+        cargarPerfiles();
     }, []);
 
-    const abrirEditar = (instructor) => {
-        setEditData(instructor);
+    const perfilesFiltrados = useMemo(() => {
+        const texto = busqueda.toLowerCase();
 
-        setForm({
-            nombre: instructor.nombre || "",
-            apellido: instructor.apellido || "",
-            numero_telefono: instructor.numero_telefono || "",
-            direccion: instructor.direccion || "",
-            categoria_vehiculo: instructor.categoria_vehiculo || "",
-            experiencia: instructor.experiencia || "",
-            edad: instructor.edad || "",
-            foto: null,
-        });
+        const listaInstructores = instructores
+            .filter((i) => {
+                const contenido = `${i.nombre || ""} ${i.apellido || ""} ${i.telefono || ""} ${i.categoria || ""}`.toLowerCase();
+                return contenido.includes(texto);
+            })
+            .map((i) => ({ ...i, tipo: "instructor" }));
 
-        setModal(true);
-    };
+        const listaEstudiantes = estudiantes
+            .filter((e) => {
+                const contenido = `${e.nombre || ""} ${e.apellido || ""} ${e.cedula || ""} ${e.telefono || ""} ${e.correo || ""}`.toLowerCase();
+                return contenido.includes(texto);
+            })
+            .map((e) => ({ ...e, tipo: "estudiante" }));
 
-    const cerrarModal = () => {
-        setModal(false);
-        setEditData(null);
-        setForm({
-            nombre: "",
-            apellido: "",
-            numero_telefono: "",
-            direccion: "",
-            categoria_vehiculo: "",
-            experiencia: "",
-            edad: "",
-            foto: null,
-        });
-    };
+        return [...listaInstructores, ...listaEstudiantes];
+    }, [busqueda, instructores, estudiantes]);
 
-    const guardarPerfil = async (e) => {
-        e.preventDefault();
+    const PerfilCard = ({ perfil, tipo }) => {
+        const esInstructor = tipo === "instructor";
 
-        if (!editData) return;
-
-        const formData = new FormData();
-
-        formData.append("nombre", form.nombre);
-        formData.append("apellido", form.apellido);
-        formData.append("numero_telefono", form.numero_telefono);
-        formData.append("direccion", form.direccion);
-        formData.append("categoria_vehiculo", form.categoria_vehiculo || "");
-        formData.append("experiencia", form.experiencia);
-        formData.append("edad", form.edad || "");
-
-        if (form.foto) {
-            formData.append("foto", form.foto);
-        }
-
-        try {
-            const response = await fetch(`http://127.0.0.1:8000/api/instructores/${editData.id}/`, {
-                method: "PATCH",
-                headers: {
-                    Authorization: `Token ${token}`,
-                },
-                body: formData,
-            });
-
-            if (!response.ok) {
-                const data = await response.json();
-                const mensaje = Object.values(data).flat().join("\n");
-                Swal.fire("Error", mensaje || "No se pudo actualizar el perfil", "error");
-                return;
-            }
-
-            Swal.fire("Éxito", "Perfil actualizado correctamente", "success");
-            cerrarModal();
-            cargarInstructores();
-        } catch (error) {
-            Swal.fire("Error", "Error de conexión", "error");
-        }
-    };
-
-    return (
-        <div className="p-6 bg-gray-50 min-h-screen">
-            <div className="mb-8">
-                <h1 className="text-4xl font-bold text-gray-800">
-                    Perfiles de Instructores
-                </h1>
-                <p className="text-gray-500 mt-1">
-                    Información profesional de los instructores registrados.
-                </p>
-            </div>
-
-            {loading ? (
-                <div className="bg-white rounded-2xl shadow p-8 text-center text-gray-500">
-                    Cargando perfiles...
-                </div>
-            ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                    {instructores.map((inst) => (
+        return (
+            <div
+                onClick={() => setPerfilSeleccionado({ ...perfil, tipo })}
+                className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition overflow-hidden cursor-pointer hover:-translate-y-1 duration-200"
+            >
+                <div className="p-5">
+                    <div className="flex items-start gap-4">
                         <div
-                            key={inst.id}
-                            className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden"
+                            className={`w-16 h-16 rounded-2xl overflow-hidden flex items-center justify-center shrink-0 ${
+                                esInstructor ? "bg-green-50" : "bg-blue-50"
+                            }`}
                         >
-                            <div className="h-32 bg-gradient-to-r from-green-500 to-emerald-600" />
+                            {perfil?.foto ? (
+                                <img
+                                    src={perfil.foto}
+                                    alt={`${perfil.nombre || ""} ${perfil.apellido || ""}`}
+                                    className="w-full h-full object-cover"
+                                />
+                            ) : (
+                                <span
+                                    className={`text-2xl font-bold ${
+                                        esInstructor ? "text-green-600" : "text-blue-600"
+                                    }`}
+                                >
+                                    {(perfil?.nombre || "P").charAt(0).toUpperCase()}
+                                </span>
+                            )}
+                        </div>
 
-                            <div className="p-6 -mt-16">
-                                <div className="w-28 h-28 rounded-full border-4 border-white bg-gray-100 overflow-hidden shadow">
-                                    {inst.foto_url ? (
+                        <div className="min-w-0 flex-1">
+                            <h2 className="text-lg font-bold text-gray-800 leading-tight">
+                                {perfil?.nombre} {perfil?.apellido}
+                            </h2>
+
+                            <span
+                                className={`inline-flex mt-1 px-2.5 py-1 rounded-full text-[11px] font-bold ${
+                                    esInstructor
+                                        ? "bg-green-100 text-green-700"
+                                        : "bg-blue-100 text-blue-700"
+                                }`}
+                            >
+                                {esInstructor ? "Instructor" : "Estudiante"}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+    const ModalPerfil = () => {
+        if (!perfilSeleccionado) return null;
+
+        const esInstructor = perfilSeleccionado.tipo === "instructor";
+
+        return (
+            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4">
+                <div className="bg-white rounded-2xl w-full max-w-2xl shadow-xl max-h-[90vh] overflow-y-auto">
+                    <div
+                        className={`h-28 ${
+                            esInstructor
+                                ? "bg-gradient-to-r from-green-500 to-emerald-600"
+                                : "bg-gradient-to-r from-blue-500 to-indigo-600"
+                        }`}
+                    />
+
+                    <div className="p-6 -mt-16">
+                        <div className="flex items-start justify-between gap-4">
+                            <div className="flex items-end gap-4">
+                                <div className="w-28 h-28 rounded-2xl border-4 border-white bg-gray-100 overflow-hidden shadow flex items-center justify-center">
+                                    {perfilSeleccionado.foto ? (
                                         <img
-                                            src={inst.foto_url}
-                                            alt={inst.nombre_completo}
+                                            src={perfilSeleccionado.foto}
+                                            alt={`${perfilSeleccionado.nombre || ""} ${perfilSeleccionado.apellido || ""}`}
                                             className="w-full h-full object-cover"
                                         />
                                     ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-3xl font-bold text-gray-400">
-                                            {(inst.nombre || "I").charAt(0)}
-                                        </div>
+                                        <span className="text-4xl font-bold text-gray-400">
+                                            {(perfilSeleccionado.nombre || "P").charAt(0).toUpperCase()}
+                                        </span>
                                     )}
                                 </div>
 
-                                <div className="mt-4">
-                                    <h2 className="text-xl font-bold text-gray-800">
-                                        {inst.nombre_completo}
+                                <div className="mb-2">
+                                    <h2 className="text-2xl font-bold text-gray-800">
+                                        {perfilSeleccionado.nombre} {perfilSeleccionado.apellido}
                                     </h2>
 
-                                    <p className="text-sm text-gray-500">
-                                        Categoría: {inst.categoria_nombre || "No asignada"}
-                                    </p>
-
-                                    <p className="text-sm text-gray-500">
-                                        Teléfono: {inst.numero_telefono || "No registrado"}
-                                    </p>
-
-                                    <p className="text-sm text-gray-500">
-                                        Edad: {inst.edad || "No registrada"}
-                                    </p>
-
-                                    <p className="text-sm text-gray-500 mt-2">
-                                        Dirección: {inst.direccion || "No registrada"}
-                                    </p>
-
-                                    <p className="text-sm text-gray-600 mt-3 line-clamp-3">
-                                        {inst.experiencia || "Sin experiencia registrada."}
-                                    </p>
+                                    <span
+                                        className={`inline-flex mt-2 px-3 py-1 rounded-full text-xs font-bold ${
+                                            esInstructor
+                                                ? "bg-green-100 text-green-700"
+                                                : "bg-blue-100 text-blue-700"
+                                        }`}
+                                    >
+                                        {esInstructor ? "Instructor" : "Estudiante"}
+                                    </span>
                                 </div>
-
-                                <button
-                                    onClick={() => abrirEditar(inst)}
-                                    className="mt-5 w-full px-4 py-2 rounded-xl bg-green-500 text-white hover:bg-green-600 transition"
-                                >
-                                    Editar perfil
-                                </button>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            )}
-
-            {modal && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
-                    <div className="bg-white rounded-2xl w-full max-w-xl p-6 shadow-xl max-h-[90vh] overflow-y-auto">
-                        <div className="flex items-center justify-between mb-5">
-                            <div>
-                                <h2 className="text-2xl font-bold text-gray-800">
-                                    Editar perfil del instructor
-                                </h2>
-                                <p className="text-sm text-gray-500">
-                                    Complete la información profesional.
-                                </p>
                             </div>
 
                             <button
                                 type="button"
-                                onClick={cerrarModal}
-                                className="text-gray-400 hover:text-red-500 text-2xl"
+                                onClick={() => setPerfilSeleccionado(null)}
+                                className="text-gray-400 hover:text-red-500 text-3xl"
                             >
                                 ×
                             </button>
                         </div>
 
-                        <form onSubmit={guardarPerfil} className="space-y-3">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <input
-                                    type="text"
-                                    placeholder="Nombre"
-                                    value={form.nombre}
-                                    onChange={(e) => setForm({ ...form, nombre: e.target.value })}
-                                    className="w-full p-3 border rounded-xl"
-                                    required
-                                />
+                        {esInstructor ? (
+                            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <InfoItem titulo="Cédula" valor={perfilSeleccionado.cedula || "No registrada"} />
+                                <InfoItem titulo="Teléfono" valor={perfilSeleccionado.telefono || "No registrado"} />
+                                <InfoItem titulo="Edad" valor={perfilSeleccionado.edad ? `${perfilSeleccionado.edad} años` : "No registrada"} />
+                                <InfoItem titulo="Nacionalidad" valor={perfilSeleccionado.nacionalidad || "No registrada"} />
+                                <InfoItem titulo="Nivel escolar" valor={perfilSeleccionado.nivel_escolar || "No registrado"} />
+                                <InfoItem titulo="Categoría vehicular" valor={perfilSeleccionado.categoria || "No asignada"} />
+                                <InfoItem titulo="Dirección" valor={perfilSeleccionado.direccion || "No registrada"} />
+                                <InfoItem titulo="Antecedentes penales" valor={perfilSeleccionado.antecedentes_penales || "No registrado"} />
+                                <InfoItem titulo="Centro de trabajo" valor={perfilSeleccionado.centro_trabajo || "No registrado"} />
+                                <InfoItem titulo="Cargo" valor={perfilSeleccionado.cargo || "No registrado"} />
+                                <InfoItem titulo="Curso aprobado como instructor" valor={perfilSeleccionado.curso_aprobado_instructor || "No registrado"} />
+                                <InfoItem titulo="Fecha de ingreso" valor={perfilSeleccionado.fecha_ingreso || "No registrada"} />
+                                <InfoItem titulo="Fecha de salida" valor={perfilSeleccionado.fecha_salida || "No registrada"} />
 
-                                <input
-                                    type="text"
-                                    placeholder="Apellido"
-                                    value={form.apellido}
-                                    onChange={(e) => setForm({ ...form, apellido: e.target.value })}
-                                    className="w-full p-3 border rounded-xl"
-                                    required
-                                />
+                                <div className="bg-gray-50 rounded-xl p-4 sm:col-span-2">
+                                    <p className="text-xs text-gray-400">Experiencia</p>
+                                    <p className="font-semibold text-gray-700 whitespace-pre-line">
+                                        {perfilSeleccionado.experiencia || "Sin experiencia registrada."}
+                                    </p>
+                                </div>
+
+                                <div className="bg-gray-50 rounded-xl p-4 sm:col-span-2">
+                                    <p className="text-xs text-gray-400">Motivo de salida</p>
+                                    <p className="font-semibold text-gray-700 whitespace-pre-line">
+                                        {perfilSeleccionado.motivo_salida || "No registrado."}
+                                    </p>
+                                </div>
+
+                                <div className="bg-gray-50 rounded-xl p-4 sm:col-span-2">
+                                    <p className="text-xs text-gray-400">Infracciones / resoluciones</p>
+                                    <p className="font-semibold text-gray-700 whitespace-pre-line">
+                                        {perfilSeleccionado.infracciones_resoluciones || "No registradas."}
+                                    </p>
+                                </div>
                             </div>
-
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <input
-                                    type="text"
-                                    placeholder="Número telefónico"
-                                    value={form.numero_telefono}
-                                    onChange={(e) => setForm({ ...form, numero_telefono: e.target.value })}
-                                    className="w-full p-3 border rounded-xl"
-                                />
-
-                                <input
-                                    type="number"
-                                    placeholder="Edad"
-                                    value={form.edad}
-                                    onChange={(e) => setForm({ ...form, edad: e.target.value })}
-                                    className="w-full p-3 border rounded-xl"
-                                />
+                        ) : (
+                            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <InfoItem titulo="Cédula" valor={perfilSeleccionado.cedula || "No registrada"} />
+                                <InfoItem titulo="Teléfono" valor={perfilSeleccionado.telefono || "No registrado"} />
+                                <InfoItem titulo="Correo" valor={perfilSeleccionado.correo || "No registrado"} />
+                                <InfoItem titulo="Edad" valor={perfilSeleccionado.edad ? `${perfilSeleccionado.edad} años` : "No registrada"} />
+                                <InfoItem titulo="Sexo" valor={perfilSeleccionado.sexo || "No registrado"} />
+                                <InfoItem titulo="Nacionalidad" valor={perfilSeleccionado.nacionalidad || "No registrada"} />
+                                <InfoItem titulo="Fecha de nacimiento" valor={perfilSeleccionado.fecha_nacimiento || "No registrada"} />
+                                <InfoItem titulo="Nivel educativo" valor={perfilSeleccionado.nivel_educativo || "No registrado"} />
+                                <InfoItem titulo="Dirección" valor={perfilSeleccionado.direccion || "No registrada"} />
+                                <InfoItem titulo="Contacto de emergencia" valor={perfilSeleccionado.nombre_emergencia || "No registrado"} />
+                                <InfoItem titulo="Teléfono de emergencia" valor={perfilSeleccionado.telefono_emergencia || "No registrado"} />
+                                <InfoItem titulo="Estado" valor={perfilSeleccionado.activo ? "Activo" : "Inactivo"} />
                             </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        );
+    };
 
-                            <input
-                                type="text"
-                                placeholder="Dirección"
-                                value={form.direccion}
-                                onChange={(e) => setForm({ ...form, direccion: e.target.value })}
-                                className="w-full p-3 border rounded-xl"
-                            />
+    const InfoItem = ({ titulo, valor }) => {
+        return (
+            <div className="bg-gray-50 rounded-xl p-4">
+                <p className="text-xs text-gray-400">{titulo}</p>
+                <p className="font-semibold text-gray-700">{valor}</p>
+            </div>
+        );
+    };
 
-                            <select
-                                value={form.categoria_vehiculo}
-                                onChange={(e) => setForm({ ...form, categoria_vehiculo: e.target.value })}
-                                className="w-full p-3 border rounded-xl"
-                            >
-                                <option value="">Seleccionar categoría vehicular</option>
-                                {categorias.map((cat) => (
-                                    <option key={cat.id} value={cat.id}>
-                                        {cat.nombre}
-                                    </option>
+    if (loading) {
+        return (
+            <div className="p-6 bg-gray-50 min-h-screen">
+                <div className="bg-white rounded-2xl shadow p-8 text-center text-gray-500">
+                    Cargando perfiles...
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="p-6 bg-gray-50 min-h-screen">
+            <div className="mb-8">
+                <h1 className="text-4xl font-bold text-gray-800">
+                    Perfiles
+                </h1>
+
+                <p className="text-gray-500 mt-1">
+                    Consulta la información registrada.
+                </p>
+            </div>
+
+            {(rol === "admin" || rol === "secretaria" || rol === "instructor") && (
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 mb-6">
+                    <input
+                        type="text"
+                        placeholder="Buscar por nombre, cédula, teléfono, correo o categoría..."
+                        value={busqueda}
+                        onChange={(e) => setBusqueda(e.target.value)}
+                        className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                </div>
+            )}
+
+            {rol === "estudiante" && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {miPerfil && (
+                        <PerfilCard
+                            perfil={miPerfil}
+                            tipo="estudiante"
+                        />
+                    )}
+
+                    {instructor && (
+                        <PerfilCard
+                            perfil={instructor}
+                            tipo="instructor"
+                        />
+                    )}
+
+                    {!instructor && (
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 text-gray-400">
+                            Todavía no tienes instructor asignado.
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {rol === "instructor" && (
+                <div className="space-y-6">
+                    {miPerfil && (
+                        <div>
+                            <h2 className="text-2xl font-bold text-gray-800 mb-4">
+                                Mi perfil
+                            </h2>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                                <PerfilCard perfil={miPerfil} tipo="instructor" />
+                            </div>
+                        </div>
+                    )}
+
+                    <div>
+                        <h2 className="text-2xl font-bold text-gray-800 mb-4">
+                            Mis estudiantes asignados
+                        </h2>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                            {perfilesFiltrados
+                                .filter((p) => p.tipo === "estudiante")
+                                .map((perfil) => (
+                                    <PerfilCard
+                                        key={`estudiante-${perfil.id}`}
+                                        perfil={perfil}
+                                        tipo="estudiante"
+                                    />
                                 ))}
-                            </select>
 
-                            <textarea
-                                placeholder="Experiencia"
-                                value={form.experiencia}
-                                onChange={(e) => setForm({ ...form, experiencia: e.target.value })}
-                                className="w-full p-3 border rounded-xl"
-                                rows="4"
-                            />
-
-                            <input
-                                type="file"
-                                accept="image/*"
-                                onChange={(e) => setForm({ ...form, foto: e.target.files[0] })}
-                                className="w-full p-3 border rounded-xl"
-                            />
-
-                            <div className="flex justify-end gap-3 pt-4">
-                                <button
-                                    type="button"
-                                    onClick={cerrarModal}
-                                    className="px-5 py-2.5 border rounded-xl text-gray-700 hover:bg-gray-100 transition"
-                                >
-                                    Cancelar
-                                </button>
-
-                                <button
-                                    type="submit"
-                                    className="px-5 py-2.5 bg-green-500 text-white rounded-xl hover:bg-green-600 transition"
-                                >
-                                    Guardar perfil
-                                </button>
-                            </div>
-                        </form>
+                            {perfilesFiltrados.filter((p) => p.tipo === "estudiante").length === 0 && (
+                                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 text-gray-400">
+                                    No hay estudiantes para mostrar.
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}
+
+            {(rol === "admin" || rol === "secretaria") && (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {perfilesFiltrados.map((perfil) => (
+                        <PerfilCard
+                            key={`${perfil.tipo}-${perfil.id}`}
+                            perfil={perfil}
+                            tipo={perfil.tipo}
+                        />
+                    ))}
+
+                    {perfilesFiltrados.length === 0 && (
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 text-gray-400">
+                            No hay perfiles que coincidan con la búsqueda.
+                        </div>
+                    )}
+                </div>
+            )}
+
+            <ModalPerfil />
         </div>
     );
 }

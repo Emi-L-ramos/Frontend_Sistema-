@@ -13,12 +13,9 @@ import MatriculaForm from "../../components/matriculaForm";
 function MatriculaPage() {
     const [showModal, setShowModal] = useState(false);
     const [search, setSearch] = useState("");
-    const [filtroEdad, setFiltroEdad] = useState("");
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [editData, setEditData] = useState(null);
-    const [fechaDesde, setFechaDesde] = useState("");
-    const [fechaHasta, setFechaHasta] = useState("");
 
     const closeModal = () => {
         setEditData(null);
@@ -40,17 +37,11 @@ function MatriculaPage() {
     const getFechaNacimiento = (item) => item.estudiante_fecha_nacimiento || item.fecha_nacimiento || "";
     const getDireccion = (item) => item.estudiante_direccion || item.direccion || "";
     const getNivelEducativo = (item) => item.estudiante_nivel_educativo || item.nivel_educativo || "";
-    const getContactoEmergencia = (item) => item.estudiante_contacto_emergencia || item.en_caso_de_emergencia || "";
+    const getNombreEmergencia = (item) => item.estudiante_contacto_emergencia ||"";
     const getTelefonoEmergencia = (item) => item.estudiante_telefono_emergencia || item.telefono_emergencia || "";
-
-    const fechaLocal = (fecha) => {
-        if (!fecha) return null;
-
-        const soloFecha = fecha.split("T")[0];
-        const [year, month, day] = soloFecha.split("-");
-
-        return new Date(Number(year), Number(month) - 1, Number(day));
-    };
+    const getInstructor = (item) => item.instructor_nombre || "";
+    const getFechaInicio = (item) => item.fecha || item.fecha_inicio || "";
+    const getHoraInicio = (item) => item.hora_inicio || "";
 
     const fetchMatriculas = async () => {
         try {
@@ -182,19 +173,22 @@ function MatriculaPage() {
                         }
 
                         .logo-img {
-                            width: 80px;
-                            height: auto;
+                            width: 75px;
+                            height: 75px;
+                            object-fit: contain;
                         }
 
                         .titulo {
                             font-weight: bold;
                             text-decoration: underline;
+                            margin-top: 20px;
                             margin-bottom: 15px;
                         }
 
                         .form-row {
                             margin-bottom: 10px;
-                            border-bottom: 1px solid #000;
+                            border-bottom: 1px solid #444;
+                            padding-bottom: 4px;
                             width: 100%;
                             display: inline-block;
                         }
@@ -215,6 +209,10 @@ function MatriculaPage() {
                             padding-top: 10px;
                             font-size: 11px;
                         }
+
+                        .value {
+                            font-weight: normal;
+                        }
                     </style>
                 </head>
 
@@ -234,7 +232,7 @@ function MatriculaPage() {
                     <div class="titulo">
                         HOJA DE MATRÍCULA DE ADULTOS A CURSO DE: EDUCACIÓN VIAL Y MANEJO RESPONSABLE.
                         <br/>
-                        Fecha: ${getFechaMatricula(matricula)}
+                        Fecha: ${new Date(getFechaMatricula(matricula)).toLocaleDateString("es-NI")}
                     </div>
 
                     <br/>
@@ -252,7 +250,7 @@ function MatriculaPage() {
                         </div>
 
                         <div class="form-row">
-                            <span class="label">Nacionalidad / fecha de nacimiento:</span>
+                            <span class="label">Nacionalidad / Fecha de nacimiento:</span>
                             ${getNacionalidad(matricula)} / ${getFechaNacimiento(matricula)}
                         </div>
                     </div>
@@ -261,34 +259,37 @@ function MatriculaPage() {
 
                     <div style="display: flex; gap: 20px;">
                         <div class="form-row" style="width: 30%">
-                            <span class="label">Edad:${getEdad(matricula)}</span> 
+                            <span class="label">Edad:</span>
+                            <span class="value">${getEdad(matricula)}</span>
                         </div>
 
                         <div class="form-row">
-                            <span class="label">Número de cédula:${getCedula(matricula)}</span>
-                            
+                            <span class="label">Número de cédula:</span>
+                            <span class="value">${getCedula(matricula)}</span>
+
                         </div>
                     </div>
 
                     <br/>
 
                     <div class="form-row">
-                        <span class="label">Dirección${getDireccion(matricula)}:</span>
-                    
+                        <span class="label">Dirección:</span>
+                        <span class="value">${getDireccion(matricula)}</span>
                     </div>
 
                     <br/><br/>
 
                     <div class="form-row">
-                        <span class="label">Correo electrónico: ${getCorreo(matricula)}</span>
-                       
+                        <span class="label">Correo electrónico:</span>
+                        <span class="value">${getCorreo(matricula)}</span>
                     </div>
 
                     <br/><br/>
 
                     <div style="display: flex; gap: 20px;">
                         <div class="form-row">
-                            <span class="label">Teléfono móvil ${getTelefono(matricula)}:</span>
+                            <span class="label">Teléfono móvil:</span>
+                            <span class="value">${getTelefono(matricula)}</span>
                            
                         </div>
 
@@ -302,13 +303,13 @@ function MatriculaPage() {
 
                     <div style="display: flex; gap: 10px;">
                         <div class="form-row">
-                            <span class="label">Nivel Académico: ${getNivelEducativo(matricula)}</span>
-                           
+                        <span class="label">Nivel Académico:</span>
+                            <span class="value">${getNivelEducativo(matricula)}</span>
                         </div>
 
                         <div class="form-row">
                             <span class="label">Contacto emergencia:</span>
-                            <span class="value">${getContactoEmergencia(matricula)}</span>
+                            <span class="value">${getNombreEmergencia(matricula)}</span>
                         </div>
                     </div>
 
@@ -335,8 +336,8 @@ function MatriculaPage() {
                         </div>
 
                         <div class="form-row">
-                            <span class="label">Categoría:   ${getCategoria(matricula)}</span>
-                         
+                            <span class="label">Categoría:</span>
+                            <span class="value">${getCategoria(matricula)}</span>
                         </div>
                     </div>
 
@@ -347,10 +348,20 @@ function MatriculaPage() {
                         <span class="value">${matricula.observaciones || ""}</span>
                     </div>
 
-                    <br/><br/><br/><br/><br/><br/><br/><br/>
+                    <br/><br/><br/><br/>
 
-                    <div style="text-align: center; margin: 30px 0; font-weight: bold;">
-                        FIRMA DEL SOLICITANTE
+                    <div style="margin-top: 70px; text-align: center;">
+                        <div
+                            style="
+                                width: 320px;
+                                margin: 0 auto 10px auto;
+                                border-top: 2px solid #000;
+                            "
+                        ></div>
+
+                        <div style="font-weight: bold;">
+                            FIRMA DEL SOLICITANTE
+                        </div>
                     </div>
 
                     <div class="footer-nota">
@@ -380,7 +391,7 @@ function MatriculaPage() {
         ventanaImpresion.document.close();
     };
 
-    const enviarWhatsApp = (matricula) => {
+    const enviarWhatsApp = async (matricula) => {
         const telefono = getTelefono(matricula);
         const driveLink = "https://drive.google.com/drive/folders/1Xo9n8s0l7mLh2j3k4n5o6p7q8r9s0t?usp=sharing";
 
@@ -389,192 +400,64 @@ function MatriculaPage() {
             return;
         }
 
-        const mensaje = `Hola ${getNombre(matricula)}, tu matrícula ha sido registrada exitosamente. Te has inscrito en el curso ${getCurso(matricula)} para la categoría ${getCategoria(matricula)}. Esperamos que aproveches al máximo tus clases teóricas y prácticas. Material de estudio: ${driveLink}`;
+        let primeraClase = null;
+
+        try {
+            const token = localStorage.getItem("token");
+
+            const response = await fetch("http://127.0.0.1:8000/api/calendario/", {
+                headers: {
+                    Authorization: `Token ${token}`,
+                },
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                const calendario = Array.isArray(result) ? result : result.results || [];
+
+                const clasesEstudiante = calendario
+                    .filter((cita) => String(cita.matricula) === String(matricula.id))
+                    .sort((a, b) => {
+                        const fechaA = `${a.fecha} ${a.hora_inicio || ""}`;
+                        const fechaB = `${b.fecha} ${b.hora_inicio || ""}`;
+                        return fechaA.localeCompare(fechaB);
+                    });
+
+                primeraClase = clasesEstudiante[0] || null;
+            }
+        } catch (error) {
+            console.error("Error obteniendo calendario para WhatsApp:", error);
+        }
+
+        const instructor = primeraClase?.instructor_nombre || "Pendiente de asignación";
+
+        const fechaInicio = primeraClase?.fecha
+            ? new Date(primeraClase.fecha + "T00:00:00").toLocaleDateString("es-NI", {
+                weekday: "long",
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+            })
+            : "Pendiente de asignación";
+
+        const horaInicio = primeraClase?.hora_inicio
+            ? primeraClase.hora_inicio.slice(0, 5)
+            : "Pendiente de asignación";
+
+        const mensaje = `Hola ${getNombre(matricula)}, tu matrícula ha sido registrada exitosamente.
+
+    Curso: ${getCurso(matricula)}
+    Categoría: ${getCategoria(matricula)}
+    Instructor: ${instructor}
+    Inicio del curso: ${fechaInicio}
+    Hora: ${horaInicio}
+
+    Esperamos que aproveches al máximo tus clases teóricas y prácticas.
+
+    Material de estudio: ${driveLink}`;
 
         const url = `https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`;
         window.open(url, "_blank");
-    };
-
-    const imprimirPorEdades = () => {
-        let datosAImprimir = [];
-
-        if (filtroEdad === "menores18") {
-            datosAImprimir = data.filter((item) => parseInt(getEdad(item)) < 18);
-        } else if (filtroEdad === "18a30") {
-            datosAImprimir = data.filter(
-                (item) => parseInt(getEdad(item)) >= 18 && parseInt(getEdad(item)) <= 30
-            );
-        } else if (filtroEdad === "31a50") {
-            datosAImprimir = data.filter(
-                (item) => parseInt(getEdad(item)) >= 31 && parseInt(getEdad(item)) <= 50
-            );
-        } else if (filtroEdad === "mayores50") {
-            datosAImprimir = data.filter((item) => parseInt(getEdad(item)) > 50);
-        } else {
-            datosAImprimir = filteredByAge;
-        }
-
-        const ventanaImpresion = window.open("", "_blank");
-
-        ventanaImpresion.document.write(`
-            <html>
-                <head>
-                    <title>Reporte de Matrículas por Edad</title>
-                    <style>
-                        body { font-family: Arial, sans-serif; margin: 20px; }
-                        h1 { color: #333; text-align: center; }
-                        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-                        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-                        th { background-color: #4CAF50; color: white; }
-                        .total { margin-top: 20px; font-weight: bold; text-align: right; }
-                    </style>
-                </head>
-
-                <body>
-                    <h1>Reporte de Matrículas</h1>
-
-                    <p>
-                        <strong>Filtro de edad:</strong>
-                        ${
-                            filtroEdad === "menores18"
-                                ? "Menores de 18 años"
-                                : filtroEdad === "18a30"
-                                ? "18 a 30 años"
-                                : filtroEdad === "31a50"
-                                ? "31 a 50 años"
-                                : filtroEdad === "mayores50"
-                                ? "Mayores de 50 años"
-                                : "Todos los registros"
-                        }
-                    </p>
-
-                    <p><strong>Fecha de generación:</strong> ${new Date().toLocaleString()}</p>
-                    <p><strong>Total de registros:</strong> ${datosAImprimir.length}</p>
-
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Nombre</th>
-                                <th>Cédula</th>
-                                <th>Edad</th>
-                                <th>Sexo</th>
-                                <th>Teléfono</th>
-                                <th>Categoría</th>
-                                <th>Curso</th>
-                                <th>Estado</th>
-                            </tr>
-                        </thead>
-
-                        <tbody>
-                            ${datosAImprimir
-                                .map(
-                                    (item) => `
-                                    <tr>
-                                        <td>${getNombre(item)}</td>
-                                        <td>${getCedula(item)}</td>
-                                        <td>${getEdad(item)}</td>
-                                        <td>${getSexo(item)}</td>
-                                        <td>${getTelefono(item)}</td>
-                                        <td>${getCategoria(item)}</td>
-                                        <td>${getCurso(item)}</td>
-                                        <td>${item.estado === "matriculado" ? "Matriculado" : item.estado === "cancelado" ? "Cancelado" : "Pendiente"}</td>
-                                    </tr>
-                                `
-                                )
-                                .join("")}
-                        </tbody>
-                    </table>
-
-                    <p style="margin-top: 30px; text-align: center; color: #666;">
-                        Reporte generado el ${new Date().toLocaleDateString()}
-                    </p>
-                </body>
-            </html>
-        `);
-
-        ventanaImpresion.document.close();
-        ventanaImpresion.print();
-    };
-
-    const imprimirPorFechas = () => {
-        let filtrados = data;
-
-        if (fechaDesde) {
-            const desde = new Date(fechaDesde);
-            filtrados = filtrados.filter((item) => fechaLocal(getFechaMatricula(item)) >= desde);
-        }
-
-        if (fechaHasta) {
-            const hasta = new Date(fechaHasta);
-            filtrados = filtrados.filter((item) => fechaLocal(getFechaMatricula(item)) <= hasta);
-        }
-
-        if (filtrados.length === 0) {
-            Swal.fire("Sin registros", "No se encontraron registros en este rango de fechas.", "info");
-            return;
-        }
-
-        const ventanaImpresion = window.open("", "_blank");
-
-        ventanaImpresion.document.write(`
-            <html>
-                <head>
-                    <title>Reporte por Fechas</title>
-                    <style>
-                        body { font-family: Arial, sans-serif; margin: 20px; }
-                        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-                        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-                        th { background: #f0f0f0; }
-                    </style>
-                </head>
-
-                <body>
-                    <h1>Reporte de Matrículas</h1>
-
-                    <p>
-                        <strong>Desde:</strong> ${fechaDesde || "Inicio"}
-                        <strong>Hasta:</strong> ${fechaHasta || "Fin"}
-                    </p>
-
-                    <p><strong>Total:</strong> ${filtrados.length} registros</p>
-
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>F. Matrícula</th>
-                                <th>Nombre</th>
-                                <th>Cédula</th>
-                                <th>Edad</th>
-                                <th>Categoría</th>
-                                <th>Curso</th>
-                                <th>Estado</th>
-                            </tr>
-                        </thead>
-
-                        <tbody>
-                            ${filtrados
-                                .map(
-                                    (item) => `
-                                    <tr>
-                                        <td>${getFechaMatricula(item)}</td>
-                                        <td>${getNombre(item)}</td>
-                                        <td>${getCedula(item)}</td>
-                                        <td>${getEdad(item)}</td>
-                                        <td>${getCategoria(item)}</td>
-                                        <td>${getCurso(item)}</td>
-                                        <td>${item.estado === "matriculado" ? "Matriculado" : item.estado === "cancelado" ? "Cancelado" : "Pendiente"}</td>
-                                    </tr>
-                                `
-                                )
-                                .join("")}
-                        </tbody>
-                    </table>
-                </body>
-            </html>
-        `);
-
-        ventanaImpresion.document.close();
-        ventanaImpresion.print();
     };
 
     useEffect(() => {
@@ -594,24 +477,7 @@ function MatriculaPage() {
         return texto.includes(search.toLowerCase());
     });
 
-    const filteredByAge = (() => {
-        if (!filtroEdad) return filteredData;
-
-        return filteredData.filter((item) => {
-            const edad = parseInt(getEdad(item));
-
-            if (isNaN(edad)) return false;
-
-            if (filtroEdad === "menores18") return edad < 18;
-            if (filtroEdad === "18a30") return edad >= 18 && edad <= 30;
-            if (filtroEdad === "31a50") return edad >= 31 && edad <= 50;
-            if (filtroEdad === "mayores50") return edad > 50;
-
-            return true;
-        });
-    })();
-
-    const displayData = filteredByAge;
+    const displayData = filteredData;
 
     return (
         <div className="w-full max-w-full min-w-0 overflow-hidden px-4">
@@ -623,9 +489,9 @@ function MatriculaPage() {
             </div>
 
             <div className="w-full max-w-full overflow-x-auto">
-                <div className="w-[1300px]">
-                    <div className="flex flex-row items-center gap-3 rounded-xl whitespace-nowrap mb-4">
-                        <div className="relative w-[280px] shrink-0">
+                <div className="max-w-[1225px]">
+                    <div className="flex flex-row items-center justify-between gap-3 rounded-xl whitespace-nowrap mb-4">
+                        <div className="relative w-[420px] shrink-0">
                             <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
 
                             <input
@@ -633,62 +499,16 @@ function MatriculaPage() {
                                 placeholder="Buscar por nombre, cédula o estado..."
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2 border rounded-3xl focus:outline-none bg-white border-blue-500 hover:outline-2 hover:outline-offset-2 hover:outline-dashed hover:border-blue-900 transition h-11"
+                                className="w-full pl-10 pr-4 py-2 border rounded-3xl bg-white border-blue-500 transition h-11"
                             />
                         </div>
-
-                        <div className="flex gap-2">
-                            <select
-                                value={filtroEdad}
-                                onChange={(e) => setFiltroEdad(e.target.value)}
-                                className="w-[100px] border rounded-3xl focus:outline-none bg-white border-blue-500 h-11 px-3 shrink-0"
-                            >
-                                <option value="">Edades</option>
-                                <option value="menores18">Menor a 18 años</option>
-                                <option value="18a30">18 a 30 años</option>
-                                <option value="31a50">31 a 50 años</option>
-                                <option value="mayores50">Mayores de 50 años</option>
-                            </select>
-
-                            <button
-                                onClick={imprimirPorEdades}
-                                className="flex items-center gap-1 bg-white text-black px-5 rounded-3xl hover:bg-blue-300 transition h-11 hover:cursor-pointer"
-                            >
-                                <FiPrinter className="text-black" />
-                                Edades
-                            </button>
-                        </div>
-
-                        <input
-                            type="date"
-                            value={fechaDesde}
-                            onChange={(e) => setFechaDesde(e.target.value)}
-                            className="w-[140px] px-4 py-2 border rounded-3xl bg-white border-blue-500 shrink-0"
-                            title="Fecha desde"
-                        />
-
-                        <input
-                            type="date"
-                            value={fechaHasta}
-                            onChange={(e) => setFechaHasta(e.target.value)}
-                            className="w-[140px] px-4 py-2 border rounded-3xl bg-white border-blue-500 shrink-0"
-                            title="Fecha hasta"
-                        />
-
-                        <button
-                            onClick={imprimirPorFechas}
-                            className="flex items-center gap-2 bg-white text-black px-4 py-2 rounded-3xl hover:bg-blue-300 transition cursor-pointer"
-                        >
-                            <FiPrinter />
-                            
-                        </button>
 
                         <button
                             onClick={() => {
                                 setEditData(null);
                                 setShowModal(true);
                             }}
-                            className="relative group overflow-hidden px-20 h-11 rounded-3xl bg-green-500 text-white flex items-center gap-2 transition-all duration-300 hover:bg-green-600 justify-end hover:cursor-pointer"
+                            className="relative group overflow-hidden px-12 h-11 rounded-3xl bg-green-500 text-white flex items-center gap-2 transition-all duration-300 hover:bg-green-600 justify-end hover:cursor-pointer shrink-0"
                         >
                             <span className="absolute top-0 left-[-75%] w-[50%] h-full bg-gradient-to-r from-transparent via-white/60 to-transparent skew-x-12 group-hover:left-[125%] transition-all duration-700"></span>
 
@@ -705,10 +525,9 @@ function MatriculaPage() {
                                 <tr className="border-gray-300">
                                     <th className="p-3 w-[60px]">Código</th>
                                     <th className="p-3 w-[220px]">Nombre</th>
-                                    <th className="p-3 w-[180px]">Cédula</th> 
-                                    <th className="p-3 w-[90px]">Edad</th> 
+                                    <th className="p-3 w-[180px]">Cédula</th>
+                                    <th className="p-3 w-[90px]">Edad</th>
                                     <th className="p-3 w-[150px]">Teléfono</th>
-                                    {/* <th className="p-3 w-[120px]">Categoría</th> */}
                                     <th className="p-3 w-[180px]">Curso</th>
                                     <th className="p-3 w-[130px]">Estado</th>
                                     <th className="p-3 w-[170px]">Opciones</th>
@@ -718,7 +537,7 @@ function MatriculaPage() {
                             <tbody className="justify-center text-center items-center">
                                 {loading ? (
                                     <tr>
-                                        <td colSpan="9" className="p-6 text-center">
+                                        <td colSpan="8" className="p-6 text-center">
                                             Cargando...
                                         </td>
                                     </tr>
@@ -734,27 +553,22 @@ function MatriculaPage() {
                                                 {getNombre(item)}
                                             </td>
 
-                                             <td className="px-2">
+                                            <td className="px-2">
                                                 {getCedula(item)}
-                                            </td> 
+                                            </td>
 
-                                             <td className="px-5">
+                                            <td className="px-5">
                                                 {getEdad(item)}
-                                            </td> 
+                                            </td>
 
                                             <td className="px-7">
                                                 {getTelefono(item)}
                                             </td>
 
-                                            {/* <td className="px-9 text-blue-800 font-bold">
-                                                {getCategoria(item)}
-                                            </td> */}
-
                                             <td className="p-2">
                                                 {getCurso(item) || getPlan(item)}
                                             </td>
 
-                                            {/* ESTADO CORREGIDO - Ahora usa "matriculado" en lugar de "aprobado" */}
                                             <td className="p-2">
                                                 <span
                                                     className={`px-3 py-1 rounded-full text-xs font-bold ${
@@ -785,7 +599,7 @@ function MatriculaPage() {
                                                         title="Eliminar"
                                                     >
                                                         <RiDeleteBinLine className="text-red-500 text-xl hover:text-red-700 hover:cursor-pointer" />
-                                                    </button> 
+                                                    </button>
 
                                                     <button
                                                         onClick={() => {
@@ -799,19 +613,22 @@ function MatriculaPage() {
                                                     </button>
 
                                                     <button
-                                                        onClick={() => imprimirMatriculaIndividual(item)}
-                                                        className="p-2 rounded-lg hover:bg-green-100"
-                                                        title="Imprimir Matrícula"
-                                                    >
-                                                        <AiOutlinePrinter className="text-green-500 text-xl hover:text-green-700 hover:cursor-pointer" />
-                                                    </button>
-
-                                                    <button
                                                         onClick={() => enviarWhatsApp(item)}
                                                         className="p-2 rounded-lg hover:bg-green-100"
                                                         title="Enviar por WhatsApp"
                                                     >
                                                         <IoLogoWhatsapp className="text-green-600 text-xl hover:text-green-700 hover:cursor-pointer" />
+                                                    </button>
+
+                                                    <button
+                                                        onClick={() => {
+                                                            console.log("MATRÍCULA A IMPRIMIR:", item);
+                                                            imprimirMatriculaIndividual(item);
+                                                        }}
+                                                        className="p-2 rounded-lg hover:bg-green-100"
+                                                        title="Imprimir Matrícula"
+                                                    >
+                                                        <AiOutlinePrinter className="text-green-500 text-xl hover:text-green-700 hover:cursor-pointer" />
                                                     </button>
                                                 </div>
                                             </td>
@@ -819,7 +636,7 @@ function MatriculaPage() {
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan="9" className="p-6 text-center text-gray-400">
+                                        <td colSpan="8" className="p-6 text-center text-gray-400">
                                             No hay registros
                                         </td>
                                     </tr>
