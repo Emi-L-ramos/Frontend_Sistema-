@@ -613,38 +613,6 @@ function RecibosForm({ onSave, initialData }) {
                     </p>
                 </div>
 
-                {saldoPendienteLocal !== null && (
-                    <div className="mt-3 pt-3 border-t border-blue-200 grid grid-cols-3 gap-2 text-center text-sm">
-                        <div>
-                            <p className="text-gray-500">Total</p>
-                            <p className="font-bold text-gray-800">
-                                C$ {redondearMonto(saldoInfo?.monto_total || totalCurso)}
-                            </p>
-                        </div>
-
-                        <div>
-                            <p className="text-gray-500">
-                                {Number(saldoInfo?.total_pagado || 0) > 0 ? "Pagado" : "Anticipo"}
-                            </p>
-                            <p className="font-bold text-green-600">
-                                C$ {redondearMonto(Number(saldoInfo?.total_pagado || 0) || montoAnticipo)}
-                            </p>
-                        </div>
-
-                        <div>
-                            <p className="text-gray-500">Saldo pendiente</p>
-                            <p
-                                className={`font-bold text-lg ${
-                                    saldoPendienteLocal > 0
-                                        ? "text-orange-600"
-                                        : "text-green-600"
-                                }`}
-                            >
-                                C$ {saldoPendienteLocal}
-                            </p>
-                        </div>
-                    </div>
-                )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -914,7 +882,7 @@ function RecibosForm({ onSave, initialData }) {
                                 ? "bg-gray-100"
                                 : ""
                         }`}
-                        readOnly={form.tipo_pago === "completo" || form.tipo_pago === "beneficio" || esSegundoAnticipo}
+                        readOnly={form.tipo_pago === "completo" || esSegundoAnticipo}
                         required={form.tipo_pago !== "beneficio"}
                     />
                 </div>
