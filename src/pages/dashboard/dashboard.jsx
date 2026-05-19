@@ -11,6 +11,7 @@ import PerfilEstudiante from "../perfil_studiante/perfil_estudiante";
 import UsuariosPage from "../admin/UsuariosPage";
 import EstudiantesPage from "../estudiantes/EstudiantesPage";
 import ReportesPages from "../reportes/ReportesPages";
+import InstructoresPage from "../instructores/InstructoresPage";
 
 import { LuLayoutDashboard } from "react-icons/lu";
 import { TbMenu2 } from "react-icons/tb";
@@ -106,6 +107,9 @@ function Dashboard() {
 
             case 'usuarios':
                 return <UsuariosPage />;
+            
+            case 'instructores':
+                return <InstructoresPage />;
 
             default:
                 return <DashboardHome />;
@@ -266,6 +270,24 @@ function Dashboard() {
                                 <span>Usuarios</span>
                             </button>
                         </>
+                    )}
+
+                    {/* INSTRUCTORES */}
+                    {esAdmin && (
+                        <button
+                            onClick={() => {
+                                setActiveTab('instructores');
+                                setIsSidebarOpen(false);
+                            }}
+                            className={`w-full flex items-center p-3 space-x-3 rounded-xl transition hover:cursor-pointer ${
+                                activeTab === 'instructores'
+                                    ? 'bg-blue-100 text-blue-500 font-bold'
+                                    : 'text-gray-600 hover:bg-blue-50'
+                            }`}
+                        >
+                            <MdPersonOutline size={'1.5rem'} />
+                            <span>Instructores</span>
+                        </button>
                     )}
 
                     {/* GESTIÓN ACADÉMICA */}

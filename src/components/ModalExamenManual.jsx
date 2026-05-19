@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { X, AlertCircle } from "lucide-react";
-import { crearExamenManual, listarInstructores, listarMatriculas } from "../api/calendario";
+import { crearExamenManual, listarInstructores, listarMatriculasInstructor } from "../api/calendario";
 
 export default function ModalExamenManual({ abierto, onClose, onCreada }) {
   const [instructores, setInstructores] = useState([]);
@@ -19,7 +19,7 @@ export default function ModalExamenManual({ abierto, onClose, onCreada }) {
   useEffect(() => {
     if (!abierto) return;
     listarInstructores().then(setInstructores).catch(() => {});
-    listarMatriculas().then(setMatriculas).catch(() => {});
+    listarMatriculasInstructor().then(setMatriculas).catch(() => {});
     setForm({ matricula_id: "", fecha: "", hora_inicio: "14:00", hora_fin: "16:00" });
     setError("");
   }, [abierto]);
@@ -116,9 +116,6 @@ export default function ModalExamenManual({ abierto, onClose, onCreada }) {
               onChange={(e) => setForm({ ...form, fecha: e.target.value })}
               className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
             />
-            <p className="text-xs text-gray-500 mt-1">
-              El examen puede ser cualquier día (incluso fin de semana).
-            </p>
           </div>
 
           <div className="bg-orange-50 border border-orange-200 rounded-md p-3 text-sm text-orange-800">

@@ -9,6 +9,7 @@ import UsuariosPage from "./pages/admin/UsuariosPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Asistencia from "./pages/asistencia/Asistencia";
 import PerfilEstudiante from "./pages/perfil_studiante/perfil_estudiante";
+import InstructoresPage from "./pages/instructores/InstructoresPage";
 
 import "./App.css";
 
@@ -28,22 +29,27 @@ function App() {
                     } />
                     
                     <Route path="/dashboard/matricula" element={
-                        <ProtectedRoute rolesPermitidos={['admin', 'secretaria']}>
+                        <ProtectedRoute rolesPermitidos={['admin']}>
                             <MatriculaPage />
                         </ProtectedRoute>
                     } />
                     
                     <Route path="/dashboard/recibos" element={
-                        <ProtectedRoute rolesPermitidos={['admin', 'secretaria', 'cajero']}>
+                        <ProtectedRoute rolesPermitidos={['admin']}>
                             <RecibosPage />
                         </ProtectedRoute>
                     } />
                     
-                                        <Route
-                        path="/dashboard/perfiles"
-                        element={
+                    <Route path="/dashboard/perfiles" element={
                             <ProtectedRoute>
                                 <PerfilEstudiante />
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    <Route path="/dashboard/instructores" element={
+                            <ProtectedRoute rolesPermitidos={['admin']}>
+                                <InstructoresPage />
                             </ProtectedRoute>
                         }
                     />

@@ -268,7 +268,7 @@ export default function Calendario() {
             </div>
           </div>
 
-          <div className="lg:col-span-2 bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+          <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm h-fit">
             <h2 className="text-lg font-bold mb-4">
               {diaSeleccionado
                 ? `Clases del ${new Date(diaSeleccionado + "T00:00:00").toLocaleDateString("es-ES", {

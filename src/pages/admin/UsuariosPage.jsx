@@ -11,6 +11,8 @@ function UsuariosPage() {
     const [roles, setRoles] = useState([]);
     const [matriculas, setMatriculas] = useState([]);
     const [busquedaMatricula, setBusquedaMatricula] = useState("");
+    const [instructores, setInstructores] = useState([]);
+    const [busquedaInstructor, setBusquedaInstructor] = useState("");
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [editData, setEditData] = useState(null);
@@ -23,6 +25,7 @@ function UsuariosPage() {
         last_name: "",
         rol: "",
         matricula_id: "",
+        instructor_id: "",
     });
 
     const normalizarRol = (rol) => {
@@ -137,6 +140,25 @@ function UsuariosPage() {
         }
     };
 
+    const fetchInstructores = async () => {
+        try {
+            const response = await fetch("http://127.0.0.1:8000/api/instructores/", {
+                headers: {
+                    Authorization: `Token ${token}`,
+                },
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setInstructores(Array.isArray(data) ? data : data.results || []);
+            } else {
+                console.error("Error cargando instructores");
+            }
+        } catch (error) {
+            console.error("Error cargando instructores:", error);
+        }
+    };
+
     const resetForm = () => {
         setForm({
             username: "",
@@ -146,6 +168,7 @@ function UsuariosPage() {
             last_name: "",
             rol: "",
             matricula_id: "",
+            instructor_id: "",
         });
 
         setEditData(null);
@@ -169,6 +192,10 @@ function UsuariosPage() {
 
         if (form.rol === "estudiante" && form.matricula_id) {
             userData.matricula_id = parseInt(form.matricula_id);
+        }
+
+        if (form.rol === "instructor" && form.instructor_id) {
+            userData.instructor_id = parseInt(form.instructor_id);
         }
 
         if (form.password) {
@@ -256,6 +283,7 @@ function UsuariosPage() {
         fetchUsuarios();
         fetchRoles();
         fetchMatriculas();
+        fetchInstructores();
     }, [token]);
 
     return (
@@ -487,8 +515,10 @@ function UsuariosPage() {
                                         ...form,
                                         rol: e.target.value,
                                         matricula_id: "",
+                                        instructor_id: "",
                                     });
                                     setBusquedaMatricula("");
+                                    setBusquedaInstructor("");
                                 }}
                                 className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 required
@@ -552,6 +582,63 @@ function UsuariosPage() {
                                                         </p>
                                                         <p className="text-xs text-gray-500">
                                                             Estado: {m.estado || "N/A"}
+                                                        </p>
+                                                    </div>
+                                                ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {form.rol === "instructor" && !editData && (
+                                <div className="relative">
+                                    <input
+                                        type="text"
+                                        placeholder="Buscar instructor por nombre..."
+                                        value={busquedaInstructor}
+                                        onChange={e => {
+                                            setBusquedaInstructor(e.target.value);
+                                            setForm({ ...form, instructor_id: "" });
+                                        }}
+                                        className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        required={!form.instructor_id}
+                                    />
+
+                                    {busquedaInstructor && !form.instructor_id && (
+                                        <div className="absolute z-10 w-full bg-white border rounded-xl shadow-lg max-h-48 overflow-y-auto mt-1">
+                                            {instructores
+                                                .filter(i => {
+                                                    const texto = `
+                                                        ${i.nombre || ""}
+                                                        ${i.apellido || ""}
+                                                        ${i.nombre_completo || ""}
+                                                        ${i.numero_telefono || ""}
+                                                    `.toLowerCase();
+
+                                                    return texto.includes(busquedaInstructor.toLowerCase());
+                                                })
+                                                .map(i => (
+                                                    <div
+                                                        key={i.id}
+                                                        onClick={() => {
+                                                            setForm({ ...form, instructor_id: i.id });
+                                                            setBusquedaInstructor(
+                                                                i.nombre_completo ||
+                                                                `${i.nombre || ""} ${i.apellido || ""}`.trim()
+                                                            );
+                                                        }}
+                                                        className="p-3 hover:bg-blue-50 cursor-pointer text-sm border-b last:border-b-0"
+                                                    >
+                                                        <p className="font-semibold text-gray-800">
+                                                            {i.nombre_completo || `${i.nombre || ""} ${i.apellido || ""}`.trim()}
+                                                        </p>
+
+                                                        <p className="text-xs text-gray-500">
+                                                            Teléfono: {i.numero_telefono || "N/A"}
+                                                        </p>
+
+                                                        <p className="text-xs text-gray-500">
+                                                            Categoría: {i.categoria_nombre || "N/A"}
                                                         </p>
                                                     </div>
                                                 ))}

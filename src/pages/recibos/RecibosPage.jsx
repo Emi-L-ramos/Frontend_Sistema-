@@ -106,8 +106,13 @@ function RecibosPage() {
     
     const recibosMes = recibos.filter(r => {
         if (!r.fecha_pago) return false;
-        const fecha = new Date(r.fecha_pago);
-        return fecha.getMonth() === mesActual && fecha.getFullYear() === anioActual;
+
+        const [year, month] = String(r.fecha_pago).split("T")[0].split("-");
+
+        return (
+            Number(month) - 1 === mesActual &&
+            Number(year) === anioActual
+        );
     });
     
     const totalMes = recibosMes.reduce((acc, r) => {
@@ -117,8 +122,15 @@ function RecibosPage() {
     
     const formatearFecha = (fecha) => {
         if (!fecha) return "N/A";
-        const date = new Date(fecha);
-        return date.toLocaleDateString('es-ES');
+
+        const texto = String(fecha).split("T")[0].trim();
+
+        if (texto.includes("-")) {
+            const [year, month, day] = texto.split("-");
+            return `${day}/${month}/${year}`;
+        }
+
+        return texto;
     };
 
     // Función para mostrar el texto del estado según el tipo de pago
