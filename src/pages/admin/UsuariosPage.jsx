@@ -124,6 +124,16 @@ function UsuariosPage() {
                     return orden[a.value] - orden[b.value];
                 });
 
+                rolesFormateados.sort((a, b) => {
+                    const orden = {
+                        admin: 1,
+                        instructor: 2,
+                        estudiante: 3,
+                    };
+
+                    return orden[a.value] - orden[b.value];
+                });
+
                 setRoles(rolesFormateados);
             } else {
                 console.error("Error cargando roles");
