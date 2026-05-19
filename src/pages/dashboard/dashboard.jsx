@@ -283,6 +283,7 @@ function Dashboard() {
                         </>
                     )}
 
+
                     {/* INSTRUCTORES */}
                     {esAdmin && (
                         <button
@@ -300,6 +301,7 @@ function Dashboard() {
                             <span>Instructores</span>
                         </button>
                     )}
+
 
                     {/* GESTIÓN ACADÉMICA */}
                     <div className="pt-4 mt-4 border-t border-gray-200">

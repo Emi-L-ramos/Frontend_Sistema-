@@ -15,6 +15,10 @@ import VerPlanEstudio from "./pages/plan_studio/VerPlanEstudio";
 import ExamenTeoricoPage from "./pages/examen_teorico/ExamenTeoricoPage";
 import ExamenTeoricoEstudiante from "./pages/examen_teorico/ExamenTeoricoEstudiante";
 import InstructoresPage from "./pages/instructores/InstructoresPage";
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
 
 import "./App.css";
 
@@ -60,7 +64,10 @@ function App() {
                             </ProtectedRoute>
                         }
                     />
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
                     <Route path="/dashboard/usuarios" element={
                         <ProtectedRoute rolesPermitidos={['admin']}>
                             <UsuariosPage />
@@ -104,6 +111,10 @@ function App() {
                         </ProtectedRoute>
                     } />
                                         
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
                     <Route path="/dashboard/instructores" element={
                             <ProtectedRoute rolesPermitidos={['admin']}>
                                 <InstructoresPage />
