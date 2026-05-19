@@ -488,7 +488,7 @@ function EstudiantesPage() {
 
                                 <input
                                     type="text"
-                                    name="en_caso_de_emergencia"
+                                    name="nombre_emergencia"
                                     placeholder="Contacto de emergencia"
                                     value={form.nombre_emergencia}
                                     onChange={handleChange}
