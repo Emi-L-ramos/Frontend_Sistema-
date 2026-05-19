@@ -57,10 +57,6 @@ function App() {
                         </ProtectedRoute>
                     } />
                     
-<<<<<<< HEAD
-
-=======
->>>>>>> ba97acb1f8754d6027ae7c9497f65c48700cd72c
                     <Route path="/dashboard/perfiles" element={
                             <ProtectedRoute>
                                 <PerfilEstudiante />
@@ -68,7 +64,6 @@ function App() {
                         }
                     />
 
-<<<<<<< HEAD
                     <Route path="/dashboard/usuarios" element={
                         <ProtectedRoute rolesPermitidos={['admin']}>
                             <UsuariosPage />
@@ -112,7 +107,6 @@ function App() {
                         </ProtectedRoute>
                     } />
                                         
-=======
                     <Route path="/dashboard/instructores" element={
                             <ProtectedRoute rolesPermitidos={['admin']}>
                                 <InstructoresPage />
@@ -120,7 +114,6 @@ function App() {
                         }
                     />
 
->>>>>>> ba97acb1f8754d6027ae7c9497f65c48700cd72c
                     <Route path="*" element={<Navigate to="/login" />} />
                 </Routes>
             </Router>
