@@ -96,8 +96,8 @@ function UsuariosPage() {
 
                 const colores = {
                     admin: "bg-red-100 text-red-700",
-                    instructor: "bg-green-100 text-green-700",
-                    estudiante: "bg-blue-100 text-blue-700",
+                    Instructor: "bg-green-100 text-green-700",
+                    Estudiante: "bg-blue-100 text-blue-700",
                 };
 
                 const rolesFormateados = (Array.isArray(data) ? data : []).map(r => {
@@ -107,9 +107,21 @@ function UsuariosPage() {
                     return {
                         id: r.id,
                         value,
-                        label: nombre || "Sin rol",
+                        label: nombre
+                            ? nombre.charAt(0).toUpperCase() + nombre.slice(1).toLowerCase()
+                            : "Sin rol",
                         color: colores[value] || "bg-gray-100 text-gray-700",
                     };
+                });
+
+                rolesFormateados.sort((a, b) => {
+                    const orden = {
+                        Admin: 1,
+                        Instructor: 2,
+                        Estudiante: 3,
+                    };
+
+                    return orden[a.value] - orden[b.value];
                 });
 
                 setRoles(rolesFormateados);
@@ -376,9 +388,13 @@ function UsuariosPage() {
                                                             </td>
 
                                                             <td className="p-4 text-gray-700">
-                                                                {u.first_name || u.last_name
-                                                                    ? `${u.first_name || ""} ${u.last_name || ""}`.trim()
-                                                                    : "-"}
+                                                                {normalizarRol(u.rol) === "Estudiante"
+                                                                    ? (u.estudiante_nombre || "-")
+                                                                    : normalizarRol(u.rol) === "Instructor"
+                                                                    ? (u.instructor_nombre || "-")
+                                                                    : (u.first_name || u.last_name
+                                                                        ? `${u.first_name || ""} ${u.last_name || ""}`.trim()
+                                                                        : "-")}
                                                             </td>
 
                                                             <td className="p-4">
@@ -488,25 +504,25 @@ function UsuariosPage() {
                                 />
                             </div>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <input
-                                    type="text"
-                                    placeholder="Nombres"
-                                    value={form.first_name}
-                                    onChange={e => setForm({ ...form, first_name: e.target.value })}
-                                    required={form.rol === "instructor"}
-                                    className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                />
+                            {form.rol !== "estudiante" && form.rol !== "instructor" && (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <input
+                                        type="text"
+                                        placeholder="Nombres"
+                                        value={form.first_name}
+                                        onChange={e => setForm({ ...form, first_name: e.target.value })}
+                                        className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    />
 
-                                <input
-                                    type="text"
-                                    placeholder="Apellidos"
-                                    value={form.last_name}
-                                    onChange={e => setForm({ ...form, last_name: e.target.value })}
-                                    required={form.rol === "instructor"}
-                                    className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                />
-                            </div>
+                                    <input
+                                        type="text"
+                                        placeholder="Apellidos"
+                                        value={form.last_name}
+                                        onChange={e => setForm({ ...form, last_name: e.target.value })}
+                                        className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    />
+                                </div>
+                            )}
 
                             <select
                                 value={form.rol}
