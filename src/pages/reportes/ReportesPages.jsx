@@ -28,6 +28,8 @@ function ReportesPages() {
         "";
     const getEdad = (item) => item.estudiante_edad || item.edad || "";
     const getSexo = (item) => item.estudiante_sexo || item.sexo || "";
+    const [fechaPolicialDesde, setFechaPolicialDesde] = useState("");
+    const [fechaPolicialHasta, setFechaPolicialHasta] = useState("");
 
     const fechaLocal = (fecha) => {
         if (!fecha) return null;
@@ -502,8 +504,18 @@ function ReportesPages() {
         try {
             const token = localStorage.getItem("token");
 
+            const params = new URLSearchParams();
+
+            if (fechaPolicialDesde) {
+                params.append("desde", fechaPolicialDesde);
+            }
+
+            if (fechaPolicialHasta) {
+                params.append("hasta", fechaPolicialHasta);
+            }
+
             const response = await fetch(
-                "http://127.0.0.1:8000/api/reporte-instructores-policial/",
+                `http://127.0.0.1:8000/api/reporte-instructores-policial/?${params.toString()}`,
                 {
                     headers: {
                         Authorization: `Token ${token}`,
@@ -512,11 +524,16 @@ function ReportesPages() {
             );
 
             if (!response.ok) {
+                const errorText = await response.text();
+
+                console.error("ERROR REPORTE POLICIAL:", errorText);
+
                 Swal.fire(
                     "Error",
-                    "No se pudo generar el reporte policial.",
+                    errorText,
                     "error"
                 );
+
                 return;
             }
 
@@ -527,7 +544,7 @@ function ReportesPages() {
             const a = document.createElement("a");
 
             a.href = url;
-            a.download = "reporte_instructores_policial.xlsx";
+            a.download = "INFORME TRANSITO POLICIA NAC.xlsm";
 
             document.body.appendChild(a);
 
@@ -744,6 +761,35 @@ function ReportesPages() {
                                     Exporta el expediente completo de instructores.
                                 </p>
                             </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                            <div>
+                                <label className="block text-sm text-gray-600 mb-1">
+                                    Fecha Desde
+                                </label>
+
+                                <input
+                                    type="date"
+                                    value={fechaPolicialDesde}
+                                    onChange={(e) => setFechaPolicialDesde(e.target.value)}
+                                    className="w-full border border-gray-300 rounded-xl px-4 py-2"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm text-gray-600 mb-1">
+                                    Fecha Hasta
+                                </label>
+
+                                <input
+                                    type="date"
+                                    value={fechaPolicialHasta}
+                                    onChange={(e) => setFechaPolicialHasta(e.target.value)}
+                                    className="w-full border border-gray-300 rounded-xl px-4 py-2"
+                                />
+                            </div>
+
                         </div>
 
                         <button
