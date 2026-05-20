@@ -30,49 +30,37 @@ function PlanStudio({ userRole }) {
 
   // Función para obtener progresos
   const obtenerProgresos = useCallback(async (mostrarCargaInicial = false) => {
-    if (!isMounted.current) return;
+  if (!isMounted.current) return;
+  
+  try {
+    if (mostrarCargaInicial) setError(null);
     
-    try {
-      if (mostrarCargaInicial) setError(null);
-      
-      const response = await axios.get("/progreso-tema/");
-      const data = Array.isArray(response.data)
-        ? response.data
-        : response.data.results || [];
+    const response = await axios.get("/progreso-tema/");
+    const data = Array.isArray(response.data)
+      ? response.data
+      : response.data.results || [];
 
-      const sortedData = [...data].sort((a, b) => {
-        const temaOrdenA = a.tema_orden || a.subtema?.tema?.orden || 0;
-        const temaOrdenB = b.tema_orden || b.subtema?.tema?.orden || 0;
-        
-        if (temaOrdenA !== temaOrdenB) {
-          return temaOrdenA - temaOrdenB;
-        }
-        
-        const subtemaOrdenA = a.subtema_orden || a.subtema?.orden || 0;
-        const subtemaOrdenB = b.subtema_orden || b.subtema?.orden || 0;
-        
-        return subtemaOrdenA - subtemaOrdenB;
-      });
+    // Ordenar correctamente por tema_orden (NO por orden_general)
+    const sortedData = [...data].sort((a, b) => {
+    const ordenA = Number(a.orden_general || a.tema_orden || 0);
+    const ordenB = Number(b.orden_general || b.tema_orden || 0);
 
-      // Solo actualizar si hay cambios (evita re-renders innecesarios)
-      setProgresos(prev => {
-        const prevStr = JSON.stringify(prev);
-        const newStr = JSON.stringify(sortedData);
-        if (prevStr !== newStr) {
-          console.log("🔄 Datos actualizados en segundo plano");
-          return sortedData;
-        }
-        return prev;
-      });
-    } catch (error) {
-      console.error("Error cargando progreso:", error);
-      if (mostrarCargaInicial) {
-        setError("Error al cargar el progreso. Por favor, recarga la página.");
-      }
-    } finally {
-      if (mostrarCargaInicial) setCargando(false);
+    return ordenA - ordenB;
+  });
+
+    setProgresos(sortedData);
+  } catch (error) {
+    console.error("Error cargando progreso:", error);
+    if (mostrarCargaInicial) {
+      setError("Error al cargar el progreso. Por favor, recarga la página.");
     }
-  }, []);
+  } finally {
+    if (mostrarCargaInicial) setCargando(false);
+  }
+}, []);
+
+
+
 
   // Iniciar polling automático (invisible)
   useEffect(() => {
@@ -341,16 +329,14 @@ function PanelAdmin({ progresos, marcarClase, accionEnProceso }) {
       });
     });
 
-    Object.values(mapa).forEach(est => {
-      est.progresos.sort((a, b) => {
-        const temaA = a.subtema?.tema?.orden || a.tema_orden || 0;
-        const temaB = b.subtema?.tema?.orden || b.tema_orden || 0;
-        if (temaA !== temaB) return temaA - temaB;
-        const subA = a.subtema?.orden || a.subtema_orden || 0;
-        const subB = b.subtema?.orden || b.subtema_orden || 0;
-        return subA - subB;
-      });
+    Object.values(mapa).forEach((est) => {
+    est.progresos.sort((a, b) => {
+      const ordenA = Number(a.orden_general || a.tema_orden || 0);
+      const ordenB = Number(b.orden_general || b.tema_orden || 0);
+
+      return ordenA - ordenB;
     });
+  });
 
     return Object.values(mapa);
   }, [progresos]);
@@ -511,7 +497,7 @@ function PanelAdmin({ progresos, marcarClase, accionEnProceso }) {
                             : "bg-slate-200 text-slate-500"
                         }`}
                       >
-                        {index + 1}
+                        {item.orden_general}
                       </div>
 
                       <div>
@@ -750,17 +736,13 @@ function PanelInstructor({ progresos, marcarClase, accionEnProceso }) {
     });
 
     Object.values(mapa).forEach((estudiante) => {
+    estudiante.progresos.sort((a, b) => {
+      const ordenA = Number(a.orden_general || a.tema_orden || 0);
+      const ordenB = Number(b.orden_general || b.tema_orden || 0);
 
-      estudiante.progresos.sort((a, b) => {
-
-        const temaA = a.tema_orden || 0;
-        const temaB = b.tema_orden || 0;
-
-        return temaA - temaB;
-
-      });
-
+      return ordenA - ordenB;
     });
+  });
 
     return Object.values(mapa);
 
@@ -1034,7 +1016,7 @@ function PanelInstructor({ progresos, marcarClase, accionEnProceso }) {
                               : "bg-slate-200 text-slate-500"
                           }`}
                         >
-                          {index + 1}
+                          {item.orden_general}
                         </div>
 
                         <div>
@@ -1230,7 +1212,7 @@ useEffect(() => {
 
 }, []);
 
-  const matriculasAgrupadas = useMemo(() => {
+    const matriculasAgrupadas = useMemo(() => {
     const mapa = new Map();
 
     progresos.forEach((item) => {
@@ -1265,9 +1247,10 @@ useEffect(() => {
 
     const resultado = Array.from(mapa.values()).map((matricula) => {
       matricula.progresos.sort((a, b) => {
-        const temaA = a.tema_orden || 0;
-        const temaB = b.tema_orden || 0;
-        return temaA - temaB;
+        const ordenA = Number(a.orden_general || a.tema_orden || 0);
+        const ordenB = Number(b.orden_general || b.tema_orden || 0);
+
+        return ordenA - ordenB;
       });
 
       return matricula;
@@ -1281,6 +1264,7 @@ useEffect(() => {
 
     return resultado;
   }, [progresos]);
+
 
   const matriculasFiltradas = useMemo(() => {
     if (!busquedaLocal.trim()) return matriculasAgrupadas;
@@ -1565,7 +1549,7 @@ useEffect(() => {
                                     : "bg-slate-300 text-slate-500"
                                 }`}
                               >
-                                {index + 1}
+                                {item.orden_general}
                               </div>
 
                               <div className="flex-1">

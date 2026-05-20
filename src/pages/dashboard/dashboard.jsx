@@ -31,6 +31,9 @@ import InstructorHome from "./instructorhome";
 import EstudianteHome from "./estudianteshome";
 import { useNavigate, useLocation } from 'react-router-dom';
 import { FaSquarePollVertical } from "react-icons/fa6";
+import Swal from "sweetalert2";
+import axios from "../../api/axios";
+import { useEffect } from "react";
 
 function Dashboard() {
 
@@ -46,12 +49,71 @@ function Dashboard() {
     const esAdmin = rol === 'admin';
     const esInstructor = rol === 'instructor';
     const esEstudiante = rol === 'estudiante';
-
+  
     // DEPURACIÓN
     console.log("Usuario logueado:", user);
     console.log("Rol del usuario:", user?.rol);
     console.log("Rol normalizado:", rol);
     console.log("¿Es admin?", esAdmin);
+
+
+    useEffect(() => {
+
+        obtenerNotificacionesAdmin();
+
+    }, []);
+
+    const obtenerNotificacionesAdmin = async () => {
+
+        try {
+
+            const user = JSON.parse(
+            localStorage.getItem("user")
+            );
+
+            if (!user || user.rol !== "admin") {
+            return;
+            }
+
+            const response = await axios.get(
+            "/notificaciones/admin-pendientes/"
+            );
+
+            const notificaciones = response.data;
+
+            if (!notificaciones.length) {
+            return;
+            }
+
+         
+
+            const mensajes = notificaciones
+            .map((n) => `• ${n.estudiante} - ${n.tipo_texto} - ${n.tema}`)
+            .join("<br><br>");
+
+
+            await Swal.fire({
+            icon: "warning",
+            title: "Notificaciones pendientes",
+            html: `
+                <div style="text-align:left; max-height:300px; overflow-y:auto;">
+                ${mensajes}
+                </div>
+            `,
+            width: 700,
+            confirmButtonText: "Entendido",
+            confirmButtonColor: "#ea580c",
+            });
+
+        } catch (error) {
+
+            console.error(
+            "Error obteniendo notificaciones:",
+            error
+            );
+
+        }
+        };
 
     function renderContent() {
 
@@ -103,7 +165,7 @@ function Dashboard() {
                     // Redirigir según el rol
                 return <PlanStudio userRole={rol} />;
             case 'asistencia':
-                return <Asistencia />;
+                return <Asistencia  userRole={rol} />;
 
             case 'perfil_estudiante':
                 return <PerfilEstudiante />;
