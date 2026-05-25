@@ -218,7 +218,7 @@ function MatriculaPage() {
 
                 <body>
                     <div class="header">
-                        <img src="${baseUrl}/Logo.png" class="logo-img" alt="Logo Adiact" />
+                        <img src="${baseUrl}/Logo_esesa.png" class="logo-img" alt="Logo Escuela" />
 
                         <div class="header-text">
                             <strong>Instituto de Formación y Capacitación "Adiact"</strong><br>
@@ -226,7 +226,7 @@ function MatriculaPage() {
                             <em>Ética, Integridad, Dedicación y Solidaridad</em>
                         </div>
 
-                        <img src="${baseUrl}/Logo_esesa.png" class="logo-img" alt="Logo Escuela" />
+                        <img src="${baseUrl}/Logo.png" class="logo-img" alt="Logo Adiact" />
                     </div>
 
                     <div class="titulo">

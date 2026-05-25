@@ -12,6 +12,10 @@ function ReportesPages() {
     const [recibos, setRecibos] = useState([]);
     const [fechaReciboDesde, setFechaReciboDesde] = useState("");
     const [fechaReciboHasta, setFechaReciboHasta] = useState("");
+    const [fechaInduccionDesde, setFechaInduccionDesde] = useState("");
+    const [fechaInduccionHasta, setFechaInduccionHasta] = useState("");
+    const [instructores, setInstructores] = useState([]);
+    const [instructorSeleccionado, setInstructorSeleccionado] = useState("");
 
     const getNombre = (item) => item.estudiante_nombre || "";
     const getCedula = (item) => item.estudiante_cedula || "";
@@ -108,7 +112,31 @@ function ReportesPages() {
     useEffect(() => {
         fetchMatriculas();
         fetchRecibos();
+        cargarInstructores();
     }, []);
+
+    const cargarInstructores = async () => {
+        try {
+            const token = localStorage.getItem("token");
+
+            const response = await fetch("http://127.0.0.1:8000/api/instructores/", {
+                headers: {
+                    Authorization: `Token ${token}`,
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error("No se pudieron cargar los instructores");
+            }
+
+            const result = await response.json();
+
+            setInstructores(Array.isArray(result) ? result : []);
+        } catch (error) {
+            console.error("Error cargando instructores:", error);
+            setInstructores([]);
+        }
+    };
 
     const datosPorEdad = (() => {
         if (!filtroEdad) return data;
@@ -571,6 +599,330 @@ function ReportesPages() {
         }
     };
 
+    const imprimirReporteInduccionInstructores = async () => {
+        try {
+            if (!instructorSeleccionado) {
+                Swal.fire(
+                    "Instructor requerido",
+                    "Debe seleccionar un instructor para generar el informe.",
+                    "info"
+                );
+                return;
+            }
+
+            const token = localStorage.getItem("token");
+            const baseUrl = window.location.origin;
+
+            const params = new URLSearchParams();
+
+            if (fechaInduccionDesde) {
+                params.append("desde", fechaInduccionDesde);
+            }
+
+            if (fechaInduccionHasta) {
+                params.append("hasta", fechaInduccionHasta);
+            }
+
+            params.append("instructor", instructorSeleccionado);
+
+            const response = await fetch(
+                `http://127.0.0.1:8000/api/reporte-induccion-instructores/?${params.toString()}`,
+                {
+                    headers: {
+                        Authorization: `Token ${token}`,
+                    },
+                }
+            );
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error("ERROR REPORTE INDUCCIÓN:", errorText);
+                Swal.fire("Error", errorText, "error");
+                return;
+            }
+
+            const data = await response.json();
+
+            if (!data.estudiantes || data.estudiantes.length === 0) {
+                Swal.fire(
+                    "Sin datos",
+                    "No hay estudiantes para ese instructor en el rango seleccionado.",
+                    "info"
+                );
+                return;
+            }
+
+            const filas = data.estudiantes.map((item, index) => `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${item.estudiante || ""}</td>
+                    <td>${item.fecha || ""}</td>
+                    <td>${item.numero_recibo || ""}</td>
+                    <td>${item.codigo_egreso || ""}</td>
+                    <td>C$ ${Number(item.cobro || 0).toLocaleString()}</td>
+                    <td>${item.observaciones || ""}</td>
+                </tr>
+            `).join("");
+
+            const ventana = window.open("", "_blank");
+
+            ventana.document.write(`
+                <html>
+                    <head>
+                        <title>Informe de inducción</title>
+
+                        <style>
+                            body {
+                                font-family: Arial, sans-serif;
+                                margin: 0;
+                                color: #000;
+                                font-size: 13px;
+                                background: #fff;
+                            }
+
+                            .page {
+                                width: 8.5in;
+                                min-height: 11in;
+                                margin: 0 auto;
+                                padding: 35px 45px;
+                                box-sizing: border-box;
+                                display: flex;
+                                flex-direction: column;
+                            }
+
+                            .header {
+                                display: flex;
+                                align-items: center;
+                                justify-content: space-between;
+                                border-bottom: 2px solid #222;
+                                padding-bottom: 10px;
+                                margin-bottom: 28px;
+                            }
+
+                            .logo-img {
+                                width: 62px;
+                                height: 62px;
+                                object-fit: contain;
+                            }
+
+                            .header-text {
+                                text-align: center;
+                                font-size: 12px;
+                                line-height: 1.35;
+                            }
+
+                            .header-text strong {
+                                font-size: 13px;
+                            }
+
+                            .fecha {
+                                margin-top: 18px;
+                                margin-bottom: 18px;
+                            }
+
+                            .destinatario {
+                                margin-bottom: 18px;
+                                line-height: 1.45;
+                            }
+
+                            .parrafo {
+                                text-align: justify;
+                                line-height: 1.5;
+                                margin-bottom: 18px;
+                            }
+
+                            table {
+                                width: 100%;
+                                border-collapse: collapse;
+                                margin-top: 15px;
+                                font-size: 11px;
+                            }
+
+                            th, td {
+                                border: 1px solid #000;
+                                padding: 6px;
+                                text-align: center;
+                                vertical-align: middle;
+                            }
+
+                            th {
+                                background-color: #d9eaf7;
+                                font-weight: bold;
+                            }
+
+                            .total {
+                                margin-top: 15px;
+                                text-align: right;
+                                font-weight: bold;
+                                font-size: 13px;
+                            }
+
+                            .mensaje-final {
+                                margin-top: 40px;
+                                font-size: 13px;
+                                text-align: justify;
+                                line-height: 1.5;
+                            }
+
+                            .despedida {
+                                margin-top: 15px;
+                                margin-bottom: 60px;
+                                font-size: 13px;
+                            }
+
+                            .firmas {
+                                display: flex;
+                                justify-content: space-between;
+                                gap: 70px;
+                                margin-top: 35px;
+                            }
+
+                            .firma {
+                                width: 45%;
+                                text-align: center;
+                                font-size: 12px;
+                                border-top: 1px solid #000;
+                                padding-top: 6px;
+                            }
+
+                            .footer {
+                                margin-top: auto;
+                                border-top: 2px solid #222;
+                                padding-top: 8px;
+                                text-align: center;
+                                font-size: 10px;
+                                line-height: 1.35;
+                                font-weight: bold;
+                            }
+
+                            @media print {
+                                body {
+                                    margin: 0;
+                                }
+
+                                .page {
+                                    width: 8.5in;
+                                    min-height: 11in;
+                                    padding: 30px 40px;
+                                }
+                            }
+                        </style>
+                    </head>
+
+                    <body>
+                        <div class="page">
+                            <div class="header">
+                                <img src="${baseUrl}/Logo_esesa.png" class="logo-img" alt="Logo Escuela" />
+
+                                <div class="header-text">
+                                    <strong>Instituto de Formación y Capacitación “Adiact”</strong><br>
+                                    <em>Seguro experto en Formación y Capacitación del Talento Humano</em><br>
+                                    <strong>Ética, Integridad, Dedicación y Solidaridad</strong>
+                                </div>
+
+                                <img src="${baseUrl}/Logo.png" class="logo-img" alt="Logo Adiact" />
+                            </div>
+
+                            <div class="fecha">
+                                León, ${data.fecha_emision || ""}
+                            </div>
+
+                            <div class="destinatario">
+                                <p>Licenciado</p>
+                                <p><strong>${data.firmas?.gerente_nombre || ""}</strong></p>
+                                <p>Gerente General de ESESA.</p>
+                                <p>Sus Manos.</p>
+                            </div>
+
+                            <p><strong>Estimado Licenciado:</strong></p>
+
+                            <p class="parrafo">
+                                De la manera más atenta le solicito la autorización para el pago por los servicios 
+                                de inducción en la Escuela de Manejo Cacique Adiact, prestados por el instructor
+                                <strong>${data.instructor?.nombre || ""}</strong>, durante el período comprendido
+                                del <strong>${data.fecha_desde || "inicio"}</strong> al
+                                <strong>${data.fecha_hasta || "actual"}</strong>. La inducción les fue impartida
+                                a los siguientes estudiantes de dicha Escuela:
+                            </p>
+
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>No.</th>
+                                        <th>Alumnos Atendidos<br/>Nombres y Apellidos</th>
+                                        <th>Fecha</th>
+                                        <th>No. Recibo</th>
+                                        <th>Código de Egreso</th>
+                                        <th>Cobro por Alumno</th>
+                                        <th>Observaciones</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    ${filas}
+                                </tbody>
+                            </table>
+
+                            <div class="total">
+                                TOTAL: C$ ${Number(data.total || 0).toLocaleString()}
+                            </div>
+
+                            <p class="mensaje-final">
+                                Sin más que agradecer su atenta y pronta respuesta, aprovecho para desearle
+                                éxitos en sus funciones.
+                            </p>
+
+                            <p class="despedida">
+                                De usted, 
+                                
+                                Muy atentamente.
+                            </p>
+
+                            <div class="firmas">
+                                <div class="firma">
+                                    <div class="linea-firma"></div>
+                                    <strong>${data.instructor?.nombre || ""}</strong><br>
+                                    Instructor de Manejo
+                                </div>
+
+                                <div class="firma">
+                                    <div class="linea-firma"></div>
+                                    <strong>${data.firmas?.director_nombre || ""}</strong><br>
+                                    Director Inst. Formación y Capacitación.
+                                </div>
+                            </div>
+
+                            <div class="footer">
+                                Gasolinera Uno Sutiaba 1 cuadra al norte ½ cuadra al oeste. León, Nicaragua<br>
+                                Teléfonos: 2311-1333 y 8966-3770.<br>
+                                email: institutoadiact@esesa.com.ni &nbsp;&nbsp;&nbsp; http://www.esesa.com.ni
+                            </div>
+                        </div>
+
+                        <script>
+                            window.onload = function() {
+                                setTimeout(() => {
+                                    window.focus();
+                                    window.print();
+                                }, 500);
+                            };
+
+                            window.onafterprint = function() {
+                                window.close();
+                            };
+                        </script>
+                    </body>
+                </html>
+            `);
+
+            ventana.document.close();
+
+        } catch (error) {
+            console.error(error);
+            Swal.fire("Error", "Error generando el informe de inducción.", "error");
+        }
+    };
+
     return (
         <div className="w-full max-w-7xl mx-auto px-6 py-8">
             <div className="mb-8">
@@ -798,6 +1150,85 @@ function ReportesPages() {
                         >
                             <FiFileText />
                             Exportar reporte policial
+                        </button>
+                    </div>
+
+                    <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+                        <div className="flex items-center gap-3 mb-5">
+                            <div className="w-11 h-11 rounded-full bg-orange-100 flex items-center justify-center text-orange-700">
+                                <FiFileText className="text-xl" />
+                            </div>
+
+                            <div>
+                                <h2 className="text-xl font-bold">
+                                    Informe de inducción de instructores
+                                </h2>
+
+                                <p className="text-sm text-gray-500">
+                                    Descarga el informe de estudiantes atendidos con sus dos notas registradas.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                            <div>
+                                <label className="block text-sm text-gray-600 mb-1">
+                                    Fecha Desde
+                                </label>
+
+                                <input
+                                    type="date"
+                                    value={fechaInduccionDesde}
+                                    onChange={(e) => setFechaInduccionDesde(e.target.value)}
+                                    className="w-full border border-gray-300 rounded-xl px-4 py-2"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm text-gray-600 mb-1">
+                                    Fecha Hasta
+                                </label>
+
+                                <input
+                                    type="date"
+                                    value={fechaInduccionHasta}
+                                    onChange={(e) => setFechaInduccionHasta(e.target.value)}
+                                    className="w-full border border-gray-300 rounded-xl px-4 py-2"
+                                />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium mb-1">
+                                Instructor
+                            </label>
+
+                            <select
+                                value={instructorSeleccionado}
+                                onChange={(e) => setInstructorSeleccionado(e.target.value)}
+                                className="w-full border rounded-lg px-3 py-2"
+                            >
+                                <option value="">
+                                    Seleccionar instructor
+                                </option>
+
+                                {instructores.map((instructor) => (
+                                    <option
+                                        key={instructor.id}
+                                        value={instructor.id}
+                                    >
+                                        {instructor.nombre} {instructor.apellido}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <button
+                             onClick={imprimirReporteInduccionInstructores}
+                            className="w-full h-11 rounded-3xl bg-orange-600 text-white flex items-center justify-center gap-2 hover:bg-orange-700 transition cursor-pointer"
+                        >
+                            <FiFileText />
+                            Imprimir informe de inducción
                         </button>
                     </div>
                 </div>
