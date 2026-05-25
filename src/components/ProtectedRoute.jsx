@@ -1,21 +1,30 @@
 // src/components/ProtectedRoute.jsx
-import { Navigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+
+import { Navigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 function ProtectedRoute({ children, rolesPermitidos = [] }) {
-    const { user, token, loading  } = useAuth();
+    const { user, token, loading } = useAuth();
 
     if (loading) {
         return null;
     }
 
-    if (!token) {
-        return <Navigate to="/login" />;
+    if (!token || !user) {
+        return <Navigate to="/login" replace />;
     }
 
-    // Si se requieren roles especí­ficos y el usuario no tiene uno permitido
-    if (rolesPermitidos.length > 0 && !rolesPermitidos.includes(user?.rol)) {
-        return <Navigate to="/dashboard" />;
+    const rolUsuario = user?.rol?.toLowerCase() || "";
+
+    const rolesNormalizados = rolesPermitidos.map((rol) =>
+        rol.toLowerCase()
+    );
+
+    if (
+        rolesNormalizados.length > 0 &&
+        !rolesNormalizados.includes(rolUsuario)
+    ) {
+        return <Navigate to="/dashboard" replace />;
     }
 
     return children;

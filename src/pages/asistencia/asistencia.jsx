@@ -8,8 +8,12 @@ import {
   Users,
   X,
   XCircle,
+  Gauge,
+  User,
+  CalendarDays,
 } from "lucide-react";
 import {
+  finalizarKilometraje,
   justificarClase,
   listarAsistencia,
   marcarAsistencia,
@@ -24,11 +28,17 @@ export default function Asistencia({ userRole }) {
   const [cargando, setCargando] = useState(true);
   const [busqueda, setBusqueda] = useState("");
   const [encuentroFiltro, setEncuentroFiltro] = useState(1);
+
+  const [modalDetalleEstudiante, setModalDetalleEstudiante] = useState(null);
+
   const [modalJustificar, setModalJustificar] = useState(null);
-  const [modalKm, setModalKm] = useState(null);
+  const [modalKmInicio, setModalKmInicio] = useState(null);
+  const [modalKmFinal, setModalKmFinal] = useState(null);
+
   const [motivo, setMotivo] = useState("");
   const [kmInicial, setKmInicial] = useState("");
   const [kmFinal, setKmFinal] = useState("");
+
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState("");
 
@@ -98,22 +108,63 @@ export default function Asistencia({ userRole }) {
 
   const ausentes = datos.filter((d) => {
     const a = d.asistencias?.[String(encuentroFiltro)];
-
     return a && a.estado === "falto" && !a.justificado_por_admin;
   }).length;
 
-  const handleMarcar = async (
-    calendarioId,
-    estado,
-    km_inicial = null,
-    km_final = null
-  ) => {
+  const buscarResumenKmEstudiante = (estudiante) => {
+    if (!estudiante) return null;
+
+    return resumenKm.find((item) => {
+      return (
+        item.estudiante_id === estudiante.estudiante_id ||
+        item.matricula_id === estudiante.matricula_id ||
+        item.estudiante_nombre === estudiante.nombre
+      );
+    });
+  };
+
+  const obtenerDetalleKilometraje = (estudiante) => {
+    if (!estudiante?.asistencias) return [];
+
+    return Object.entries(estudiante.asistencias)
+      .map(([numero, asistencia]) => ({
+        numero,
+        ...asistencia,
+      }))
+      .filter((item) => {
+        return (
+          item.km_inicial !== null ||
+          item.km_final !== null ||
+          item.km_recorridos !== null
+        );
+      })
+      .sort((a, b) => Number(a.numero) - Number(b.numero));
+  };
+
+  const textoEstado = (data) => {
+    if (!data) return "Sin marcar";
+
+    if (data.estado === "justificado" || data.justificado_por_admin) {
+      return "Justificada";
+    }
+
+    if (data.estado === "asistio") {
+      return "Presente";
+    }
+
+    if (data.estado === "falto") {
+      return "Ausente";
+    }
+
+    return "Sin marcar";
+  };
+
+  const handleMarcar = async (calendarioId, estado, km_inicial = null) => {
     try {
       await marcarAsistencia({
         clase_id: calendarioId,
         estado,
         km_inicial,
-        km_final,
       });
 
       await cargar();
@@ -127,32 +178,60 @@ export default function Asistencia({ userRole }) {
     }
   };
 
-  const confirmarAsistenciaConKm = async () => {
-    if (!modalKm) return;
+  const confirmarKmInicial = async () => {
+    if (!modalKmInicio) return;
 
-    if (kmInicial === "" || kmFinal === "") {
-      setError("Debe ingresar km inicial y km final.");
+    if (kmInicial === "") {
+      setError("Debe ingresar el km inicial.");
       return;
     }
 
     const inicial = Number(kmInicial);
+
+    if (Number.isNaN(inicial)) {
+      setError("El km inicial debe ser numérico.");
+      return;
+    }
+
+    await handleMarcar(modalKmInicio.id, "asistio", inicial);
+
+    setModalKmInicio(null);
+    setKmInicial("");
+  };
+
+  const confirmarKmFinal = async () => {
+    if (!modalKmFinal) return;
+
+    if (kmFinal === "") {
+      setError("Debe ingresar el km final.");
+      return;
+    }
+
     const final = Number(kmFinal);
 
-    if (Number.isNaN(inicial) || Number.isNaN(final)) {
-      setError("Los kilómetros deben ser numéricos.");
+    if (Number.isNaN(final)) {
+      setError("El km final debe ser numérico.");
       return;
     }
 
-    if (final < inicial) {
-      setError("El km final no puede ser menor que el km inicial.");
-      return;
+    try {
+      await finalizarKilometraje({
+        asistencia_id: modalKmFinal.asistencia_id,
+        km_final: final,
+      });
+
+      await cargar();
+      await cargarResumenKm();
+
+      setModalKmFinal(null);
+      setKmFinal("");
+    } catch (e) {
+      setError(
+        e?.response?.data?.error ||
+          e?.message ||
+          "No se pudo finalizar el kilometraje"
+      );
     }
-
-    await handleMarcar(modalKm.id, "asistio", inicial, final);
-
-    setModalKm(null);
-    setKmInicial("");
-    setKmFinal("");
   };
 
   const handleJustificar = async () => {
@@ -199,14 +278,38 @@ export default function Asistencia({ userRole }) {
     }
 
     if (data.estado === "asistio") {
+      const tieneKmInicial =
+        data.km_inicial !== null && data.km_inicial !== undefined;
+
+      const tieneKmFinal =
+        data.km_final !== null && data.km_final !== undefined;
+
+      const kmPendiente = tieneKmInicial && !tieneKmFinal;
+
       return (
         <td className="px-3 py-4 text-center">
           <div className="flex flex-col items-center gap-1">
             <CheckCircle2 className="w-5 h-5 text-green-500 mx-auto" />
 
-            {data.km_recorridos ? (
+            {tieneKmFinal ? (
               <span className="text-[9px] text-blue-600">
                 {data.km_recorridos} km
+              </span>
+            ) : kmPendiente && rol === "instructor" ? (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setModalKmFinal(data);
+                  setKmFinal("");
+                }}
+                className="text-[9px] text-blue-600 hover:underline"
+              >
+                Finalizar km
+              </button>
+            ) : kmPendiente ? (
+              <span className="text-[9px] text-orange-500">
+                Km pendiente
               </span>
             ) : null}
           </div>
@@ -223,13 +326,14 @@ export default function Asistencia({ userRole }) {
             {rol === "admin" || rol === "administrador" ? (
               <button
                 type="button"
-                onClick={() =>
+                onClick={(e) => {
+                  e.stopPropagation();
                   setModalJustificar({
                     asistencia_id: data.asistencia_id || data.id,
                     numero,
                     fecha: data.fecha,
-                  })
-                }
+                  });
+                }}
                 className="text-[9px] text-orange-500 hover:underline leading-tight"
               >
                 Justificar
@@ -247,10 +351,10 @@ export default function Asistencia({ userRole }) {
             <button
               type="button"
               title="Marcar presente"
-              onClick={() => {
-                setModalKm(data);
+              onClick={(e) => {
+                e.stopPropagation();
+                setModalKmInicio(data);
                 setKmInicial("");
-                setKmFinal("");
               }}
               className="hover:scale-110 transition-transform"
             >
@@ -260,7 +364,10 @@ export default function Asistencia({ userRole }) {
             <button
               type="button"
               title="Marcar ausente"
-              onClick={() => handleMarcar(data.id, "falto")}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleMarcar(data.id, "falto");
+              }}
               className="hover:scale-110 transition-transform"
             >
               <XCircle className="w-4 h-4 text-gray-300 hover:text-red-500" />
@@ -273,10 +380,16 @@ export default function Asistencia({ userRole }) {
     );
   };
 
+  const resumenSeleccionado = buscarResumenKmEstudiante(modalDetalleEstudiante);
+
+  const detalleKmSeleccionado = obtenerDetalleKilometraje(
+    modalDetalleEstudiante
+  );
+
   return (
-    <div className="p-8 max-w-[1200px] mx-auto">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-[1200px] mx-auto">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
           Control de Asistencia
         </h1>
 
@@ -307,45 +420,6 @@ export default function Asistencia({ userRole }) {
         </div>
       </div>
 
-      {resumenKm.length > 0 && (
-        <div className="mb-6">
-          <h2 className="text-lg font-bold text-gray-900 mb-3">
-            Resumen de kilometraje
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {resumenKm.map((item) => (
-              <div
-                key={`${item.estudiante_id}-${item.instructor_id}`}
-                className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm"
-              >
-                <p className="text-xs text-gray-500">Estudiante</p>
-
-                <h3 className="font-bold text-gray-900">
-                  {item.estudiante_nombre}
-                </h3>
-
-                <p className="text-xs text-gray-500 mt-2">Instructor</p>
-
-                <p className="text-sm text-gray-700">
-                  {item.instructor_nombre}
-                </p>
-
-                <div className="mt-4 flex items-center justify-between">
-                  <span className="text-sm text-gray-500">
-                    {item.total_clases} clases
-                  </span>
-
-                  <span className="text-2xl font-bold text-blue-600">
-                    {item.total_km} km
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       {error && (
         <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600 flex items-center gap-2">
           <AlertTriangle className="w-4 h-4" />
@@ -370,7 +444,7 @@ export default function Asistencia({ userRole }) {
             className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400"
           />
         </div>
-
+{/* 
         <div className="flex items-center gap-2">
           <label className="text-sm text-gray-500">Encuentro:</label>
 
@@ -385,7 +459,7 @@ export default function Asistencia({ userRole }) {
               </option>
             ))}
           </select>
-        </div>
+        </div> */}
       </div>
 
       <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-x-auto">
@@ -394,7 +468,7 @@ export default function Asistencia({ userRole }) {
             Cargando asistencia...
           </div>
         ) : (
-          <table className="w-full text-sm">
+          <table className="w-full min-w-[760px] text-sm">
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50">
                 <th className="px-4 py-3 text-left font-semibold text-gray-700">
@@ -409,7 +483,9 @@ export default function Asistencia({ userRole }) {
                   <th
                     key={e}
                     className={`px-3 py-3 text-center font-semibold ${
-                      e === encuentroFiltro ? "text-blue-600" : "text-gray-700"
+                      e === encuentroFiltro
+                        ? "text-blue-600"
+                        : "text-gray-700"
                     }`}
                   >
                     E{e}
@@ -445,7 +521,8 @@ export default function Asistencia({ userRole }) {
                 return (
                   <tr
                     key={est.matricula_id}
-                    className="border-b border-gray-50 hover:bg-gray-50 transition-colors"
+                    onClick={() => setModalDetalleEstudiante(est)}
+                    className="border-b border-gray-50 hover:bg-blue-50 transition-colors cursor-pointer"
                   >
                     <td className="px-4 py-4 font-medium text-gray-900">
                       {est.nombre}
@@ -499,68 +576,262 @@ export default function Asistencia({ userRole }) {
         </div>
       </div>
 
-      {modalKm && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="bg-blue-100 p-2.5 rounded-xl">
-                <CheckCircle2 className="w-5 h-5 text-blue-600" />
-              </div>
-
+      {modalDetalleEstudiante && (
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4"
+          onClick={() => setModalDetalleEstudiante(null)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto p-4 sm:p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-4 mb-5">
               <div>
-                <h3 className="text-lg font-bold text-gray-900">
-                  Registrar kilometraje
+                <h3 className="text-lg sm:text-xl font-bold text-gray-900">
+                  Detalle de kilometraje
                 </h3>
 
-                <p className="text-xs text-gray-500">
-                  Fecha: {modalKm.fecha || "Sin fecha"}
+                <p className="text-sm text-gray-500 mt-1">
+                  Información del estudiante seleccionado
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setModalDetalleEstudiante(null)}
+                className="w-9 h-9 rounded-full border border-gray-200 flex items-center justify-center hover:bg-gray-50 shrink-0"
+              >
+                <X className="w-4 h-4 text-gray-500" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
+              <div className="bg-gray-50 border border-gray-100 rounded-xl p-4">
+                <div className="flex items-center gap-2 text-gray-500 text-xs mb-1">
+                  <User className="w-4 h-4" />
+                  Estudiante
+                </div>
+
+                <p className="font-bold text-gray-900">
+                  {modalDetalleEstudiante.nombre}
+                </p>
+
+                <p className="text-xs text-gray-500 mt-1">
+                  {modalDetalleEstudiante.cedula || "Sin cédula"}
+                </p>
+              </div>
+
+              <div className="bg-gray-50 border border-gray-100 rounded-xl p-4">
+                <div className="flex items-center gap-2 text-gray-500 text-xs mb-1">
+                  <User className="w-4 h-4" />
+                  Conductor
+                </div>
+
+                <p className="font-bold text-gray-900">
+                  {resumenSeleccionado?.instructor_nombre || "No asignado"}
+                </p>
+
+                <p className="text-xs text-gray-500 mt-1">
+                  Instructor del recorrido
+                </p>
+              </div>
+
+              <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
+                <div className="flex items-center gap-2 text-blue-600 text-xs mb-1">
+                  <Gauge className="w-4 h-4" />
+                  Kilómetros totales
+                </div>
+
+                <p className="text-3xl font-bold text-blue-700">
+                  {resumenSeleccionado?.total_km || 0} km
+                </p>
+              </div>
+
+              <div className="bg-gray-50 border border-gray-100 rounded-xl p-4">
+                <div className="flex items-center gap-2 text-gray-500 text-xs mb-1">
+                  <CalendarDays className="w-4 h-4" />
+                  Clases con km
+                </div>
+
+                <p className="text-3xl font-bold text-gray-900">
+                  {resumenSeleccionado?.total_clases || 0}
                 </p>
               </div>
             </div>
 
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm text-gray-600">Km inicial</label>
-
-                <input
-                  type="number"
-                  value={kmInicial}
-                  onChange={(e) => setKmInicial(e.target.value)}
-                  className="w-full mt-1 border-2 border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-400"
-                  placeholder="Ingrese el kilometraje inicial"
-                />
+            <div className="border border-gray-200 rounded-xl overflow-hidden">
+              <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+                <h4 className="font-semibold text-sm text-gray-800">
+                  Registro por encuentro
+                </h4>
               </div>
 
-              <div>
-                <label className="text-sm text-gray-600">Km final</label>
+              {detalleKmSeleccionado.length === 0 ? (
+                <div className="p-6 text-center text-sm text-gray-400">
+                  Este estudiante todavía no tiene kilometraje registrado.
+                </div>
+              ) : (
+                <div className="overflow-x-auto max-h-[320px] overflow-y-auto">
+                  <table className="w-full min-w-[760px] text-sm">
+                    <thead className="sticky top-0 z-10">
+                      <tr className="bg-white border-b border-gray-100">
+                        <th className="px-4 py-3 text-left text-gray-600 font-semibold">
+                          Encuentro
+                        </th>
 
-                <input
-                  type="number"
-                  value={kmFinal}
-                  onChange={(e) => setKmFinal(e.target.value)}
-                  className="w-full mt-1 border-2 border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-400"
-                  placeholder="Ingrese el kilometraje final"
-                />
-              </div>
+                        <th className="px-4 py-3 text-left text-gray-600 font-semibold">
+                          Fecha
+                        </th>
 
-              {kmInicial !== "" &&
-                kmFinal !== "" &&
-                Number(kmFinal) >= Number(kmInicial) && (
-                  <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 text-sm text-blue-700">
-                    Recorrido del día:{" "}
-                    <strong>
-                      {Number(kmFinal) - Number(kmInicial)} km
-                    </strong>
-                  </div>
-                )}
+                        <th className="px-4 py-3 text-left text-gray-600 font-semibold">
+                          Estado
+                        </th>
+
+                        <th className="px-4 py-3 text-right text-gray-600 font-semibold">
+                          Km inicial
+                        </th>
+
+                        <th className="px-4 py-3 text-right text-gray-600 font-semibold">
+                          Km final
+                        </th>
+
+                        <th className="px-4 py-3 text-right text-gray-600 font-semibold">
+                          Recorrido
+                        </th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      {detalleKmSeleccionado.map((item) => (
+                        <tr
+                          key={`${item.numero}-${item.asistencia_id || item.id}`}
+                          className="border-b border-gray-50"
+                        >
+                          <td className="px-4 py-3 font-medium text-gray-900">
+                            E{item.numero}
+                          </td>
+
+                          <td className="px-4 py-3 text-gray-500">
+                            {item.fecha || "Sin fecha"}
+                          </td>
+
+                          <td className="px-4 py-3 text-gray-500">
+                            {textoEstado(item)}
+                          </td>
+
+                          <td className="px-4 py-3 text-right text-gray-700">
+                            {item.km_inicial ?? "-"}
+                          </td>
+
+                          <td className="px-4 py-3 text-right text-gray-700">
+                            {item.km_final ?? "-"}
+                          </td>
+
+                          <td className="px-4 py-3 text-right font-bold text-blue-600">
+                            {item.km_recorridos ?? 0} km
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
+
+            <div className="flex justify-end mt-5">
+              <button
+                type="button"
+                onClick={() => setModalDetalleEstudiante(null)}
+                className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-5 py-2.5 text-sm font-semibold"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {modalKmInicio && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-2">
+              Registrar km inicial
+            </h3>
+
+            <p className="text-xs text-gray-500 mb-4">
+              Fecha: {modalKmInicio.fecha || "Sin fecha"}
+            </p>
+
+            <label className="text-sm text-gray-600">Km inicial</label>
+
+            <input
+              type="number"
+              value={kmInicial}
+              onChange={(e) => setKmInicial(e.target.value)}
+              className="w-full mt-1 border-2 border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-400"
+              placeholder="Ingrese el kilometraje inicial"
+            />
 
             <div className="flex gap-3 mt-5">
               <button
                 type="button"
                 onClick={() => {
-                  setModalKm(null);
+                  setModalKmInicio(null);
                   setKmInicial("");
+                }}
+                className="flex-1 border-2 border-gray-200 rounded-xl py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="button"
+                onClick={confirmarKmInicial}
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white rounded-xl py-2.5 text-sm font-semibold"
+              >
+                Guardar inicio
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {modalKmFinal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-2">
+              Finalizar kilometraje
+            </h3>
+
+            <p className="text-xs text-gray-500 mb-4">
+              Km inicial: {modalKmFinal.km_inicial}
+            </p>
+
+            <label className="text-sm text-gray-600">Km final</label>
+
+            <input
+              type="number"
+              value={kmFinal}
+              onChange={(e) => setKmFinal(e.target.value)}
+              className="w-full mt-1 border-2 border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-400"
+              placeholder="Ingrese el kilometraje final"
+            />
+
+            {kmFinal !== "" &&
+              Number(kmFinal) >= Number(modalKmFinal.km_inicial) && (
+                <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 text-sm text-blue-700 mt-4">
+                  Recorrido:{" "}
+                  <strong>
+                    {Number(kmFinal) - Number(modalKmFinal.km_inicial)} km
+                  </strong>
+                </div>
+              )}
+
+            <div className="flex gap-3 mt-5">
+              <button
+                type="button"
+                onClick={() => {
+                  setModalKmFinal(null);
                   setKmFinal("");
                 }}
                 className="flex-1 border-2 border-gray-200 rounded-xl py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
@@ -570,10 +841,10 @@ export default function Asistencia({ userRole }) {
 
               <button
                 type="button"
-                onClick={confirmarAsistenciaConKm}
+                onClick={confirmarKmFinal}
                 className="flex-1 bg-blue-600 hover:bg-blue-700 text-white rounded-xl py-2.5 text-sm font-semibold"
               >
-                Guardar asistencia
+                Guardar final
               </button>
             </div>
           </div>
