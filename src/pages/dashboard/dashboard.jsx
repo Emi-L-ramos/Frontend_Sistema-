@@ -351,7 +351,7 @@ function Dashboard() {
             <span>Dashboard</span>
           </button>
 
-          {(esAdmin || esInstructor) && (
+          {esAdmin && (
             <button
               onClick={() => {
                 setActiveTab("reportes");

@@ -16,6 +16,9 @@ function ReportesPages() {
     const [fechaInduccionHasta, setFechaInduccionHasta] = useState("");
     const [instructores, setInstructores] = useState([]);
     const [instructorSeleccionado, setInstructorSeleccionado] = useState("");
+    const [fechaKmDesde, setFechaKmDesde] = useState("");
+    const [fechaKmHasta, setFechaKmHasta] = useState("");
+    const [instructorKmSeleccionado, setInstructorKmSeleccionado] = useState("");
 
     const getNombre = (item) => item.estudiante_nombre || "";
     const getCedula = (item) => item.estudiante_cedula || "";
@@ -816,7 +819,7 @@ function ReportesPages() {
 
                                 <div class="header-text">
                                     <strong>Instituto de Formación y Capacitación “Adiact”</strong><br>
-                                    <em>Seguro experto en Formación y Capacitación del Talento Humano</em><br>
+                                    <em>Somos expertos en Formación y Capacitación del Talento Humano</em><br>
                                     <strong>Ética, Integridad, Dedicación y Solidaridad</strong>
                                 </div>
 
@@ -923,12 +926,77 @@ function ReportesPages() {
         }
     };
 
+    const exportarReporteKilometros = async () => {
+        try {
+            if (!instructorKmSeleccionado) {
+                Swal.fire(
+                    "Instructor requerido",
+                    "Debe seleccionar un instructor para generar el reporte.",
+                    "info"
+                );
+                return;
+            }
+
+            const token = localStorage.getItem("token");
+
+            const params = new URLSearchParams();
+
+            if (fechaKmDesde) {
+                params.append("desde", fechaKmDesde);
+            }
+
+            if (fechaKmHasta) {
+                params.append("hasta", fechaKmHasta);
+            }
+
+            params.append("instructor", instructorKmSeleccionado);
+
+            const response = await fetch(
+                `http://127.0.0.1:8000/api/reporte-kilometros-instructor/?${params.toString()}`,
+                {
+                    headers: {
+                        Authorization: `Token ${token}`,
+                    },
+                }
+            );
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error("ERROR REPORTE KM:", errorText);
+                Swal.fire("Error", errorText, "error");
+                return;
+            }
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "reporte_kilometros_instructor.xlsx";
+
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+
+            window.URL.revokeObjectURL(url);
+
+            Swal.fire(
+                "Reporte generado",
+                "El reporte de kilómetros fue descargado correctamente.",
+                "success"
+            );
+        } catch (error) {
+            console.error(error);
+            Swal.fire("Error", "Error generando el reporte de kilómetros.", "error");
+        }
+    };
+
     return (
         <div className="w-full max-w-7xl mx-auto px-6 py-8">
             <div className="mb-8">
                 <h1 className="text-4xl font-bold">Reportes</h1>
                 <p className="text-gray-600 mt-2">
-                    Generación de reportes administrativos de matrículas.
+                    Generación de reportes administrativos.
                 </p>
             </div>
 
@@ -1231,6 +1299,86 @@ function ReportesPages() {
                             Imprimir informe de inducción
                         </button>
                     </div>
+
+                    <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+                        <div className="flex items-center gap-3 mb-5">
+                            <div className="w-11 h-11 rounded-full bg-sky-100 flex items-center justify-center text-sky-700">
+                                <FiFileText className="text-xl" />
+                            </div>
+
+                            <div>
+                                <h2 className="text-xl font-bold">
+                                    Reporte de kilómetros por instructor
+                                </h2>
+
+                                <p className="text-sm text-gray-500">
+                                    Descarga en Excel los kilómetros recorridos según asistencias registradas.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                            <div>
+                                <label className="block text-sm text-gray-600 mb-1">
+                                    Fecha Desde
+                                </label>
+
+                                <input
+                                    type="date"
+                                    value={fechaKmDesde}
+                                    onChange={(e) => setFechaKmDesde(e.target.value)}
+                                    className="w-full border border-gray-300 rounded-xl px-4 py-2"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm text-gray-600 mb-1">
+                                    Fecha Hasta
+                                </label>
+
+                                <input
+                                    type="date"
+                                    value={fechaKmHasta}
+                                    onChange={(e) => setFechaKmHasta(e.target.value)}
+                                    className="w-full border border-gray-300 rounded-xl px-4 py-2"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium mb-1">
+                                Instructor
+                            </label>
+
+                            <select
+                                value={instructorKmSeleccionado}
+                                onChange={(e) => setInstructorKmSeleccionado(e.target.value)}
+                                className="w-full border rounded-lg px-3 py-2"
+                            >
+                                <option value="">
+                                    Seleccionar instructor
+                                </option>
+
+                                {instructores.map((instructor) => (
+                                    <option
+                                        key={instructor.id}
+                                        value={instructor.id}
+                                    >
+                                        {instructor.nombre} {instructor.apellido}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <button
+                            onClick={exportarReporteKilometros}
+                            className="w-full h-11 rounded-3xl bg-sky-600 text-white flex items-center justify-center gap-2 hover:bg-sky-700 transition cursor-pointer"
+                        >
+                            <FiFileText />
+                            Exportar reporte de kilómetros
+                        </button>
+                    </div>
+
                 </div>
             )}
         </div>

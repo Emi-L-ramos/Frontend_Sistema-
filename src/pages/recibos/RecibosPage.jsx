@@ -208,11 +208,7 @@ function RecibosPage() {
                     />
                 </div>
                 
-                <div className="flex flex-wrap gap-2">
-                    <button onClick={exportarAExcel} className="bg-white text-black px-3 py-2 rounded-3xl flex items-center gap-2 hover:bg-blue-300 cursor-pointer text-sm">
-                        <FiFileText size={16} /> Exportar Todo
-                    </button>
-                    
+                <div className="flex flex-wrap gap-2">                    
                     <button 
                         onClick={() => { setEditData(null); setShowModal(true); }} 
                         className="relative group overflow-hidden px-5 h-11 rounded-3xl hover:cursor-pointer bg-green-500 text-white flex items-center gap-2 transition-all duration-300 hover:bg-green-600 justify-end"

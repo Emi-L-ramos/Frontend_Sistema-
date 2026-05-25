@@ -42,6 +42,19 @@ function MatriculaPage() {
     const getInstructor = (item) => item.instructor_nombre || "";
     const getFechaInicio = (item) => item.fecha || item.fecha_inicio || "";
     const getHoraInicio = (item) => item.hora_inicio || "";
+    const formatearFecha = (fecha) => {
+        if (!fecha) return "";
+
+        const soloFecha = String(fecha).split("T")[0];
+
+        if (!soloFecha.includes("-")) {
+            return soloFecha;
+        }
+
+        const [year, month, day] = soloFecha.split("-");
+
+        return `${day}/${month}/${year}`;
+    };
 
     const fetchMatriculas = async () => {
         try {
@@ -490,8 +503,8 @@ function MatriculaPage() {
 
             <div className="w-full max-w-full overflow-x-auto">
                 <div className="max-w-[1225px]">
-                    <div className="flex flex-row items-center justify-between gap-3 rounded-xl whitespace-nowrap mb-4">
-                        <div className="relative w-[420px] shrink-0">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-xl mb-4">
+                        <div className="relative w-full sm:w-[420px]">
                             <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
 
                             <input
@@ -508,7 +521,7 @@ function MatriculaPage() {
                                 setEditData(null);
                                 setShowModal(true);
                             }}
-                            className="relative group overflow-hidden px-12 h-11 rounded-3xl bg-green-500 text-white flex items-center gap-2 transition-all duration-300 hover:bg-green-600 justify-end hover:cursor-pointer shrink-0"
+                            className="relative group overflow-hidden w-full sm:w-auto px-6 sm:px-12 h-11 rounded-3xl bg-green-500 text-white flex items-center justify-center gap-2 transition-all duration-300 hover:bg-green-600 hover:cursor-pointer"
                         >
                             <span className="absolute top-0 left-[-75%] w-[50%] h-full bg-gradient-to-r from-transparent via-white/60 to-transparent skew-x-12 group-hover:left-[125%] transition-all duration-700"></span>
 
@@ -525,6 +538,7 @@ function MatriculaPage() {
                                 <tr className="border-gray-300">
                                     <th className="p-3 w-[60px]">Código</th>
                                     <th className="p-3 w-[220px]">Nombre</th>
+                                    <th className="p-3 w-[150px]">Fecha Matrícula</th>
                                     <th className="p-3 w-[180px]">Cédula</th>
                                     <th className="p-3 w-[90px]">Edad</th>
                                     <th className="p-3 w-[150px]">Teléfono</th>
@@ -537,7 +551,7 @@ function MatriculaPage() {
                             <tbody className="justify-center text-center items-center">
                                 {loading ? (
                                     <tr>
-                                        <td colSpan="8" className="p-6 text-center">
+                                        <td colSpan="9" className="p-6 text-center">
                                             Cargando...
                                         </td>
                                     </tr>
@@ -551,6 +565,10 @@ function MatriculaPage() {
 
                                             <td className="px-2">
                                                 {getNombre(item)}
+                                            </td>
+
+                                            <td className="px-2">
+                                                {formatearFecha(getFechaMatricula(item))}
                                             </td>
 
                                             <td className="px-2">
@@ -636,7 +654,7 @@ function MatriculaPage() {
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan="8" className="p-6 text-center text-gray-400">
+                                        <td colSpan="9" className="p-6 text-center text-gray-400">
                                             No hay registros
                                         </td>
                                     </tr>
