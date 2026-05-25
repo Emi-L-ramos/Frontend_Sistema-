@@ -235,24 +235,30 @@ export default function Asistencia({ userRole }) {
   };
 
   const handleJustificar = async () => {
-    if (!motivo.trim() || !modalJustificar?.asistencia_id) return;
+  if (!motivo.trim() || !modalJustificar?.asistencia_id) return;
 
-    setGuardando(true);
+  setGuardando(true);
+  setError("");
 
-    try {
-      await justificarClase(modalJustificar.asistencia_id, motivo);
+  try {
+    await justificarClase(modalJustificar.asistencia_id, motivo);
 
-      setModalJustificar(null);
-      setMotivo("");
+    setModalJustificar(null);
+    setMotivo("");
 
-      await cargar();
-      await cargarResumenKm();
-    } catch (e) {
-      setError(e?.message || "No se pudo justificar la ausencia");
-    } finally {
-      setGuardando(false);
-    }
-  };
+    await cargar();
+    await cargarResumenKm();
+
+  } catch (e) {
+    setError(
+      e?.response?.data?.error ||
+      e?.message ||
+      "No se pudo justificar la ausencia"
+    );
+  } finally {
+    setGuardando(false);
+  }
+};
 
   const CeldaAsistencia = ({ data, numero }) => {
     if (!data) {
@@ -872,8 +878,7 @@ export default function Asistencia({ userRole }) {
             </div>
 
             <p className="text-sm text-gray-600 mb-4 bg-orange-50 border border-orange-100 rounded-xl p-3">
-              Esta clase y <strong>todas las siguientes</strong> se
-              reprogramarán al siguiente día disponible.
+              Esta ausencia será justificada y el sistema agregará un nuevo encuentro al final del calendario para recuperar la clase perdida. No se saltarán temas del plan de estudio.
             </p>
 
             <textarea
@@ -903,7 +908,7 @@ export default function Asistencia({ userRole }) {
                 disabled={!motivo.trim() || guardando}
                 className="flex-1 bg-orange-500 hover:bg-orange-600 text-white rounded-xl py-2.5 text-sm font-semibold disabled:opacity-50 transition-colors"
               >
-                {guardando ? "Guardando..." : "Confirmar y Reprogramar"}
+                {guardando ? "Guardando..." : "Justificar y agregar día"}
               </button>
             </div>
           </div>

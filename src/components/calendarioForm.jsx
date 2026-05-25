@@ -273,18 +273,34 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
     e.preventDefault();
     setError("");
     if (!form.instructor_id) {
-      setError("Debe seleccionar un instructor conductor");
-      return;
-    }
-    if (!form.matricula_id) {
-      setError("Debe seleccionar un estudiante");
-      return;
-    }
-    if (!form.fecha_inicio) {
-      setError("Debe seleccionar una fecha de inicio");
-      return;
-    }
-    
+  Swal.fire({
+    icon: "warning",
+    title: "Instructor requerido",
+    text: "Debe seleccionar un instructor conductor.",
+    confirmButtonColor: "#2563eb",
+  });
+  return;
+}
+
+if (!form.matricula_id) {
+  Swal.fire({
+    icon: "warning",
+    title: "Estudiante requerido",
+    text: "Debe seleccionar un estudiante.",
+    confirmButtonColor: "#2563eb",
+  });
+  return;
+}
+
+if (!form.fecha_inicio) {
+  Swal.fire({
+    icon: "warning",
+    title: "Fecha requerida",
+    text: "Debe seleccionar una fecha de inicio.",
+    confirmButtonColor: "#2563eb",
+  });
+  return;
+}
     setCargando(true);
     try {
       await crearBloqueCitas({ ...form, horas_por_dia: horasPorDia });
@@ -323,8 +339,19 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
         onCreada?.();
         onClose();
       }, 1500);
-    } catch (err) {
-      setError(err.message || "Error al crear el bloque de clases");
+   } catch (err) {
+      const mensaje =
+        err.response?.data?.error ||
+        err.response?.data?.detail ||
+        err.message ||
+        "Error al crear el bloque de clases";
+
+      await Swal.fire({
+        icon: "error",
+        title: "No se pudo crear el bloque",
+        text: mensaje,
+        confirmButtonColor: "#dc2626",
+      });
     } finally {
       setCargando(false);
     }
@@ -616,7 +643,7 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
                           <p className="text-gray-600 text-xs">{fecha.toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}</p>
                           {estudianteSeleccionado && (
                             <p className="text-[11px] text-blue-700 font-medium mt-0.5 truncate">
-                              ðŸ‘¤ {estudianteSeleccionado.nombre} {estudianteSeleccionado.apellido || ''}
+                               {estudianteSeleccionado.nombre} {estudianteSeleccionado.apellido || ''}
                             </p>
                           )}
                         </div>
@@ -642,12 +669,12 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
             </div>
           )}
 
-          {error && (
+          {/* {error && (
             <div className={`${error.includes('✅') ? 'bg-green-50 border-green-200 text-green-700' : 'bg-red-50 border-red-200 text-red-700'} border-2 text-sm rounded-xl p-4 flex items-start gap-2 animate-pulse`}>
               <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
               <span>{error}</span>
             </div>
-          )}
+          )} */}
 
           <div className="flex justify-end gap-3 pt-4 border-t">
             <button type="button" onClick={onClose} className="px-5 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 hover:scale-105 transition-all duration-200" disabled={cargando}>
