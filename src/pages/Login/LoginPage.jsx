@@ -64,28 +64,27 @@ function LoginPage() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center">
-            <div className="p-15 rounded-lg shadow-md w-full max-w-md">
+        <div className="min-h-screen flex items-center justify-center p-5 bg-gray-100">
+            <div className="p-8 rounded-lg shadow-md border-b-cyan-950 w-full max-w-md">
                 <img
                     src="/Logo.png"
                     alt="Logo"
-                    className="w-40 h-40 mx-auto mb-4"
+                    className="w-30 h-30 mx-auto mb-4"
                 />
 
-                <h1 className="text-2xl font-bold mb-6 text-center text-gray-800">
-                    Sistema CACIQUE ADIACT
-                </h1>
 
                 <form onSubmit={handleSubmit}>
+                    <label className="block text-gray-700 mb-2 font-bold">Ingrese su usuario</label>
                     <input
                         type="text"
-                        placeholder="Usuario"
+                        placeholder="Por ejemplo: admin"
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
                         className="w-full p-3 border border-gray-300 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         required
                     />
 
+                    <label className="block text-gray-700 mb-2 font-bold">Ingrese su contraseña</label>
                     <input
                         type="password"
                         placeholder="Contraseña"
@@ -98,7 +97,7 @@ function LoginPage() {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+                        className="w-full bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 hover:cursor-pointer"
                     >
                         {loading ? 'Ingresando...' : 'Ingresar'}
                     </button>
