@@ -28,6 +28,31 @@ function PlanStudio({ userRole }) {
 
   const rol = userRole?.toLowerCase();
 
+  const actualizarDesbloqueos = useCallback(async () => {
+  try {
+    const response = await axios.get("/progreso-tema/");
+    const data = Array.isArray(response.data)
+      ? response.data
+      : response.data.results || [];
+
+    const matriculasIds = [
+      ...new Set(
+        data
+          .map((item) => item.matricula_id || item.matricula?.id)
+          .filter(Boolean)
+      ),
+    ];
+
+    for (const matriculaId of matriculasIds) {
+      await axios.post("/progreso-tema/actualizar-desbloqueos/", {
+        matricula_id: matriculaId,
+      });
+    }
+  } catch (error) {
+    console.error("Error actualizando desbloqueos:", error);
+  }
+}, []);
+
   // Función para obtener progresos
   const obtenerProgresos = useCallback(async (mostrarCargaInicial = false) => {
   if (!isMounted.current) return;
@@ -63,26 +88,30 @@ function PlanStudio({ userRole }) {
 
 
   // Iniciar polling automático (invisible)
-  useEffect(() => {
-    isMounted.current = true;
-    
-    // Carga inicial
-    obtenerProgresos(true);
-    
-    // Polling cada 3 segundos - SIN MOSTRAR NADA
-    pollingIntervalRef.current = setInterval(() => {
-      if (!accionEnProceso && isMounted.current) {
-        obtenerProgresos(false); // false = sin indicadores visuales
-      }
-    }, 3000);
-    
-    return () => {
-      isMounted.current = false;
-      if (pollingIntervalRef.current) {
-        clearInterval(pollingIntervalRef.current);
-      }
-    };
-  }, [obtenerProgresos, accionEnProceso]);
+ useEffect(() => {
+  isMounted.current = true;
+
+  const cargarInicial = async () => {
+    await actualizarDesbloqueos();
+    await obtenerProgresos(true);
+  };
+
+  cargarInicial();
+
+  pollingIntervalRef.current = setInterval(() => {
+    if (!accionEnProceso && isMounted.current) {
+      obtenerProgresos(false);
+    }
+  }, 3000);
+
+  return () => {
+    isMounted.current = false;
+
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+    }
+  };
+}, [obtenerProgresos, actualizarDesbloqueos, accionEnProceso]);
 
   const marcarClase = async (progresoId, tipo, valor = true) => {
     if (accionEnProceso) {
