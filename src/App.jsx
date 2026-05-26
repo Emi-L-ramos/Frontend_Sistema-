@@ -3,7 +3,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 
-import LoginPage from "./pages/login/LoginPage";
+import LoginPage from "./pages/Login/LoginPage";
 import Dashboard from "./pages/dashboard/dashboard";
 import MatriculaPage from "./pages/matricula/MatriculaPage";
 import RecibosPage from "./pages/recibos/RecibosPage";
