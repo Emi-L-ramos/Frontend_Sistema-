@@ -60,7 +60,7 @@ function EstudianteHome({ setActiveTab }) {
             const fechaB = new Date(`${b.fecha}T${b.hora_inicio}`);
             return fechaA - fechaB;
         })
-        .slice(0, 3);
+        .slice(0, 2);
 
     const totalClases = clasesPracticas.length;
     const totalCompletadas = clasesCompletadas.length;

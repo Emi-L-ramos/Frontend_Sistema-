@@ -67,7 +67,7 @@ function InstructorHome() {
             const fechaB = new Date(`${b.fecha}T${b.hora_inicio}`);
             return fechaA - fechaB;
         })
-        .slice(0, 5);
+        .slice(0, 3);
 
     const progresoEstudiantes = estudiantesActivos.map((estudiante) => {
         const clasesEstudiante = clases.filter(
