@@ -60,7 +60,7 @@ function InstructorHome() {
             const hoy = new Date();
             hoy.setHours(0, 0, 0, 0);
 
-            return fechaClase >= hoy && clase.estado !== "completada";
+            return fechaClase >= hoy && clase.estado === "pendiente";
         })
         .sort((a, b) => {
             const fechaA = new Date(`${a.fecha}T${a.hora_inicio}`);
@@ -68,27 +68,6 @@ function InstructorHome() {
             return fechaA - fechaB;
         })
         .slice(0, 3);
-
-    const progresoEstudiantes = estudiantesActivos.map((estudiante) => {
-        const clasesEstudiante = clases.filter(
-            (clase) => clase.estudiante_cedula === estudiante.cedula && !clase.es_examen
-        );
-
-        const completadas = clasesEstudiante.filter(
-            (clase) => clase.estado === "completada"
-        ).length;
-
-        const total = clasesEstudiante.length;
-
-        const porcentaje = total > 0 ? Math.round((completadas / total) * 100) : 0;
-
-        return {
-            ...estudiante,
-            total,
-            completadas,
-            porcentaje,
-        };
-    });
 
     const formatoFecha = (fecha) => {
         return new Date(`${fecha}T00:00:00`).toLocaleDateString("es-NI", {
@@ -136,7 +115,8 @@ function InstructorHome() {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Próximas clases */}
+            <div className="grid grid-cols-1 gap-6">
                 <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
                     <h3 className="font-semibold text-gray-700 mb-4">
                         Próximas clases
@@ -181,54 +161,6 @@ function InstructorHome() {
                                     >
                                         {clase.estado}
                                     </span>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
-
-                <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
-                    <h3 className="font-semibold text-gray-700 mb-4">
-                        Progreso de estudiantes
-                    </h3>
-
-                    {loading ? (
-                        <p className="text-gray-400 text-sm text-center py-8">
-                            Cargando progreso...
-                        </p>
-                    ) : progresoEstudiantes.length === 0 ? (
-                        <p className="text-gray-400 text-sm text-center py-8">
-                            Sin datos disponibles
-                        </p>
-                    ) : (
-                        <div className="space-y-4">
-                            {progresoEstudiantes.slice(0, 5).map((estudiante) => (
-                                <div key={estudiante.cedula}>
-                                    <div className="flex justify-between items-center mb-1">
-                                        <div>
-                                            <p className="font-semibold text-gray-800 text-sm">
-                                                {estudiante.nombre}
-                                            </p>
-                                            <p className="text-xs text-gray-400">
-                                                {estudiante.tipo_curso} - {estudiante.modalidad}
-                                            </p>
-                                        </div>
-
-                                        <span className="text-sm font-semibold text-gray-700">
-                                            {estudiante.porcentaje}%
-                                        </span>
-                                    </div>
-
-                                    <div className="w-full bg-gray-200 rounded-full h-2">
-                                        <div
-                                            className="bg-gray-800 h-2 rounded-full transition-all"
-                                            style={{ width: `${estudiante.porcentaje}%` }}
-                                        ></div>
-                                    </div>
-
-                                    <p className="text-xs text-gray-400 mt-1">
-                                        {estudiante.completadas} de {estudiante.total} clases completadas
-                                    </p>
                                 </div>
                             ))}
                         </div>

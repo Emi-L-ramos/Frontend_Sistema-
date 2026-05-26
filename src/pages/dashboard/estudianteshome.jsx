@@ -5,6 +5,22 @@ import { useNavigate } from "react-router-dom";
 function EstudianteHome({ setActiveTab }) {
     const [clases, setClases] = useState([]);
     const [loading, setLoading] = useState(true);
+
+    const [asistencia, setAsistencia] = useState({
+        porcentaje: 0,
+        asistidas: 0,
+        total: 0,
+    });
+
+    const [progresoPlan, setProgresoPlan] = useState({
+        porcentaje: 0,
+        temas_completados: 0,
+        total_temas: 0,
+    });
+
+    const [loadingAsistencia, setLoadingAsistencia] = useState(true);
+    const [loadingProgresoPlan, setLoadingProgresoPlan] = useState(true);
+
     const navigate = useNavigate();
 
     const fecha = new Date().toLocaleDateString("es-NI", {
@@ -16,6 +32,8 @@ function EstudianteHome({ setActiveTab }) {
 
     useEffect(() => {
         cargarCalendario();
+        cargarAsistencia();
+        cargarProgresoPlan();
     }, []);
 
     const cargarCalendario = async () => {
@@ -39,7 +57,90 @@ function EstudianteHome({ setActiveTab }) {
         }
     };
 
-    const clasesPracticas = clases.filter((clase) => !clase.es_examen);
+    const cargarAsistencia = async () => {
+        try {
+            setLoadingAsistencia(true);
+
+            const response = await api.get("/asistencia/resumen-estudiante/");
+
+            setAsistencia({
+                porcentaje: response.data.porcentaje || 0,
+                asistidas: response.data.asistidas || 0,
+                total: response.data.total || 0,
+            });
+        } catch (error) {
+            console.error("Error cargando asistencia:", error);
+
+            setAsistencia({
+                porcentaje: 0,
+                asistidas: 0,
+                total: 0,
+            });
+        } finally {
+            setLoadingAsistencia(false);
+        }
+    };
+
+    const cargarProgresoPlan = async () => {
+        try {
+            setLoadingProgresoPlan(true);
+
+            const response = await api.get("/dashboard-plan/mi-progreso/");
+
+            setProgresoPlan({
+                porcentaje: response.data.porcentaje || 0,
+                temas_completados: response.data.temas_completados || 0,
+                total_temas: response.data.total_temas || 0,
+            });
+        } catch (error) {
+            console.error("Error cargando progreso del plan:", error);
+
+            setProgresoPlan({
+                porcentaje: 0,
+                temas_completados: 0,
+                total_temas: 0,
+            });
+        } finally {
+            setLoadingProgresoPlan(false);
+        }
+    };
+
+    const calcularHorasPorDia = (clase) => {
+        if (!clase?.hora_inicio || !clase?.hora_fin) return 1;
+
+        const inicio = new Date(`2000-01-01T${clase.hora_inicio}`);
+        const fin = new Date(`2000-01-01T${clase.hora_fin}`);
+
+        const horas = (fin - inicio) / (1000 * 60 * 60);
+
+        return horas > 0 ? horas : 1;
+    };
+
+    const calcularTotalEncuentrosOficiales = () => {
+        const primeraClase = clases.find((clase) => !clase.es_examen);
+
+        if (!primeraClase) return 0;
+
+        const horasPorDia = calcularHorasPorDia(primeraClase);
+
+        let horasTotales = 0;
+
+        if (primeraClase.tipo_curso === "Principiante") {
+            horasTotales = 15;
+        } else {
+            horasTotales = Number(primeraClase.horas_reforzamiento || 0);
+        }
+
+        return Math.ceil(horasTotales / horasPorDia);
+    };
+
+    const totalEncuentrosOficiales = calcularTotalEncuentrosOficiales();
+
+    const clasesPracticas = clases.filter(
+        (clase) =>
+            !clase.es_examen &&
+            clase.numero_clase <= totalEncuentrosOficiales
+    );
 
     const clasesCompletadas = clasesPracticas.filter(
         (clase) => clase.estado === "completada"
@@ -49,12 +150,17 @@ function EstudianteHome({ setActiveTab }) {
         (clase) => clase.estado === "pendiente"
     );
 
-    const clasesInasistencia = clasesPracticas.filter(
-        (clase) => clase.estado === "inasistencia"
-    );
-
     const proximasClases = clases
-        .filter((clase) => clase.estado !== "completada")
+        .filter((clase) => {
+            const fechaClase = new Date(`${clase.fecha}T00:00:00`);
+            const hoy = new Date();
+            hoy.setHours(0, 0, 0, 0);
+
+            return (
+                fechaClase >= hoy &&
+                clase.estado === "pendiente"
+            );
+        })
         .sort((a, b) => {
             const fechaA = new Date(`${a.fecha}T${a.hora_inicio}`);
             const fechaB = new Date(`${b.fecha}T${b.hora_inicio}`);
@@ -65,7 +171,7 @@ function EstudianteHome({ setActiveTab }) {
     const totalClases = clasesPracticas.length;
     const totalCompletadas = clasesCompletadas.length;
 
-    const progreso =
+    const progresoEncuentros =
         totalClases > 0 ? Math.round((totalCompletadas / totalClases) * 100) : 0;
 
     const formatoFecha = (fecha) => {
@@ -94,9 +200,13 @@ function EstudianteHome({ setActiveTab }) {
                 <div className="bg-white rounded-2xl shadow-sm p-6 flex justify-between items-center border border-gray-100">
                     <div>
                         <p className="text-gray-500 text-sm">Asistencia</p>
-                        <h2 className="text-4xl font-bold mt-1">{progreso}%</h2>
+
+                        <h2 className="text-4xl font-bold mt-1">
+                            {loadingAsistencia ? "..." : `${asistencia.porcentaje}%`}
+                        </h2>
+
                         <p className="text-gray-400 text-sm mt-1">
-                            {totalCompletadas} de {totalClases} Encuentros Realizados
+                            {asistencia.asistidas} de {asistencia.total} asistencias registradas
                         </p>
                     </div>
 
@@ -108,9 +218,13 @@ function EstudianteHome({ setActiveTab }) {
                 <div className="bg-white rounded-2xl shadow-sm p-6 flex justify-between items-center border border-gray-100">
                     <div>
                         <p className="text-gray-500 text-sm">Progreso del Curso</p>
-                        <h2 className="text-4xl font-bold mt-1">{progreso}%</h2>
+
+                        <h2 className="text-4xl font-bold mt-1">
+                            {progresoEncuentros}%
+                        </h2>
+
                         <p className="text-gray-400 text-sm mt-1">
-                            {totalCompletadas} de {totalClases} Encuentros Completados
+                            {totalCompletadas} de {totalClases} encuentros completados
                         </p>
                     </div>
 
@@ -188,19 +302,24 @@ function EstudianteHome({ setActiveTab }) {
                         </h3>
 
                         <div className="flex justify-between text-sm text-gray-500 mb-1">
-                            <span>Progreso</span>
-                            <span>{progreso}%</span>
+                            <span>Avance del plan</span>
+                            <span>
+                                {loadingProgresoPlan
+                                    ? "..."
+                                    : `${progresoPlan.porcentaje}%`}
+                            </span>
                         </div>
 
                         <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
                             <div
                                 className="bg-gray-800 h-2 rounded-full transition-all"
-                                style={{ width: `${progreso}%` }}
+                                style={{ width: `${progresoPlan.porcentaje}%` }}
                             ></div>
                         </div>
 
                         <p className="text-gray-400 text-sm">
-                            {totalCompletadas} de {totalClases} clases completadas
+                            {progresoPlan.temas_completados} de{" "}
+                            {progresoPlan.total_temas} temas completados
                         </p>
                     </div>
 
@@ -211,14 +330,18 @@ function EstudianteHome({ setActiveTab }) {
 
                         <div className="space-y-3">
                             <div className="flex justify-between text-sm">
-                                <span className="text-gray-500">Total de encuentros</span>
+                                <span className="text-gray-500">
+                                    Total de encuentros
+                                </span>
                                 <span className="font-semibold text-gray-800">
                                     {totalClases}
                                 </span>
                             </div>
 
                             <div className="flex justify-between text-sm">
-                                <span className="text-gray-500">Encuentros Completados</span>
+                                <span className="text-gray-500">
+                                    Encuentros completados
+                                </span>
                                 <span className="font-semibold text-green-600">
                                     {totalCompletadas}
                                 </span>
@@ -228,13 +351,6 @@ function EstudianteHome({ setActiveTab }) {
                                 <span className="text-gray-500">Pendientes</span>
                                 <span className="font-semibold text-yellow-600">
                                     {clasesPendientes.length}
-                                </span>
-                            </div>
-
-                            <div className="flex justify-between text-sm">
-                                <span className="text-gray-500">Inasistencias</span>
-                                <span className="font-semibold text-red-600">
-                                    {clasesInasistencia.length}
                                 </span>
                             </div>
                         </div>
