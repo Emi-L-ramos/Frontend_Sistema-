@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
+import api from "../../api/axios";
 
 function LoginPage() {
     const [username, setUsername] = useState('');
@@ -18,27 +19,12 @@ function LoginPage() {
         setLoading(true);
 
         try {
-            const response = await fetch('http://127.0.0.1:8000/api/login/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    username: username.trim(),
-                    password: password,
-                }),
+            const response = await api.post("/login/", {
+                username: username.trim(),
+                password: password,
             });
 
-            const data = await response.json();
-
-            if (!response.ok) {
-                Swal.fire(
-                    'Error',
-                    data.error || 'Credenciales inválidas',
-                    'error'
-                );
-                return;
-            }
+            const data = response.data;
 
             login(data, data.token);
 
@@ -55,7 +41,7 @@ function LoginPage() {
         } catch (error) {
             Swal.fire(
                 'Error',
-                'Error de conexión con el servidor',
+                error.response?.data?.error || 'Error de conexión con el servidor',
                 'error'
             );
         } finally {

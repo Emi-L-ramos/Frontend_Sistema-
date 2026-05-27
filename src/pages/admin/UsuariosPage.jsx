@@ -145,7 +145,7 @@ function UsuariosPage() {
 
     const fetchMatriculas = async () => {
         try {
-            const response = await fetch("http://127.0.0.1:8000/api/matricula/", {
+            const response = await fetch("http://import.meta.env.VITE_API_URL/api/matricula/", {
                 headers: {
                     Authorization: `Token ${token}`,
                 },
