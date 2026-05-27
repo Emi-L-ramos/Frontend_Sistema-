@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import Swal from "sweetalert2";
+import api from "../../api/axios";
 
 function UsuariosPage() {
     const { token, user: usuarioActual } = useAuth();
@@ -64,18 +65,9 @@ function UsuariosPage() {
 
     const fetchUsuarios = async () => {
         try {
-            const response = await fetch("http://127.0.0.1:8000/api/usuarios/", {
-                headers: {
-                    Authorization: `Token ${token}`,
-                },
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                setUsuarios(Array.isArray(data) ? data : []);
-            } else {
-                console.error("Error cargando usuarios");
-            }
+            const response = await api.get("/usuarios/");
+            const data = response.data;
+            setUsuarios(Array.isArray(data) ? data : []);
         } catch (error) {
             console.error("Error cargando usuarios:", error);
         } finally {
@@ -85,59 +77,42 @@ function UsuariosPage() {
 
     const fetchRoles = async () => {
         try {
-            const response = await fetch("http://127.0.0.1:8000/api/roles/", {
-                headers: {
-                    Authorization: `Token ${token}`,
-                },
+            const response = await api.get("/roles/");
+            const data = response.data;
+
+            console.log("ROLES DESDE API:", data);
+
+            const colores = {
+                admin: "bg-red-100 text-red-700",
+                instructor: "bg-green-100 text-green-700",
+                estudiante: "bg-blue-100 text-blue-700",
+            };
+
+            const rolesFormateados = (Array.isArray(data) ? data : []).map(r => {
+                const nombre = r.nombre || r.label || r.value || "";
+                const value = nombre.toLowerCase();
+
+                return {
+                    id: r.id,
+                    value,
+                    label: nombre
+                        ? nombre.charAt(0).toUpperCase() + nombre.slice(1).toLowerCase()
+                        : "Sin rol",
+                    color: colores[value] || "bg-gray-100 text-gray-700",
+                };
             });
 
-            if (response.ok) {
-                const data = await response.json();
-
-                const colores = {
-                    admin: "bg-red-100 text-red-700",
-                    Instructor: "bg-green-100 text-green-700",
-                    Estudiante: "bg-blue-100 text-blue-700",
+            rolesFormateados.sort((a, b) => {
+                const orden = {
+                    admin: 1,
+                    instructor: 2,
+                    estudiante: 3,
                 };
 
-                const rolesFormateados = (Array.isArray(data) ? data : []).map(r => {
-                    const nombre = r.nombre || r.label || r.value || "";
-                    const value = nombre.toLowerCase();
+                return orden[a.value] - orden[b.value];
+            });
 
-                    return {
-                        id: r.id,
-                        value,
-                        label: nombre
-                            ? nombre.charAt(0).toUpperCase() + nombre.slice(1).toLowerCase()
-                            : "Sin rol",
-                        color: colores[value] || "bg-gray-100 text-gray-700",
-                    };
-                });
-
-                rolesFormateados.sort((a, b) => {
-                    const orden = {
-                        Admin: 1,
-                        Instructor: 2,
-                        Estudiante: 3,
-                    };
-
-                    return orden[a.value] - orden[b.value];
-                });
-
-                rolesFormateados.sort((a, b) => {
-                    const orden = {
-                        admin: 1,
-                        instructor: 2,
-                        estudiante: 3,
-                    };
-
-                    return orden[a.value] - orden[b.value];
-                });
-
-                setRoles(rolesFormateados);
-            } else {
-                console.error("Error cargando roles");
-            }
+            setRoles(rolesFormateados);
         } catch (error) {
             console.error("Error cargando roles:", error);
         }
@@ -145,18 +120,9 @@ function UsuariosPage() {
 
     const fetchMatriculas = async () => {
         try {
-            const response = await fetch("http://import.meta.env.VITE_API_URL/api/matricula/", {
-                headers: {
-                    Authorization: `Token ${token}`,
-                },
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                setMatriculas(Array.isArray(data) ? data : []);
-            } else {
-                console.error("Error cargando matrículas");
-            }
+            const response = await api.get("/matricula/");
+            const data = response.data;
+            setMatriculas(Array.isArray(data) ? data : []);
         } catch (error) {
             console.error("Error cargando matrículas:", error);
         }
@@ -164,18 +130,9 @@ function UsuariosPage() {
 
     const fetchInstructores = async () => {
         try {
-            const response = await fetch("http://127.0.0.1:8000/api/instructores/", {
-                headers: {
-                    Authorization: `Token ${token}`,
-                },
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                setInstructores(Array.isArray(data) ? data : data.results || []);
-            } else {
-                console.error("Error cargando instructores");
-            }
+            const response = await api.get("/instructores/");
+            const data = response.data;
+            setInstructores(Array.isArray(data) ? data : data.results || []);
         } catch (error) {
             console.error("Error cargando instructores:", error);
         }
@@ -195,6 +152,7 @@ function UsuariosPage() {
 
         setEditData(null);
         setBusquedaMatricula("");
+        setBusquedaInstructor("");
     };
 
     const handleSubmit = async (e) => {
@@ -224,42 +182,31 @@ function UsuariosPage() {
             userData.password = form.password;
         }
 
-        const url = editData
-            ? `http://127.0.0.1:8000/api/usuarios/${editData.id}/`
-            : "http://127.0.0.1:8000/api/usuarios/";
-
-        const method = editData ? "PUT" : "POST";
-
         try {
-            const response = await fetch(url, {
-                method,
-                headers: {
-                    Authorization: `Token ${token}`,
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(userData),
-            });
-
-            if (response.ok) {
-                Swal.fire(
-                    "Éxito",
-                    editData ? "Usuario actualizado" : "Usuario creado",
-                    "success"
-                );
-
-                fetchUsuarios();
-                setShowModal(false);
-                resetForm();
+            if (editData) {
+                await api.put(`/usuarios/${editData.id}/`, userData);
             } else {
-                const data = await response.json();
-                const mensaje = typeof data === "object"
-                    ? Object.values(data).flat().join("\n")
-                    : "No se pudo guardar el usuario";
-
-                Swal.fire("Error", mensaje, "error");
+                await api.post("/usuarios/", userData);
             }
+
+            Swal.fire(
+                "Éxito",
+                editData ? "Usuario actualizado" : "Usuario creado",
+                "success"
+            );
+
+            fetchUsuarios();
+            setShowModal(false);
+            resetForm();
+
         } catch (error) {
-            Swal.fire("Error", "Error de conexión", "error");
+            const data = error.response?.data;
+
+            const mensaje = data && typeof data === "object"
+                ? Object.values(data).flat().join("\n")
+                : "Error de conexión";
+
+            Swal.fire("Error", mensaje, "error");
         }
     };
 
@@ -281,21 +228,13 @@ function UsuariosPage() {
         if (!confirm.isConfirmed) return;
 
         try {
-            const response = await fetch(`http://127.0.0.1:8000/api/usuarios/${id}/`, {
-                method: "DELETE",
-                headers: {
-                    Authorization: `Token ${token}`,
-                },
-            });
+            await api.delete(`/usuarios/${id}/`);
 
-            if (response.ok) {
-                Swal.fire("Eliminado", "Usuario eliminado correctamente", "success");
-                fetchUsuarios();
-            } else {
-                Swal.fire("Error", "No se pudo eliminar el usuario", "error");
-            }
+            Swal.fire("Eliminado", "Usuario eliminado correctamente", "success");
+            fetchUsuarios();
+
         } catch (error) {
-            Swal.fire("Error", "Error de conexión", "error");
+            Swal.fire("Error", "No se pudo eliminar el usuario", "error");
         }
     };
 
@@ -398,9 +337,9 @@ function UsuariosPage() {
                                                             </td>
 
                                                             <td className="p-4 text-gray-700">
-                                                                {normalizarRol(u.rol) === "Estudiante"
+                                                                {normalizarRol(u.rol) === "estudiante"
                                                                     ? (u.estudiante_nombre || "-")
-                                                                    : normalizarRol(u.rol) === "Instructor"
+                                                                    : normalizarRol(u.rol) === "instructor"
                                                                     ? (u.instructor_nombre || "-")
                                                                     : (u.first_name || u.last_name
                                                                         ? `${u.first_name || ""} ${u.last_name || ""}`.trim()
