@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { FiPrinter, FiCalendar, FiUsers, FiFileText } from "react-icons/fi";
 import Swal from "sweetalert2";
 import * as XLSX from "xlsx";
+import api from "../../api/axios";
 
 function ReportesPages() {
     const [data, setData] = useState([]);
@@ -51,29 +52,19 @@ function ReportesPages() {
         try {
             setLoading(true);
 
-            const token = localStorage.getItem("token");
+            const response = await api.get("/matricula/");
+            const result = response.data;
 
-            const response = await fetch("http://127.0.0.1:8000/api/matricula/", {
-                headers: {
-                    Authorization: `Token ${token}`,
-                },
-            });
-
-            const contentType = response.headers.get("content-type");
-
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-
-            if (!contentType || !contentType.includes("application/json")) {
-                throw new Error("La API no devolvió JSON");
-            }
-
-            const result = await response.json();
-            setData(Array.isArray(result) ? result : []);
+            setData(Array.isArray(result) ? result : result.results || []);
         } catch (error) {
             console.error("Error al cargar matrículas:", error);
-            Swal.fire("Error", "No se pudieron cargar las matrículas: " + error.message, "error");
+
+            const mensaje =
+                error.response?.data?.detail ||
+                error.message ||
+                "No se pudieron cargar las matrículas.";
+
+            Swal.fire("Error", "No se pudieron cargar las matrículas: " + mensaje, "error");
         } finally {
             setLoading(false);
         }
@@ -81,31 +72,18 @@ function ReportesPages() {
 
     const fetchRecibos = async () => {
         try {
-            const token = localStorage.getItem("token");
+            const response = await api.get("/recibo/");
+            const result = response.data;
 
-            const response = await fetch("http://127.0.0.1:8000/api/recibo/", {
-                headers: {
-                    Authorization: `Token ${token}`,
-                    "Content-Type": "application/json",
-                },
-            });
+            console.log("RECIBOS CARGADOS:", result);
 
-            if (response.ok) {
-                const result = await response.json();
+            const lista = Array.isArray(result)
+                ? result
+                : Array.isArray(result.results)
+                ? result.results
+                : [];
 
-                console.log("RECIBOS CARGADOS:", result);
-
-                const lista = Array.isArray(result)
-                    ? result
-                    : Array.isArray(result.results)
-                    ? result.results
-                    : [];
-
-                setRecibos(lista);
-            } else {
-                console.error("Error cargando recibos:", response.status);
-                setRecibos([]);
-            }
+            setRecibos(lista);
         } catch (error) {
             console.error("Error cargando recibos:", error);
             setRecibos([]);
@@ -120,21 +98,10 @@ function ReportesPages() {
 
     const cargarInstructores = async () => {
         try {
-            const token = localStorage.getItem("token");
+            const response = await api.get("/instructores/");
+            const result = response.data;
 
-            const response = await fetch("http://127.0.0.1:8000/api/instructores/", {
-                headers: {
-                    Authorization: `Token ${token}`,
-                },
-            });
-
-            if (!response.ok) {
-                throw new Error("No se pudieron cargar los instructores");
-            }
-
-            const result = await response.json();
-
-            setInstructores(Array.isArray(result) ? result : []);
+            setInstructores(Array.isArray(result) ? result : result.results || []);
         } catch (error) {
             console.error("Error cargando instructores:", error);
             setInstructores([]);
@@ -533,8 +500,6 @@ function ReportesPages() {
 
     const exportarReporteInstructoresPolicial = async () => {
         try {
-            const token = localStorage.getItem("token");
-
             const params = new URLSearchParams();
 
             if (fechaPolicialDesde) {
@@ -545,30 +510,24 @@ function ReportesPages() {
                 params.append("hasta", fechaPolicialHasta);
             }
 
-            const response = await fetch(
-                `http://127.0.0.1:8000/api/reporte-instructores-policial/?${params.toString()}`,
+            const response = await api.get(
+                `/reporte-instructores-policial/?${params.toString()}`,
                 {
-                    headers: {
-                        Authorization: `Token ${token}`,
-                    },
+                    responseType: "blob",
+                    validateStatus: () => true,
                 }
             );
 
-            if (!response.ok) {
-                const errorText = await response.text();
+            if (response.status < 200 || response.status >= 300) {
+                const errorText = await response.data.text();
 
                 console.error("ERROR REPORTE POLICIAL:", errorText);
 
-                Swal.fire(
-                    "Error",
-                    errorText,
-                    "error"
-                );
-
+                Swal.fire("Error", errorText, "error");
                 return;
             }
 
-            const blob = await response.blob();
+            const blob = response.data;
 
             const url = window.URL.createObjectURL(blob);
 
@@ -613,7 +572,6 @@ function ReportesPages() {
                 return;
             }
 
-            const token = localStorage.getItem("token");
             const baseUrl = window.location.origin;
 
             const params = new URLSearchParams();
@@ -628,23 +586,11 @@ function ReportesPages() {
 
             params.append("instructor", instructorSeleccionado);
 
-            const response = await fetch(
-                `http://127.0.0.1:8000/api/reporte-induccion-instructores/?${params.toString()}`,
-                {
-                    headers: {
-                        Authorization: `Token ${token}`,
-                    },
-                }
+            const response = await api.get(
+                `/reporte-induccion-instructores/?${params.toString()}`
             );
 
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error("ERROR REPORTE INDUCCIÓN:", errorText);
-                Swal.fire("Error", errorText, "error");
-                return;
-            }
-
-            const data = await response.json();
+            const data = response.data;
 
             if (!data.estudiantes || data.estudiantes.length === 0) {
                 Swal.fire(
@@ -937,8 +883,6 @@ function ReportesPages() {
                 return;
             }
 
-            const token = localStorage.getItem("token");
-
             const params = new URLSearchParams();
 
             if (fechaKmDesde) {
@@ -951,23 +895,23 @@ function ReportesPages() {
 
             params.append("instructor", instructorKmSeleccionado);
 
-            const response = await fetch(
-                `http://127.0.0.1:8000/api/reporte-kilometros-instructor/?${params.toString()}`,
+           const response = await api.get(
+                `/reporte-kilometros-instructor/?${params.toString()}`,
                 {
-                    headers: {
-                        Authorization: `Token ${token}`,
-                    },
+                    responseType: "blob",
+                    validateStatus: () => true,
                 }
             );
 
-            if (!response.ok) {
-                const errorText = await response.text();
+            if (response.status < 200 || response.status >= 300) {
+                const errorText = await response.data.text();
+
                 console.error("ERROR REPORTE KM:", errorText);
                 Swal.fire("Error", errorText, "error");
                 return;
             }
 
-            const blob = await response.blob();
+            const blob = response.data;
             const url = window.URL.createObjectURL(blob);
 
             const a = document.createElement("a");

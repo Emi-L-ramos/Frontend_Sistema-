@@ -1,13 +1,13 @@
 // src/pages/matricula/MatriculaPage.jsx
 
 import { useState, useEffect } from "react";
-import { FiUserPlus, FiSearch, FiX, FiPrinter } from "react-icons/fi";
+import { FiUserPlus, FiSearch, FiX} from "react-icons/fi";
 import { AiOutlinePrinter } from "react-icons/ai";
 import { RiDeleteBinLine } from "react-icons/ri";
 import { CiEdit } from "react-icons/ci";
 import { IoLogoWhatsapp } from "react-icons/io5";
 import Swal from "sweetalert2";
-
+import api from "../../api/axios";
 import MatriculaForm from "../../components/matriculaForm";
 
 function MatriculaPage() {
@@ -39,9 +39,6 @@ function MatriculaPage() {
     const getNivelEducativo = (item) => item.estudiante_nivel_educativo || item.nivel_educativo || "";
     const getNombreEmergencia = (item) => item.estudiante_contacto_emergencia ||"";
     const getTelefonoEmergencia = (item) => item.estudiante_telefono_emergencia || item.telefono_emergencia || "";
-    const getInstructor = (item) => item.instructor_nombre || "";
-    const getFechaInicio = (item) => item.fecha || item.fecha_inicio || "";
-    const getHoraInicio = (item) => item.hora_inicio || "";
     const formatearFecha = (fecha) => {
         if (!fecha) return "";
 
@@ -60,36 +57,26 @@ function MatriculaPage() {
         try {
             setLoading(true);
 
-            const token = localStorage.getItem("token");
+            const response = await api.get("/matricula/");
+            const result = response.data;
 
-            const response = await fetch("http://127.0.0.1:8000/api/matricula/", {
-                headers: {
-                    Authorization: `Token ${token}`,
-                },
-            });
+            const matriculas = Array.isArray(result) ? result : result.results || [];
 
-            const contentType = response.headers.get("content-type");
-            
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-            
-            if (!contentType || !contentType.includes("application/json")) {
-                throw new Error("La API no devolvió JSON");
-            }
-            
-            const result = await response.json();
-            
-            // Debug: Ver los estados de las matrículas
             console.log("📊 MATRÍCULAS CARGADAS:");
-            result.forEach(mat => {
+            matriculas.forEach((mat) => {
                 console.log(`  - ID ${mat.id}: ${mat.estudiante_nombre} → ESTADO: ${mat.estado}`);
             });
-            
-            setData(Array.isArray(result) ? result : []);
+
+            setData(matriculas);
         } catch (error) {
             console.error("Error al cargar matrículas:", error);
-            Swal.fire("Error", "No se pudieron cargar las matrículas: " + error.message, "error");
+
+            const mensaje =
+                error.response?.data?.detail ||
+                error.message ||
+                "No se pudieron cargar las matrículas.";
+
+            Swal.fire("Error", "No se pudieron cargar las matrículas: " + mensaje, "error");
         } finally {
             setLoading(false);
         }
@@ -119,36 +106,21 @@ function MatriculaPage() {
         });
 
         try {
-            const token = localStorage.getItem("token");
+            await api.delete(`/matricula/${id}/`);
 
-            const response = await fetch(`http://127.0.0.1:8000/api/matricula/${id}/`, {
-                method: "DELETE",
-                headers: {
-                    Authorization: `Token ${token}`,
-                },
-            });
+            setData((prev) => prev.filter((item) => item.id !== id));
 
-            if (response.ok) {
-                setData((prev) => prev.filter((item) => item.id !== id));
-
-                Swal.fire(
-                    "¡Eliminado!",
-                    "La matrícula ha sido eliminada correctamente.",
-                    "success"
-                );
-            } else {
-                Swal.fire(
-                    "Error",
-                    "No se pudo eliminar la matrícula. Puede tener datos relacionados.",
-                    "error"
-                );
-            }
+            Swal.fire(
+                "¡Eliminado!",
+                "La matrícula ha sido eliminada correctamente.",
+                "success"
+            );
         } catch (error) {
             console.error("Error eliminando:", error);
 
             Swal.fire(
                 "Error",
-                "Hubo un problema al eliminar la matrícula.",
+                "No se pudo eliminar la matrícula. Puede tener datos relacionados.",
                 "error"
             );
         }
@@ -416,28 +388,20 @@ function MatriculaPage() {
         let primeraClase = null;
 
         try {
-            const token = localStorage.getItem("token");
+            const response = await api.get("/calendario/");
+            const result = response.data;
 
-            const response = await fetch("http://127.0.0.1:8000/api/calendario/", {
-                headers: {
-                    Authorization: `Token ${token}`,
-                },
-            });
+            const calendario = Array.isArray(result) ? result : result.results || [];
 
-            if (response.ok) {
-                const result = await response.json();
-                const calendario = Array.isArray(result) ? result : result.results || [];
+            const clasesEstudiante = calendario
+                .filter((cita) => String(cita.matricula) === String(matricula.id))
+                .sort((a, b) => {
+                    const fechaA = `${a.fecha} ${a.hora_inicio || ""}`;
+                    const fechaB = `${b.fecha} ${b.hora_inicio || ""}`;
+                    return fechaA.localeCompare(fechaB);
+                });
 
-                const clasesEstudiante = calendario
-                    .filter((cita) => String(cita.matricula) === String(matricula.id))
-                    .sort((a, b) => {
-                        const fechaA = `${a.fecha} ${a.hora_inicio || ""}`;
-                        const fechaB = `${b.fecha} ${b.hora_inicio || ""}`;
-                        return fechaA.localeCompare(fechaB);
-                    });
-
-                primeraClase = clasesEstudiante[0] || null;
-            }
+            primeraClase = clasesEstudiante[0] || null;
         } catch (error) {
             console.error("Error obteniendo calendario para WhatsApp:", error);
         }

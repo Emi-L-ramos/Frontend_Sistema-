@@ -1,13 +1,14 @@
 // frontend/src/pages/recibos/RecibosPage.jsx
 
 import { useEffect, useState } from "react";
-import { FiPlus, FiSearch, FiFileText } from "react-icons/fi";
+import { FiPlus, FiSearch } from "react-icons/fi";
 import { RiDeleteBinLine } from "react-icons/ri";
 import Swal from "sweetalert2";
 import * as XLSX from 'xlsx';
 import RecibosForm from "../../components/RecibosForm";
 import { CiEdit } from "react-icons/ci";
 import { FiX } from "react-icons/fi";
+import api from "../../api/axios";
 
 function RecibosPage() {
     const [recibos, setRecibos] = useState([]);
@@ -15,29 +16,25 @@ function RecibosPage() {
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [editData, setEditData] = useState(null);
-    const [matriculas, setMatriculas] = useState([]);
 
     const fetchRecibos = async () => {
         try {
-            const token = localStorage.getItem("token");
-            if (!token) return;
+            setLoading(true);
 
-            const response = await fetch("http://127.0.0.1:8000/api/recibo/", {
-                headers: {
-                    "Authorization": `Token ${token}`,
-                    "Content-Type": "application/json"
-                }
-            });
+            const response = await api.get("/recibo/");
+            const data = response.data;
 
-            if (response.ok) {
-                const data = await response.json();
-                console.log("📊 RECIBOS CARGADOS:", data);
-                setRecibos(Array.isArray(data) ? data : []);
-            } else {
-                console.error("Error cargando recibos:", response.status);
-            }
+            console.log("📊 RECIBOS CARGADOS:", data);
+
+            setRecibos(Array.isArray(data) ? data : data.results || []);
         } catch (error) {
-            console.error("Error:", error);
+            console.error("Error cargando recibos:", error);
+
+            const mensaje =
+                error.response?.data?.detail ||
+                "No se pudieron cargar los recibos.";
+
+            Swal.fire("Error", mensaje, "error");
         } finally {
             setLoading(false);
         }
@@ -45,35 +42,31 @@ function RecibosPage() {
 
     const eliminarRecibo = async (id) => {
         const confirm = await Swal.fire({
-            title: '¿Eliminar recibo?',
-            text: 'Esta acción actualizará el saldo pendiente del estudiante',
-            icon: 'warning',
+            title: "¿Eliminar recibo?",
+            text: "Esta acción actualizará el saldo pendiente del estudiante",
+            icon: "warning",
             showCancelButton: true,
-            confirmButtonColor: '#d33',
-            confirmButtonText: 'Sí, eliminar',
-            cancelButtonText: 'Cancelar'
+            confirmButtonColor: "#d33",
+            confirmButtonText: "Sí, eliminar",
+            cancelButtonText: "Cancelar",
         });
 
-        if (confirm.isConfirmed) {
-            try {
-                const token = localStorage.getItem("token");
-                const response = await fetch(`http://127.0.0.1:8000/api/recibo/${id}/`, {
-                    method: "DELETE",
-                    headers: {
-                        "Authorization": `Token ${token}`,
-                        "Content-Type": "application/json"
-                    }
-                });
+        if (!confirm.isConfirmed) return;
 
-                if (response.ok) {
-                    Swal.fire('Eliminado', 'El recibo ha sido eliminado', 'success');
-                    fetchRecibos();
-                } else {
-                    Swal.fire('Error', 'No se pudo eliminar el recibo', 'error');
-                }
-            } catch (error) {
-                Swal.fire('Error', 'Error de conexión', 'error');
-            }
+        try {
+            await api.delete(`/recibo/${id}/`);
+
+            Swal.fire("Eliminado", "El recibo ha sido eliminado", "success");
+            fetchRecibos();
+
+        } catch (error) {
+            console.error("Error eliminando recibo:", error);
+
+            const mensaje =
+                error.response?.data?.detail ||
+                "No se pudo eliminar el recibo";
+
+            Swal.fire("Error", mensaje, "error");
         }
     };
 

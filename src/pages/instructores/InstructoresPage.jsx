@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
+import api from "../../api/axios";
 
 function InstructoresPage() {
-    const token = localStorage.getItem("token");
 
     const [instructores, setInstructores] = useState([]);
-    const [categorias, setCategorias] = useState([]);
     const [loading, setLoading] = useState(true);
     const [modal, setModal] = useState(false);
     const [editData, setEditData] = useState(null);
@@ -34,37 +33,21 @@ function InstructoresPage() {
 
     const cargarInstructores = async () => {
         try {
-            const response = await fetch("http://127.0.0.1:8000/api/instructores/", {
-                headers: { Authorization: `Token ${token}` },
-            });
-
-            const data = await response.json();
+            const response = await api.get("/instructores/");
+            const data = response.data;
 
             console.log("Respuesta instructores:", data);
-
-            if (!response.ok) {
-                throw new Error(data.detail || "Error cargando instructores");
-            }
 
             setInstructores(Array.isArray(data) ? data : data.results || []);
         } catch (error) {
             console.error("Error cargando instructores:", error);
             setInstructores([]);
-            Swal.fire("Error", error.message, "error");
-        }
-    };
 
-    const cargarCategorias = async () => {
-        try {
-            const response = await fetch("http://127.0.0.1:8000/api/categorias/", {
-                headers: { Authorization: `Token ${token}` },
-            });
+            const mensaje =
+                error.response?.data?.detail ||
+                "Error cargando instructores";
 
-            const data = await response.json();
-            setCategorias(Array.isArray(data) ? data : data.results || []);
-        } catch (error) {
-            console.error("Error cargando categorías:", error);
-            setCategorias([]);
+            Swal.fire("Error", mensaje, "error");
         }
     };
 
@@ -72,7 +55,6 @@ function InstructoresPage() {
         const iniciar = async () => {
             setLoading(true);
             await cargarInstructores();
-            await cargarCategorias();
             setLoading(false);
         };
 
@@ -174,30 +156,11 @@ function InstructoresPage() {
             formData.append("foto", form.foto);
         }
 
-        const url = editData
-            ? `http://127.0.0.1:8000/api/instructores/${editData.id}/`
-            : "http://127.0.0.1:8000/api/instructores/";
-
-        const method = editData ? "PATCH" : "POST";
-
         try {
-            const response = await fetch(url, {
-                method,
-                headers: {
-                    Authorization: `Token ${token}`,
-                },
-                body: formData,
-            });
-
-            if (!response.ok) {
-                const data = await response.json();
-                const mensaje =
-                    typeof data === "object"
-                        ? Object.values(data).flat().join("\n")
-                        : "No se pudo guardar el instructor.";
-
-                Swal.fire("Error", mensaje, "error");
-                return;
+            if (editData) {
+                await api.patch(`/instructores/${editData.id}/`, formData);
+            } else {
+                await api.post("/instructores/", formData);
             }
 
             Swal.fire(
@@ -210,9 +173,17 @@ function InstructoresPage() {
 
             cerrarModal();
             cargarInstructores();
+
         } catch (error) {
             console.error(error);
-            Swal.fire("Error", "Error de conexión con el servidor.", "error");
+
+            const data = error.response?.data;
+
+            const mensaje = data && typeof data === "object"
+                ? Object.values(data).flat().join("\n")
+                : "No se pudo guardar el instructor.";
+
+            Swal.fire("Error", mensaje, "error");
         }
     };
 
@@ -229,23 +200,13 @@ function InstructoresPage() {
         if (!confirm.isConfirmed) return;
 
         try {
-            const response = await fetch(
-                `http://127.0.0.1:8000/api/instructores/${instructor.id}/`,
-                {
-                    method: "DELETE",
-                    headers: { Authorization: `Token ${token}` },
-                }
-            );
-
-            if (!response.ok) {
-                Swal.fire("Error", "No se pudo eliminar el instructor.", "error");
-                return;
-            }
+            await api.delete(`/instructores/${instructor.id}/`);
 
             Swal.fire("Eliminado", "Instructor eliminado correctamente.", "success");
             cargarInstructores();
+
         } catch (error) {
-            Swal.fire("Error", "Error de conexión con el servidor.", "error");
+            Swal.fire("Error", "No se pudo eliminar el instructor.", "error");
         }
     };
 

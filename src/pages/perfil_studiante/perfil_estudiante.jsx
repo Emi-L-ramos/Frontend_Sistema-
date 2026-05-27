@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
+import api from "../../api/axios";
 
 function PerfilEstudiante() {
-    const token = localStorage.getItem("token");
-
     const [loading, setLoading] = useState(true);
     const [rol, setRol] = useState("");
     const [miPerfil, setMiPerfil] = useState(null);
@@ -16,17 +15,8 @@ function PerfilEstudiante() {
         try {
             setLoading(true);
 
-            const response = await fetch("http://127.0.0.1:8000/api/perfiles/", {
-                headers: {
-                    Authorization: `Token ${token}`,
-                },
-            });
-
-            if (!response.ok) {
-                throw new Error(`Error ${response.status}`);
-            }
-
-            const data = await response.json();
+            const response = await api.get("/perfiles/");
+            const data = response.data;
 
             setRol((data.rol || "").toLowerCase());
             setMiPerfil(data.mi_perfil || null);

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
+import api from "../api/axios";
 
 function MatriculaForm({ initialData, onSave, onError }) {
     const [estudiantes, setEstudiantes] = useState([]);
@@ -46,8 +47,6 @@ function MatriculaForm({ initialData, onSave, onError }) {
         { value: "otro", label: "otro" },
     ];
 
-    const token = localStorage.getItem("token");
-
     useEffect(() => {
         cargarEstudiantes();
         cargarcategorias();
@@ -75,59 +74,32 @@ function MatriculaForm({ initialData, onSave, onError }) {
 
     const cargarcategorias = async () => {
         try {
-             
-            const token = localStorage.getItem("token");
+            const response = await api.get("/categorias/");
+            const data = response.data;
 
-            const response = await fetch("http://127.0.0.1:8000/api/categorias/",{
-                headers: {
-                    Authorization: `Token ${token}`,
-                }
-            });
-            const contentType = response.headers.get("content-type");
-            if(!response.ok){
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-            }
-            if (!contentType || !contentType.includes("application/json")) {
-                throw new Error(
-                    "La API no devolvió JSON. Verifique que el backend esté funcionando correctamente."
-                );
-            }
-            const data = await response.json();
-            setCategorias(Array.isArray(data) ? data : [])
-        } catch (error) { 
-            console.error("Error al cargar las categorias:",error);
+            setCategorias(Array.isArray(data) ? data : data.results || []);
+        } catch (error) {
+            console.error("Error al cargar las categorias:", error);
             Swal.fire(
                 "Error",
-                "No pudieron cargas las categorias: ", + error.message,
+                "No se pudieron cargar las categorías.",
                 "error"
-            )
+            );
         }
     };
 
       
     const cargarEstudiantes = async () => {
         try {
-            const response = await fetch("http://127.0.0.1:8000/api/estudiantes/", {
-                headers: {
-                    Authorization: `Token ${token}`,
-                },
-            });
-            const contentType = response.headers.get("content-type");
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-            if (!contentType || !contentType.includes("application/json")) {
-                throw new Error(
-                    "La API no devolvió JSON. Verifique que el backend esté funcionando correctamente."
-                );
-            }
-            const data = await response.json();
-            setEstudiantes(Array.isArray(data) ? data : []);
+            const response = await api.get("/estudiantes/");
+            const data = response.data;
+
+            setEstudiantes(Array.isArray(data) ? data : data.results || []);
         } catch (error) {
             console.error("Error cargando estudiantes:", error);
             Swal.fire(
                 "Error",
-                "No se pudieron cargar los estudiantes: " + error.message,
+                "No se pudieron cargar los estudiantes.",
                 "error"
             );
         }
@@ -254,69 +226,15 @@ function MatriculaForm({ initialData, onSave, onError }) {
         };
 
         try {
-            const url = initialData
-                ? `http://127.0.0.1:8000/api/matricula/${initialData.id}/`
-                : "http://127.0.0.1:8000/api/matricula/";
+            let response;
 
-            const method = initialData ? "PUT" : "POST";
-
-            const response = await fetch(url, {
-                method,
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Token ${token}`,
-                },
-                body: JSON.stringify(dataToSend),
-            });
-
-            const contentType = response.headers.get("content-type");
-            let responseData;
-
-            if (contentType && contentType.includes("application/json")) {
-                responseData = await response.json();
+            if (initialData) {
+                response = await api.put(`/matricula/${initialData.id}/`, dataToSend);
             } else {
-                const textResponse = await response.text();
-                console.error("Respuesta no JSON:", textResponse.substring(0, 200));
-
-                if (response.status === 500) {
-                    throw new Error(
-                        "Error interno del servidor (500). Verifique los logs de Django."
-                    );
-                }
-
-                if (response.status === 404) {
-                    throw new Error(
-                        "Endpoint de API no encontrado. Verifique la configuración de URLs."
-                    );
-                }
-
-                if (response.status === 401 || response.status === 403) {
-                    throw new Error(
-                        "Error de autenticación. Por favor, inicie sesión nuevamente."
-                    );
-                }
-
-                throw new Error(`Error del servidor (${response.status}): ${response.statusText}`);
+                response = await api.post("/matricula/", dataToSend);
             }
 
-            if (!response.ok) {
-                setServerErrors(responseData);
-
-                const mensaje =
-                    typeof responseData === "object"
-                        ? Object.entries(responseData)
-                              .map(([campo, errores]) => {
-                                  const texto = Array.isArray(errores)
-                                      ? errores.join(", ")
-                                      : errores;
-                                  return `${campo}: ${texto}`;
-                              })
-                              .join("\n")
-                        : "No se pudo guardar la matrícula.";
-
-                Swal.fire("Error", mensaje, "error");
-                return;
-            }
+            const responseData = response.data;
 
             Swal.fire({
                 title: "¡Éxito!",

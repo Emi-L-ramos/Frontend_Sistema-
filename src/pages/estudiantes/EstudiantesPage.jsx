@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import Swal from "sweetalert2";
 import { Plus } from "lucide-react";
+import api from "../../api/axios";
 
 function EstudiantesPage() {
     const { token } = useAuth();
@@ -33,19 +34,10 @@ function EstudiantesPage() {
         try {
             setLoading(true);
 
-            const response = await fetch("http://127.0.0.1:8000/api/estudiantes/", {
-                headers: {
-                    Authorization: `Token ${token}`,
-                },
-            });
+            const response = await api.get("/estudiantes/");
+            const data = response.data;
 
-            const data = await response.json();
-
-            if (response.ok) {
-                setEstudiantes(Array.isArray(data) ? data : []);
-            } else {
-                Swal.fire("Error", "No se pudieron cargar los estudiantes", "error");
-            }
+            setEstudiantes(Array.isArray(data) ? data : data.results || []);
         } catch (error) {
             Swal.fire("Error", "Error de conexión con el servidor", "error");
         } finally {
@@ -125,43 +117,31 @@ function EstudiantesPage() {
             edad: parseInt(form.edad),
         };
 
-        const url = editData
-            ? `http://127.0.0.1:8000/api/estudiantes/${editData.id}/`
-            : "http://127.0.0.1:8000/api/estudiantes/";
-
-        const method = editData ? "PUT" : "POST";
-
         try {
-            const response = await fetch(url, {
-                method,
-                headers: {
-                    Authorization: `Token ${token}`,
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(payload),
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                Swal.fire(
-                    "Correcto",
-                    editData ? "Estudiante actualizado correctamente" : "Estudiante registrado correctamente",
-                    "success"
-                );
-
-                setShowModal(false);
-                resetForm();
-                fetchEstudiantes();
+            if (editData) {
+                await api.put(`/estudiantes/${editData.id}/`, payload);
             } else {
-                const mensaje = typeof data === "object"
-                    ? Object.values(data).flat().join("\n")
-                    : "No se pudo guardar el estudiante";
-
-                Swal.fire("Error", mensaje, "error");
+                await api.post("/estudiantes/", payload);
             }
+
+            Swal.fire(
+                "Correcto",
+                editData ? "Estudiante actualizado correctamente" : "Estudiante registrado correctamente",
+                "success"
+            );
+
+            setShowModal(false);
+            resetForm();
+            fetchEstudiantes();
+
         } catch (error) {
-            Swal.fire("Error", "Error de conexión con el servidor", "error");
+            const data = error.response?.data;
+
+            const mensaje = data && typeof data === "object"
+                ? Object.values(data).flat().join("\n")
+                : "No se pudo guardar el estudiante";
+
+            Swal.fire("Error", mensaje, "error");
         }
     };
 
@@ -178,28 +158,17 @@ function EstudiantesPage() {
         if (!confirm.isConfirmed) return;
 
         try {
-            const response = await fetch(
-                `http://127.0.0.1:8000/api/estudiantes/${estudiante.id}/`,
-                {
-                    method: "DELETE",
-                    headers: {
-                        Authorization: `Token ${token}`,
-                    },
-                }
-            );
+            await api.delete(`/estudiantes/${estudiante.id}/`);
 
-            if (response.ok) {
-                Swal.fire("Eliminado", "Estudiante eliminado correctamente", "success");
-                fetchEstudiantes();
-            } else {
-                Swal.fire(
-                    "Error",
-                    "No se pudo eliminar. Puede que el estudiante ya tenga matrícula relacionada.",
-                    "error"
-                );
-            }
+            Swal.fire("Eliminado", "Estudiante eliminado correctamente", "success");
+            fetchEstudiantes();
+
         } catch (error) {
-            Swal.fire("Error", "Error de conexión con el servidor", "error");
+            Swal.fire(
+                "Error",
+                "No se pudo eliminar. Puede que el estudiante ya tenga matrícula relacionada.",
+                "error"
+            );
         }
     };
 

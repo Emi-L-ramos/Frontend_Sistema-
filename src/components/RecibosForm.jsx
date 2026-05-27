@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
-import { FiSearch, FiUserCheck, FiX } from "react-icons/fi";
+import { FiSearch, FiX } from "react-icons/fi";
+import api from "../api/axios";
 
 const redondearMonto = (valor) => Math.round(Number(valor || 0));
 
@@ -83,23 +84,10 @@ function RecibosForm({ onSave, initialData }) {
 
     const cargarValoresCurso = async () => {
         try {
-            const token = localStorage.getItem("token");
+            const response = await api.get("/valores-curso/?activo=true");
+            const data = response.data;
 
-            const response = await fetch(
-                "http://127.0.0.1:8000/api/valores-curso/?activo=true",
-                {
-                    headers: {
-                        Authorization: `Token ${token}`,
-                    },
-                }
-            );
-
-            if (!response.ok) {
-                throw new Error("No se pudieron cargar los valores de los cursos.");
-            }
-
-            const data = await response.json();
-            setValoresCurso(data);
+            setValoresCurso(Array.isArray(data) ? data : data.results || []);
         } catch (error) {
             console.error("Error cargando valores de curso:", error);
             Swal.fire("Error", "No se pudieron cargar los valores de los cursos.", "error");
@@ -120,19 +108,10 @@ function RecibosForm({ onSave, initialData }) {
         setBuscando(true);
 
         try {
-            const token = localStorage.getItem("token");
+            const response = await api.get("/matricula/");
+            const data = response.data;
 
-            const response = await fetch("http://127.0.0.1:8000/api/matricula/", {
-                headers: {
-                    Authorization: `Token ${token}`,
-                },
-            });
-
-            if (!response.ok) {
-                throw new Error("No se pudieron cargar las matrículas.");
-            }
-
-            const todasLasMatriculas = await response.json();
+            const todasLasMatriculas = Array.isArray(data) ? data : data.results || [];
             const searchTerm = termino.toLowerCase();
 
             // ========== FILTRO CORREGIDO ==========
@@ -177,22 +156,13 @@ function RecibosForm({ onSave, initialData }) {
         if (!matriculaId) return;
 
         try {
-            const token = localStorage.getItem("token");
             const queryHoras = horas ? `&horas=${horas}` : "";
 
-            const response = await fetch(
-                `http://127.0.0.1:8000/api/saldo/?matricula=${matriculaId}${queryHoras}`,
-                {
-                    headers: {
-                        Authorization: `Token ${token}`,
-                    },
-                }
+            const response = await api.get(
+                `/saldo/?matricula=${matriculaId}${queryHoras}`
             );
 
-            if (response.ok) {
-                const data = await response.json();
-                setSaldoInfo(data);
-            }
+            setSaldoInfo(response.data);
         } catch (error) {
             console.error("Error cargando saldo:", error);
         }
@@ -284,29 +254,18 @@ function RecibosForm({ onSave, initialData }) {
 
                 const buscarMatricula = async () => {
                     try {
-                        const token = localStorage.getItem("token");
+                        const response = await api.get(`/matricula/${initialData.matricula}/`);
+                        const mat = response.data;
 
-                        const response = await fetch(
-                            `http://127.0.0.1:8000/api/matricula/${initialData.matricula}/`,
-                            {
-                                headers: {
-                                    Authorization: `Token ${token}`,
-                                },
-                            }
+                        const tipo = normalizarTipoCurso(mat);
+                        const valorCurso = obtenerValorCurso(tipo);
+
+                        setMatriculaSeleccionada(mat);
+                        setValorCursoActual(valorCurso || null);
+
+                        setBusquedaEstudiante(
+                            `${mat.estudiante_nombre || "Sin nombre"} - ${mat.estudiante_cedula || "Sin cédula"}`
                         );
-
-                        if (response.ok) {
-                            const mat = await response.json();
-                            const tipo = normalizarTipoCurso(mat);
-                            const valorCurso = obtenerValorCurso(tipo);
-
-                            setMatriculaSeleccionada(mat);
-                            setValorCursoActual(valorCurso || null);
-
-                            setBusquedaEstudiante(
-                                `${mat.estudiante_nombre || "Sin nombre"} - ${mat.estudiante_cedula || "Sin cédula"}`
-                            );
-                        }
                     } catch (error) {
                         console.error("Error cargando matrícula:", error);
                     }
@@ -445,7 +404,7 @@ function RecibosForm({ onSave, initialData }) {
 
         if (monto > saldoPendiente) {
             
-            const totalPagadoPrevio = Number(saldoInfo.total_pagos || 0);
+            const totalPagadoPrevio = Number(saldoInfo.total_pagado || 0);
 
             if (totalPagadoPrevio > 0 && Math.round(monto) !== Math.round(saldoPendiente)) {
                 Swal.fire(
@@ -458,14 +417,7 @@ function RecibosForm({ onSave, initialData }) {
             }
         }
     }
-        const token = localStorage.getItem("token");
         const isEditing = !!initialData?.id;
-
-        const url = isEditing
-            ? `http://127.0.0.1:8000/api/recibo/${initialData.id}/`
-            : "http://127.0.0.1:8000/api/recibo/";
-
-        const method = isEditing ? "PUT" : "POST";
 
         const montoFinal = parseFloat(form.monto_pagado || 0);
 
@@ -496,52 +448,37 @@ function RecibosForm({ onSave, initialData }) {
         console.log("DATOS ENVIADOS RECIBO:", datosEnvio);
 
         try {
-            const response = await fetch(url, {
-                method,
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Token ${token}`,
-                },
-                body: JSON.stringify(datosEnvio),
-            });
-
-            if (response.ok) {
-                Swal.fire({
-                    title: isEditing ? "¡Recibo actualizado!" : "¡Recibo creado!",
-                    text: `Monto registrado: C$${redondearMonto(montoFinal)}`,
-                    icon: "success",
-                    confirmButtonText: "Aceptar",
-                }).then(() => {
-                    if (onSave) {
-                        onSave();
-                    } else {
-                        navigate("/dashboard/recibos");
-                    }
-                });
+            if (isEditing) {
+                await api.put(`/recibo/${initialData.id}/`, datosEnvio);
             } else {
-                const contentType = response.headers.get("content-type");
-
-                if (contentType && contentType.includes("application/json")) {
-                    const data = await response.json();
-                    const mensaje =
-                        data.error ||
-                        data.detail ||
-                        Object.values(data).flat().join("\n");
-
-                    Swal.fire("Error", mensaje, "error");
-                } else {
-                    const text = await response.text();
-                    console.error("Respuesta HTML del backend:", text);
-                    Swal.fire(
-                        "Error",
-                        "Error interno del servidor. Revisa la terminal de Django.",
-                        "error"
-                    );
-                }
+                await api.post("/recibo/", datosEnvio);
             }
+
+            Swal.fire({
+                title: isEditing ? "¡Recibo actualizado!" : "¡Recibo creado!",
+                text: `Monto registrado: C$${redondearMonto(montoFinal)}`,
+                icon: "success",
+                confirmButtonText: "Aceptar",
+            }).then(() => {
+                if (onSave) {
+                    onSave();
+                } else {
+                    navigate("/dashboard/recibos");
+                }
+            });
         } catch (error) {
             console.error("Error guardando recibo:", error);
-            Swal.fire("Error", "Error de conexión", "error");
+
+            const data = error.response?.data;
+
+            const mensaje =
+                data?.error ||
+                data?.detail ||
+                (data && typeof data === "object"
+                    ? Object.values(data).flat().join("\n")
+                    : "Error de conexión");
+
+            Swal.fire("Error", mensaje, "error");
         } finally {
             setLoading(false);
         }

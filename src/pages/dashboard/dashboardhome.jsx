@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import Chart from "react-apexcharts";
+import api from "../../api/axios";
 
 const MESES = {
   "01":"Ene","02":"Feb","03":"Mar","04":"Abr",
@@ -13,16 +14,13 @@ function DashboardHome() {
   const [cargando, setCargando] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const headers = { "Authorization": `Token ${token}` };
-
     Promise.all([
-      fetch("http://localhost:8000/api/dashboard/ganancias/", { headers }).then(r => r.json()),
-      fetch("http://localhost:8000/api/dashboard/resumen/", { headers }).then(r => r.json()),
+      api.get("/dashboard/ganancias/"),
+      api.get("/dashboard/resumen/"),
     ])
-      .then(([dataGanancias, dataResumen]) => {
-        console.log("Ganancias:", dataGanancias);
-        console.log("Resumen:", dataResumen);
+      .then(([resGanancias, resResumen]) => {
+        const dataGanancias = resGanancias.data;
+        const dataResumen = resResumen.data;
 
         setGanancias(Array.isArray(dataGanancias) ? dataGanancias : []);
         setResumen(dataResumen || {});
