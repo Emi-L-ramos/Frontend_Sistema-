@@ -29,7 +29,7 @@ function MatriculaPage() {
     const getPlan = (item) => item.plan_nombre || "";
     const getCurso = (item) => item.tipo_curso || "";
     const getModalidad = (item) => item.modalidad || "";
-    const getCategoria = (item) => item.categoria || "";
+    const getCategoria = (item) =>  item.categoria_nombre || item.categoria?.nombre || item.categoria || "";
     const getFechaMatricula = (item) => item.fecha_registro || item.fecha_matricula || "";
     const getEdad = (item) => item.estudiante_edad || item.edad || "";
     const getSexo = (item) => item.estudiante_sexo || item.sexo || "";

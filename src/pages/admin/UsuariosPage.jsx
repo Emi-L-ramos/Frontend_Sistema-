@@ -543,9 +543,6 @@ function UsuariosPage() {
                                                             Cédula: {m.estudiante_cedula || "N/A"}
                                                         </p>
                                                         <p className="text-xs text-gray-500">
-                                                            Plan: {m.plan_nombre || "N/A"}
-                                                        </p>
-                                                        <p className="text-xs text-gray-500">
                                                             Estado: {m.estado || "N/A"}
                                                         </p>
                                                     </div>

@@ -150,17 +150,21 @@ function InstructoresPage() {
 
         if (form.eliminar_foto) {
             formData.append("foto", "");
-        }
-
-        if (form.foto) {
+        } else if (form.foto instanceof File) {
             formData.append("foto", form.foto);
         }
 
         try {
+            const config = {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
+            };
+
             if (editData) {
-                await api.patch(`/instructores/${editData.id}/`, formData);
+                await api.patch(`/instructores/${editData.id}/`, formData, config);
             } else {
-                await api.post("/instructores/", formData);
+                await api.post("/instructores/", formData, config);
             }
 
             Swal.fire(
