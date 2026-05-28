@@ -371,10 +371,10 @@ function InstructoresPage() {
                                                 
                                                 {/*borrar despues de las pruebas*/}
                                                 <button
-                                                    onClick={() => despedirInstructor(inst)}
-                                                    className="px-3 py-1.5 rounded-lg bg-orange-100 text-orange-700 hover:bg-orange-200 transition"
+                                                    onClick={() => eliminarInstructor(inst)}
+                                                    className="px-3 py-1.5 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 transition"
                                                 >
-                                                    Despedir
+                                                    Eliminar
                                                 </button>
                                             </div>
                                         </td>
