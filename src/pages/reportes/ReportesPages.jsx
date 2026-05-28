@@ -1204,7 +1204,7 @@ function ReportesPages() {
 
                                 <div className="flex-1">
                                     <h2 className="text-2xl font-extrabold text-slate-900">
-                                        Reporte policial de instructores
+                                        Reporte Policial
                                     </h2>
                                     <p className="text-sm text-slate-500 mt-1">
                                         Exporta el expediente completo de instructores.
