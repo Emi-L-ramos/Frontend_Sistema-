@@ -995,7 +995,7 @@ function ReportesPages() {
                                 <p className="text-xs text-slate-500">
                                     Admin
                                 </p>
-                            </div>0" />
+                            </div>
                         </div>
                     </div>
                 </div>
