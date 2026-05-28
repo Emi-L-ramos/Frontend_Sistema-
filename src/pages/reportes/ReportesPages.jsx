@@ -5,7 +5,6 @@ import {
     FiUsers,
     FiFileText,
     FiBarChart2,
-    FiBell,
     FiChevronDown,
     FiShield,
     FiBookOpen,
@@ -961,7 +960,7 @@ function ReportesPages() {
     const counterBase =
         "inline-flex items-center gap-2 rounded-2xl px-4 py-2 text-sm font-semibold";
 
-        return (
+    return (
             <div className="w-full max-w-[1500px] mx-auto px-4 md:px-6 py-6 space-y-7">
                 <div className="relative overflow-hidden rounded-[2rem] bg-white border border-slate-100 px-7 py-7 md:px-10 md:py-8 shadow-sm">
                     <div className="absolute right-0 top-0 w-96 h-full bg-gradient-to-l from-blue-50 via-slate-50 to-transparent"></div>
@@ -996,9 +995,7 @@ function ReportesPages() {
                                 <p className="text-xs text-slate-500">
                                     Admin
                                 </p>
-                            </div>
-
-                            <FiChevronDown className="text-slate-500" />
+                            </div>0" />
                         </div>
                     </div>
                 </div>
@@ -1418,7 +1415,6 @@ function ReportesPages() {
                     </div>
                 )}
             </div>
-        );
     );
 }
 
