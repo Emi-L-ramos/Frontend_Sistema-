@@ -11,7 +11,10 @@ import {
   Gauge,
   User,
   CalendarDays,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
+
 import {
   finalizarKilometraje,
   justificarClase,
@@ -20,17 +23,275 @@ import {
   resumenKilometros,
 } from "../../api/asistencia";
 
+const obtenerFechaHoy = () => {
+  const hoy = new Date();
+  const year = hoy.getFullYear();
+  const month = String(hoy.getMonth() + 1).padStart(2, "0");
+  const day = String(hoy.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+};
+
+const convertirFechaLocal = (fechaTexto) => {
+  const [year, month, day] = fechaTexto.split("-").map(Number);
+  return new Date(year, month - 1, day);
+};
+
+const formatearFechaISO = (fecha) => {
+  const year = fecha.getFullYear();
+  const month = String(fecha.getMonth() + 1).padStart(2, "0");
+  const day = String(fecha.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+};
+
+const meses = [
+  "Enero",
+  "Febrero",
+  "Marzo",
+  "Abril",
+  "Mayo",
+  "Junio",
+  "Julio",
+  "Agosto",
+  "Septiembre",
+  "Octubre",
+  "Noviembre",
+  "Diciembre",
+];
+
+const diasSemana = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+
+function CalendarioRangoAsistencia({
+  fechaInicio,
+  fechaFin,
+  setFechaInicio,
+  setFechaFin,
+}) {
+  const fechaBase = convertirFechaLocal(fechaInicio);
+
+  const [abierto, setAbierto] = useState(false);
+  const [mesVisible, setMesVisible] = useState(fechaBase.getMonth());
+  const [anioVisible, setAnioVisible] = useState(fechaBase.getFullYear());
+  const [seleccionandoRango, setSeleccionandoRango] = useState(false);
+
+  useEffect(() => {
+    const fecha = convertirFechaLocal(fechaInicio);
+    setMesVisible(fecha.getMonth());
+    setAnioVisible(fecha.getFullYear());
+  }, [fechaInicio]);
+
+  const cambiarMes = (cantidad) => {
+    const nuevaFecha = new Date(anioVisible, mesVisible + cantidad, 1);
+    setMesVisible(nuevaFecha.getMonth());
+    setAnioVisible(nuevaFecha.getFullYear());
+  };
+
+  const cerrarCalendario = () => {
+    setAbierto(false);
+    setSeleccionandoRango(false);
+  };
+
+  const seleccionarDia = (fechaISO) => {
+    if (!seleccionandoRango) {
+      setFechaInicio(fechaISO);
+      setFechaFin(fechaISO);
+      setSeleccionandoRango(true);
+      return;
+    }
+
+    if (fechaISO < fechaInicio) {
+      setFechaFin(fechaInicio);
+      setFechaInicio(fechaISO);
+    } else {
+      setFechaFin(fechaISO);
+    }
+
+    setSeleccionandoRango(false);
+    setAbierto(false);
+  };
+
+  const diasCalendario = useMemo(() => {
+    const primerDiaMes = new Date(anioVisible, mesVisible, 1);
+    const ultimoDiaMes = new Date(anioVisible, mesVisible + 1, 0);
+
+    const totalDiasMes = ultimoDiaMes.getDate();
+    const diaSemanaInicio = primerDiaMes.getDay();
+
+    const celdas = [];
+
+    for (let i = 0; i < diaSemanaInicio; i++) {
+      celdas.push(null);
+    }
+
+    for (let dia = 1; dia <= totalDiasMes; dia++) {
+      celdas.push(new Date(anioVisible, mesVisible, dia));
+    }
+
+    while (celdas.length % 7 !== 0) {
+      celdas.push(null);
+    }
+
+    return celdas;
+  }, [anioVisible, mesVisible]);
+
+  const hoyISO = obtenerFechaHoy();
+
+  const fechaInicioTexto = convertirFechaLocal(fechaInicio).toLocaleDateString(
+    "es-NI",
+    {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    }
+  );
+
+  const fechaFinTexto = convertirFechaLocal(fechaFin).toLocaleDateString(
+    "es-NI",
+    {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    }
+  );
+
+  const textoBoton =
+    fechaInicio === fechaFin
+      ? fechaInicioTexto
+      : `${fechaInicioTexto} - ${fechaFinTexto}`;
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setAbierto(true)}
+        title="Seleccionar fecha o rango"
+        className="h-11 px-3 rounded-xl border bg-white border-gray-200 text-gray-600 hover:text-red-600 hover:border-red-300 hover:bg-red-50 flex items-center gap-2 transition shadow-sm cursor-pointer"
+      >
+        <CalendarDays className="w-5 h-5" />
+
+        <span className="hidden sm:inline text-sm font-medium">
+          {textoBoton}
+        </span>
+      </button>
+
+      {abierto && (
+        <div
+          className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={cerrarCalendario}
+        >
+          <div
+            className="w-[330px] sm:w-[370px] bg-white border border-gray-200 rounded-3xl shadow-2xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="bg-gradient-to-r from-red-600 to-red-500 text-white px-5 py-5">
+              <div className="flex items-center justify-between gap-4">
+                <button
+                  type="button"
+                  onClick={() => cambiarMes(-1)}
+                  className="w-10 h-10 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center transition cursor-pointer"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+
+                <div className="text-center">
+                  <p className="text-sm uppercase tracking-[0.35em] text-white/80">
+                    {meses[mesVisible]}
+                  </p>
+
+                  <h2 className="text-4xl font-bold leading-none mt-1">
+                    {anioVisible}
+                  </h2>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => cambiarMes(1)}
+                  className="w-10 h-10 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center transition cursor-pointer"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            <div className="px-5 py-5">
+              <div className="grid grid-cols-7 gap-2 mb-3">
+                {diasSemana.map((dia, index) => (
+                  <div
+                    key={dia}
+                    className={`text-center text-xs font-bold uppercase ${
+                      index === 0 ? "text-red-500" : "text-slate-500"
+                    }`}
+                  >
+                    {dia}
+                  </div>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-7 gap-2">
+                {diasCalendario.map((fecha, index) => {
+                  if (!fecha) {
+                    return <div key={`empty-${index}`} className="h-11" />;
+                  }
+
+                  const fechaISO = formatearFechaISO(fecha);
+                  const estaEnRango =
+                    fechaISO >= fechaInicio && fechaISO <= fechaFin;
+                  const esInicio = fechaISO === fechaInicio;
+                  const esFin = fechaISO === fechaFin;
+                  const esHoy = fechaISO === hoyISO;
+                  const esDomingo = fecha.getDay() === 0;
+
+                  return (
+                    <button
+                      key={fechaISO}
+                      type="button"
+                      onClick={() => seleccionarDia(fechaISO)}
+                      className={`h-11 w-11 mx-auto rounded-full text-sm font-semibold transition-all relative cursor-pointer ${
+                        estaEnRango
+                          ? "bg-red-600 text-white shadow-md hover:bg-red-700"
+                          : esHoy
+                          ? "bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100"
+                          : esDomingo
+                          ? "text-red-500 hover:bg-red-50"
+                          : "text-slate-700 hover:bg-slate-100"
+                      } ${
+                        esInicio || esFin
+                          ? "scale-105 ring-2 ring-red-200"
+                          : ""
+                      }`}
+                    >
+                      {fecha.getDate()}
+
+                      {estaEnRango && (
+                        <span className="absolute left-1/2 -translate-x-1/2 bottom-1 w-1.5 h-1.5 rounded-full bg-white" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
 export default function Asistencia({ userRole }) {
   const rol = userRole?.toLowerCase();
 
   const [datos, setDatos] = useState([]);
   const [resumenKm, setResumenKm] = useState([]);
+
   const [cargando, setCargando] = useState(true);
   const [busqueda, setBusqueda] = useState("");
   const [encuentroFiltro, setEncuentroFiltro] = useState(1);
 
-  const [modalDetalleEstudiante, setModalDetalleEstudiante] = useState(null);
+  const [fechaInicio, setFechaInicio] = useState(obtenerFechaHoy());
+  const [fechaFin, setFechaFin] = useState(obtenerFechaHoy());
 
+  const [modalDetalleEstudiante, setModalDetalleEstudiante] = useState(null);
   const [modalJustificar, setModalJustificar] = useState(null);
   const [modalKmInicio, setModalKmInicio] = useState(null);
   const [modalKmFinal, setModalKmFinal] = useState(null);
@@ -44,12 +305,17 @@ export default function Asistencia({ userRole }) {
 
   const cargar = async () => {
     setCargando(true);
+    setError("");
 
     try {
-      const res = await listarAsistencia();
+      const res = await listarAsistencia(fechaInicio, fechaFin);
       setDatos(Array.isArray(res) ? res : []);
-    } catch {
-      setError("Error al cargar asistencia");
+    } catch (e) {
+      setError(
+        e?.response?.data?.error ||
+          e?.message ||
+          "Error al cargar asistencia"
+      );
     } finally {
       setCargando(false);
     }
@@ -67,7 +333,7 @@ export default function Asistencia({ userRole }) {
   useEffect(() => {
     cargar();
     cargarResumenKm();
-  }, []);
+  }, [fechaInicio, fechaFin]);
 
   const encuentrosDisponibles = useMemo(() => {
     const numeros = new Set();
@@ -79,6 +345,7 @@ export default function Asistencia({ userRole }) {
     });
 
     const resultado = Array.from(numeros).sort((a, b) => a - b);
+
     return resultado.length > 0 ? resultado : [1];
   }, [datos]);
 
@@ -107,8 +374,23 @@ export default function Asistencia({ userRole }) {
   const totalEstudiantes = datos.length;
 
   const ausentes = datos.filter((d) => {
-    const a = d.asistencias?.[String(encuentroFiltro)];
-    return a && a.estado === "falto" && !a.justificado_por_admin;
+    const asistencias = Object.values(d.asistencias || {});
+
+    return asistencias.some(
+      (a) => a && a.estado === "falto" && !a.justificado_por_admin
+    );
+  }).length;
+
+  const presentes = datos.filter((d) => {
+    const asistencias = Object.values(d.asistencias || {});
+
+    return asistencias.some((a) => a && a.estado === "asistio");
+  }).length;
+
+  const pendientes = datos.filter((d) => {
+    const asistencias = Object.values(d.asistencias || {});
+
+    return asistencias.some((a) => a && a.estado === "pendiente");
   }).length;
 
   const buscarResumenKmEstudiante = (estudiante) => {
@@ -160,6 +442,8 @@ export default function Asistencia({ userRole }) {
   };
 
   const handleMarcar = async (calendarioId, estado, km_inicial = null) => {
+    setError("");
+
     try {
       await marcarAsistencia({
         clase_id: calendarioId,
@@ -235,30 +519,29 @@ export default function Asistencia({ userRole }) {
   };
 
   const handleJustificar = async () => {
-  if (!motivo.trim() || !modalJustificar?.asistencia_id) return;
+    if (!motivo.trim() || !modalJustificar?.asistencia_id) return;
 
-  setGuardando(true);
-  setError("");
+    setGuardando(true);
+    setError("");
 
-  try {
-    await justificarClase(modalJustificar.asistencia_id, motivo);
+    try {
+      await justificarClase(modalJustificar.asistencia_id, motivo);
 
-    setModalJustificar(null);
-    setMotivo("");
+      setModalJustificar(null);
+      setMotivo("");
 
-    await cargar();
-    await cargarResumenKm();
-
-  } catch (e) {
-    setError(
-      e?.response?.data?.error ||
-      e?.message ||
-      "No se pudo justificar la ausencia"
-    );
-  } finally {
-    setGuardando(false);
-  }
-};
+      await cargar();
+      await cargarResumenKm();
+    } catch (e) {
+      setError(
+        e?.response?.data?.error ||
+          e?.message ||
+          "No se pudo justificar la ausencia"
+      );
+    } finally {
+      setGuardando(false);
+    }
+  };
 
   const CeldaAsistencia = ({ data, numero }) => {
     if (!data) {
@@ -309,14 +592,12 @@ export default function Asistencia({ userRole }) {
                   setModalKmFinal(data);
                   setKmFinal("");
                 }}
-                className="text-[9px] text-blue-600 hover:underline"
+                className="text-[9px] text-blue-600 hover:underline cursor-pointer"
               >
                 Finalizar km
               </button>
             ) : kmPendiente ? (
-              <span className="text-[9px] text-orange-500">
-                Km pendiente
-              </span>
+              <span className="text-[9px] text-orange-500">Km pendiente</span>
             ) : null}
           </div>
         </td>
@@ -340,7 +621,7 @@ export default function Asistencia({ userRole }) {
                     fecha: data.fecha,
                   });
                 }}
-                className="text-[9px] text-orange-500 hover:underline leading-tight"
+                className="text-[9px] text-orange-500 hover:underline leading-tight cursor-pointer"
               >
                 Justificar
               </button>
@@ -352,7 +633,7 @@ export default function Asistencia({ userRole }) {
 
     return (
       <td className="px-3 py-4 text-center">
-        {rol === "instructor" ? (
+        {rol === "instructor" && data.puede_marcar ? (
           <div className="flex items-center justify-center gap-1">
             <button
               type="button"
@@ -362,7 +643,7 @@ export default function Asistencia({ userRole }) {
                 setModalKmInicio(data);
                 setKmInicial("");
               }}
-              className="hover:scale-110 transition-transform"
+              className="hover:scale-110 transition-transform cursor-pointer"
             >
               <CheckCircle2 className="w-4 h-4 text-gray-300 hover:text-green-500" />
             </button>
@@ -374,13 +655,27 @@ export default function Asistencia({ userRole }) {
                 e.stopPropagation();
                 handleMarcar(data.id, "falto");
               }}
-              className="hover:scale-110 transition-transform"
+              className="hover:scale-110 transition-transform cursor-pointer"
             >
               <XCircle className="w-4 h-4 text-gray-300 hover:text-red-500" />
             </button>
           </div>
         ) : (
-          <Circle className="w-5 h-5 text-gray-200 mx-auto" />
+          <div className="flex flex-col items-center gap-1">
+            <Circle className="w-5 h-5 text-gray-200 mx-auto" />
+
+            {data.es_futuro && (
+              <span className="text-[9px] text-gray-300">Próxima</span>
+            )}
+
+            {data.es_pasado && data.estado === "pendiente" && (
+              <span className="text-[9px] text-gray-400">Sin marcar</span>
+            )}
+
+            {data.es_hoy && !data.puede_marcar && (
+              <span className="text-[9px] text-gray-400">Bloqueada</span>
+            )}
+          </div>
         )}
       </td>
     );
@@ -392,6 +687,29 @@ export default function Asistencia({ userRole }) {
     modalDetalleEstudiante
   );
 
+  const fechaInicioTexto = convertirFechaLocal(fechaInicio).toLocaleDateString(
+    "es-NI",
+    {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    }
+  );
+
+  const fechaFinTexto = convertirFechaLocal(fechaFin).toLocaleDateString(
+    "es-NI",
+    {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    }
+  );
+
+  const textoRango =
+    fechaInicio === fechaFin
+      ? fechaInicioTexto
+      : `${fechaInicioTexto} al ${fechaFinTexto}`;
+
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-[1200px] mx-auto">
       <div className="mb-6">
@@ -400,11 +718,11 @@ export default function Asistencia({ userRole }) {
         </h1>
 
         <p className="text-sm text-gray-500 mt-1">
-          Registro de asistencia de los encuentros
+          Registro de asistencia de los encuentros — {textoRango}
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 max-w-md">
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
         <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
           <div className="flex items-center gap-2 text-gray-500 text-sm mb-1">
             <Users className="w-4 h-4" />
@@ -418,11 +736,29 @@ export default function Asistencia({ userRole }) {
 
         <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
           <div className="flex items-center gap-2 text-gray-500 text-sm mb-1">
+            <CheckCircle2 className="w-4 h-4 text-green-500" />
+            Presentes
+          </div>
+
+          <p className="text-3xl font-bold text-green-600">{presentes}</p>
+        </div>
+
+        <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+          <div className="flex items-center gap-2 text-gray-500 text-sm mb-1">
             <UserX className="w-4 h-4" />
             Ausentes
           </div>
 
           <p className="text-3xl font-bold text-red-600">{ausentes}</p>
+        </div>
+
+        <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+          <div className="flex items-center gap-2 text-gray-500 text-sm mb-1">
+            <Circle className="w-4 h-4 text-orange-500" />
+            Pendientes
+          </div>
+
+          <p className="text-3xl font-bold text-orange-500">{pendientes}</p>
         </div>
       </div>
 
@@ -447,25 +783,16 @@ export default function Asistencia({ userRole }) {
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
             placeholder="Buscar estudiante..."
-            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400"
+            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-red-400"
           />
         </div>
-{/* 
-        <div className="flex items-center gap-2">
-          <label className="text-sm text-gray-500">Encuentro:</label>
 
-          <select
-            value={encuentroFiltro}
-            onChange={(e) => setEncuentroFiltro(Number(e.target.value))}
-            className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
-          >
-            {encuentrosDisponibles.map((e) => (
-              <option key={e} value={e}>
-                Encuentro {e}
-              </option>
-            ))}
-          </select>
-        </div> */}
+        <CalendarioRangoAsistencia
+          fechaInicio={fechaInicio}
+          fechaFin={fechaFin}
+          setFechaInicio={setFechaInicio}
+          setFechaFin={setFechaFin}
+        />
       </div>
 
       <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-x-auto">
@@ -489,9 +816,7 @@ export default function Asistencia({ userRole }) {
                   <th
                     key={e}
                     className={`px-3 py-3 text-center font-semibold ${
-                      e === encuentroFiltro
-                        ? "text-blue-600"
-                        : "text-gray-700"
+                      e === encuentroFiltro ? "text-red-600" : "text-gray-700"
                     }`}
                   >
                     E{e}
@@ -511,7 +836,7 @@ export default function Asistencia({ userRole }) {
                     colSpan={encuentrosDisponibles.length + 3}
                     className="px-4 py-8 text-center text-gray-400"
                   >
-                    No se encontraron estudiantes
+                    No hay estudiantes programados para esta fecha o rango.
                   </td>
                 </tr>
               )}
@@ -528,7 +853,7 @@ export default function Asistencia({ userRole }) {
                   <tr
                     key={est.matricula_id}
                     onClick={() => setModalDetalleEstudiante(est)}
-                    className="border-b border-gray-50 hover:bg-blue-50 transition-colors cursor-pointer"
+                    className="border-b border-gray-50 hover:bg-red-50/40 transition-colors cursor-pointer"
                   >
                     <td className="px-4 py-4 font-medium text-gray-900">
                       {est.nombre}
@@ -572,13 +897,12 @@ export default function Asistencia({ userRole }) {
           <div className="w-4 h-4 rounded-full bg-yellow-400 flex items-center justify-center">
             <span className="text-white text-[8px] font-bold">J</span>
           </div>
-
           Justificada
         </div>
 
         <div className="flex items-center gap-1.5">
           <Circle className="w-4 h-4 text-gray-200" />
-          Sin marcar
+          Sin marcar / bloqueada
         </div>
       </div>
 
@@ -710,7 +1034,9 @@ export default function Asistencia({ userRole }) {
                     <tbody>
                       {detalleKmSeleccionado.map((item) => (
                         <tr
-                          key={`${item.numero}-${item.asistencia_id || item.id}`}
+                          key={`${item.numero}-${
+                            item.asistencia_id || item.id
+                          }`}
                           className="border-b border-gray-50"
                         >
                           <td className="px-4 py-3 font-medium text-gray-900">
@@ -878,7 +1204,9 @@ export default function Asistencia({ userRole }) {
             </div>
 
             <p className="text-sm text-gray-600 mb-4 bg-orange-50 border border-orange-100 rounded-xl p-3">
-              Esta ausencia será justificada y el sistema agregará un nuevo encuentro al final del calendario para recuperar la clase perdida. No se saltarán temas del plan de estudio.
+              Esta ausencia será justificada y el sistema agregará un nuevo
+              encuentro al final del calendario para recuperar la clase perdida.
+              No se saltarán temas del plan de estudio.
             </p>
 
             <textarea
