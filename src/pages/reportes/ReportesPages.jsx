@@ -1,10 +1,24 @@
 import { useEffect, useState } from "react";
-import { FiPrinter, FiCalendar, FiUsers, FiFileText } from "react-icons/fi";
+import {
+    FiPrinter,
+    FiCalendar,
+    FiUsers,
+    FiFileText,
+    FiBarChart2,
+    FiBell,
+    FiChevronDown,
+    FiShield,
+    FiBookOpen,
+    FiMapPin,
+} from "react-icons/fi";
 import Swal from "sweetalert2";
 import * as XLSX from "xlsx";
 import api from "../../api/axios";
+import { useAuth } from "../../context/AuthContext";
 
 function ReportesPages() {
+    const { user } = useAuth();
+
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filtroEdad, setFiltroEdad] = useState("");
@@ -935,397 +949,476 @@ function ReportesPages() {
         }
     };
 
-    return (
-        <div className="w-full max-w-7xl mx-auto px-6 py-8">
-            <div className="mb-8">
-                <h1 className="text-4xl font-bold">Reportes</h1>
-                <p className="text-gray-600 mt-2">
-                    Generación de reportes administrativos.
-                </p>
+    const cardBase =
+        "relative overflow-hidden bg-white border border-slate-200 rounded-[1.7rem] p-6 pt-8 shadow-sm hover:shadow-md transition";
+
+    const inputBase =
+        "w-full h-11 px-4 border border-slate-300 rounded-xl bg-white text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500";
+
+    const labelBase =
+        "block text-sm font-semibold text-slate-600 mb-2";
+
+    const counterBase =
+        "inline-flex items-center gap-2 rounded-2xl px-4 py-2 text-sm font-semibold";
+
+        return (
+            <div className="w-full max-w-[1500px] mx-auto px-4 md:px-6 py-6 space-y-7">
+                <div className="relative overflow-hidden rounded-[2rem] bg-white border border-slate-100 px-7 py-7 md:px-10 md:py-8 shadow-sm">
+                    <div className="absolute right-0 top-0 w-96 h-full bg-gradient-to-l from-blue-50 via-slate-50 to-transparent"></div>
+                    <div className="absolute right-32 top-6 w-52 h-52 rounded-full bg-blue-100/40 blur-3xl"></div>
+
+                    <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                        <div className="flex items-center gap-5">
+                            <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-indigo-500 to-violet-600 text-white flex items-center justify-center shadow-lg shadow-indigo-200">
+                                <FiBarChart2 size={32} />
+                            </div>
+
+                            <div>
+                                <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight">
+                                    Reportes
+                                </h1>
+
+                                <p className="text-slate-500 mt-2 text-sm md:text-base">
+                                    Generación de reportes administrativos
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-3 bg-white border border-slate-100 rounded-3xl px-4 py-3 shadow-sm">
+                            <div className="w-11 h-11 rounded-full bg-blue-600 text-white flex items-center justify-center font-extrabold">
+                                {(user?.username || "A").charAt(0).toUpperCase()}
+                            </div>
+
+                            <div className="leading-tight">
+                                <p className="text-sm font-extrabold text-slate-900">
+                                    {user?.username || "admin"}
+                                </p>
+                                <p className="text-xs text-slate-500">
+                                    Admin
+                                </p>
+                            </div>
+
+                            <FiChevronDown className="text-slate-500" />
+                        </div>
+                    </div>
+                </div>
+
+                {loading ? (
+                    <div className="bg-white border border-slate-200 rounded-3xl p-10 text-center text-slate-500 shadow-sm">
+                        Cargando reportes...
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                        <div className={cardBase}>
+                            <div className="absolute top-0 left-0 right-0 h-3 bg-green-500"></div>
+                            <div className="absolute -right-10 -top-10 w-32 h-32 bg-green-50 rounded-full"></div>
+                            <div className="absolute right-5 top-3 w-10 h-10 bg-green-500 text-white rounded-bl-3xl rounded-tr-[1.7rem] flex items-center justify-center">
+                                <FiUsers size={19} />
+                            </div>
+
+                            <div className="relative flex items-start gap-5 mb-6">
+                                <div className="w-16 h-16 rounded-full bg-green-100 text-green-700 flex items-center justify-center shrink-0">
+                                    <FiUsers size={30} />
+                                </div>
+
+                                <div className="flex-1">
+                                    <h2 className="text-2xl font-extrabold text-slate-900">
+                                        Reporte de Matrícula por edades
+                                    </h2>
+                                    <p className="text-sm text-slate-500 mt-1">
+                                        Filtra las matrículas según el rango de edad del estudiante.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="relative space-y-5">
+                                <select
+                                    value={filtroEdad}
+                                    onChange={(e) => setFiltroEdad(e.target.value)}
+                                    className={inputBase}
+                                >
+                                    <option value="">Todas las edades</option>
+                                    <option value="menores18">Menor a 18 años</option>
+                                    <option value="18a20">18 a 20 años</option>
+                                    <option value="21a25">21 a 25 años</option>
+                                    <option value="26a30">26 a 30 años</option>
+                                    <option value="31a35">31 a 35 años</option>
+                                    <option value="36a40">36 a 40 años</option>
+                                    <option value="41a45">41 a 45 años</option>
+                                    <option value="46a50">46 a 50 años</option>
+                                    <option value="mayores50">Mayores de 50 años</option>
+                                </select>
+
+                                <div className="border-t border-dashed border-slate-200 pt-4">
+                                    <div className={`${counterBase} bg-green-50 text-green-700`}>
+                                        <FiUsers />
+                                        Registros encontrados:
+                                        <strong>{datosPorEdad.length}</strong>
+                                    </div>
+                                </div>
+
+                                <button
+                                    onClick={imprimirPorEdades}
+                                    className="w-full h-12 rounded-2xl bg-green-600 text-white font-bold flex items-center justify-center gap-2 hover:bg-green-700 transition cursor-pointer"
+                                >
+                                    <FiPrinter />
+                                    Imprimir reporte de Matrícula por edades
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className={cardBase}>
+                            <div className="absolute top-0 left-0 right-0 h-3 bg-blue-600"></div>
+                            <div className="absolute -right-10 -top-10 w-32 h-32 bg-blue-50 rounded-full"></div>
+                            <div className="absolute right-5 top-3 w-10 h-10 bg-blue-600 text-white rounded-bl-3xl rounded-tr-[1.7rem] flex items-center justify-center">
+                                <FiCalendar size={19} />
+                            </div>
+
+                            <div className="relative flex items-start gap-5 mb-6">
+                                <div className="w-16 h-16 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center shrink-0">
+                                    <FiCalendar size={30} />
+                                </div>
+
+                                <div className="flex-1">
+                                    <h2 className="text-2xl font-extrabold text-slate-900">
+                                        Reporte de Matrícula por fechas
+                                    </h2>
+                                    <p className="text-sm text-slate-500 mt-1">
+                                        Filtra las matrículas por fecha de registro o matrícula.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="relative space-y-5">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className={labelBase}>Desde</label>
+                                        <input
+                                            type="date"
+                                            value={fechaDesde}
+                                            onChange={(e) => setFechaDesde(e.target.value)}
+                                            className={inputBase}
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className={labelBase}>Hasta</label>
+                                        <input
+                                            type="date"
+                                            value={fechaHasta}
+                                            onChange={(e) => setFechaHasta(e.target.value)}
+                                            className={inputBase}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="border-t border-dashed border-slate-200 pt-4">
+                                    <div className={`${counterBase} bg-blue-50 text-blue-700`}>
+                                        <FiBarChart2 />
+                                        Registros encontrados:
+                                        <strong>{datosPorFecha.length}</strong>
+                                    </div>
+                                </div>
+
+                                <button
+                                    onClick={imprimirPorFechas}
+                                    className="w-full h-12 rounded-2xl bg-blue-600 text-white font-bold flex items-center justify-center gap-2 hover:bg-blue-700 transition cursor-pointer"
+                                >
+                                    <FiPrinter />
+                                    Imprimir reporte de Matrícula por fechas
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className={cardBase}>
+                            <div className="absolute top-0 left-0 right-0 h-3 bg-purple-600"></div>
+                            <div className="absolute -right-10 -top-10 w-32 h-32 bg-purple-50 rounded-full"></div>
+                            <div className="absolute right-5 top-3 w-10 h-10 bg-purple-600 text-white rounded-bl-3xl rounded-tr-[1.7rem] flex items-center justify-center">
+                                <FiFileText size={19} />
+                            </div>
+
+                            <div className="relative flex items-start gap-5 mb-6">
+                                <div className="w-16 h-16 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center shrink-0">
+                                    <FiFileText size={30} />
+                                </div>
+
+                                <div className="flex-1">
+                                    <h2 className="text-2xl font-extrabold text-slate-900">
+                                        Exportar recibos
+                                    </h2>
+                                    <p className="text-sm text-slate-500 mt-1">
+                                        Descarga en Excel todos los recibos registrados en el sistema.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="relative space-y-5">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className={labelBase}>Desde</label>
+                                        <input
+                                            type="date"
+                                            value={fechaReciboDesde}
+                                            onChange={(e) => setFechaReciboDesde(e.target.value)}
+                                            className={inputBase}
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className={labelBase}>Hasta</label>
+                                        <input
+                                            type="date"
+                                            value={fechaReciboHasta}
+                                            onChange={(e) => setFechaReciboHasta(e.target.value)}
+                                            className={inputBase}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="border-t border-dashed border-slate-200 pt-4">
+                                    <div className={`${counterBase} bg-purple-50 text-purple-700`}>
+                                        <FiFileText />
+                                        Recibos encontrados:
+                                        <strong>{recibosFiltradosPorFecha.length}</strong>
+                                    </div>
+                                </div>
+
+                                <button
+                                    onClick={exportarRecibosExcel}
+                                    className="w-full h-12 rounded-2xl bg-purple-600 text-white font-bold flex items-center justify-center gap-2 hover:bg-purple-700 transition cursor-pointer"
+                                >
+                                    <FiFileText />
+                                    Exportar Recibos a Excel
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className={cardBase}>
+                            <div className="absolute top-0 left-0 right-0 h-3 bg-emerald-600"></div>
+                            <div className="absolute -right-10 -top-10 w-32 h-32 bg-emerald-50 rounded-full"></div>
+                            <div className="absolute right-5 top-3 w-10 h-10 bg-emerald-600 text-white rounded-bl-3xl rounded-tr-[1.7rem] flex items-center justify-center">
+                                <FiShield size={19} />
+                            </div>
+
+                            <div className="relative flex items-start gap-5 mb-6">
+                                <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                                    <FiShield size={30} />
+                                </div>
+
+                                <div className="flex-1">
+                                    <h2 className="text-2xl font-extrabold text-slate-900">
+                                        Reporte policial de instructores
+                                    </h2>
+                                    <p className="text-sm text-slate-500 mt-1">
+                                        Exporta el expediente completo de instructores.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="relative space-y-5">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className={labelBase}>Fecha Desde</label>
+                                        <input
+                                            type="date"
+                                            value={fechaPolicialDesde}
+                                            onChange={(e) => setFechaPolicialDesde(e.target.value)}
+                                            className={inputBase}
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className={labelBase}>Fecha Hasta</label>
+                                        <input
+                                            type="date"
+                                            value={fechaPolicialHasta}
+                                            onChange={(e) => setFechaPolicialHasta(e.target.value)}
+                                            className={inputBase}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="border-t border-dashed border-slate-200 pt-4">
+                                    <div className={`${counterBase} bg-emerald-50 text-emerald-700`}>
+                                        <FiShield />
+                                        Expedientes encontrados:
+                                        <strong>{data.length}</strong>
+                                    </div>
+                                </div>
+
+                                <button
+                                    onClick={exportarReporteInstructoresPolicial}
+                                    className="w-full h-12 rounded-2xl bg-emerald-600 text-white font-bold flex items-center justify-center gap-2 hover:bg-emerald-700 transition cursor-pointer"
+                                >
+                                    <FiFileText />
+                                    Exportar reporte policial
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className={cardBase}>
+                            <div className="absolute top-0 left-0 right-0 h-3 bg-orange-600"></div>
+                            <div className="absolute -right-10 -top-10 w-32 h-32 bg-orange-50 rounded-full"></div>
+                            <div className="absolute right-5 top-3 w-10 h-10 bg-orange-600 text-white rounded-bl-3xl rounded-tr-[1.7rem] flex items-center justify-center">
+                                <FiBookOpen size={19} />
+                            </div>
+
+                            <div className="relative flex items-start gap-5 mb-6">
+                                <div className="w-16 h-16 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center shrink-0">
+                                    <FiBookOpen size={30} />
+                                </div>
+
+                                <div className="flex-1">
+                                    <h2 className="text-2xl font-extrabold text-slate-900">
+                                        Informe de inducción de instructores
+                                    </h2>
+                                    <p className="text-sm text-slate-500 mt-1">
+                                        Descarga el informe de estudiantes atendidos con sus dos notas registradas.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="relative space-y-5">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className={labelBase}>Fecha Desde</label>
+                                        <input
+                                            type="date"
+                                            value={fechaInduccionDesde}
+                                            onChange={(e) => setFechaInduccionDesde(e.target.value)}
+                                            className={inputBase}
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className={labelBase}>Fecha Hasta</label>
+                                        <input
+                                            type="date"
+                                            value={fechaInduccionHasta}
+                                            onChange={(e) => setFechaInduccionHasta(e.target.value)}
+                                            className={inputBase}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className={labelBase}>Instructor</label>
+                                    <select
+                                        value={instructorSeleccionado}
+                                        onChange={(e) => setInstructorSeleccionado(e.target.value)}
+                                        className={inputBase}
+                                    >
+                                        <option value="">Seleccionar instructor</option>
+
+                                        {instructores.map((instructor) => (
+                                            <option key={instructor.id} value={instructor.id}>
+                                                {instructor.nombre} {instructor.apellido}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div className="border-t border-dashed border-slate-200 pt-4">
+                                    <div className={`${counterBase} bg-orange-50 text-orange-700`}>
+                                        <FiBookOpen />
+                                        Informes encontrados:
+                                        <strong>{data.length}</strong>
+                                    </div>
+                                </div>
+
+                                <button
+                                    onClick={imprimirReporteInduccionInstructores}
+                                    className="w-full h-12 rounded-2xl bg-orange-600 text-white font-bold flex items-center justify-center gap-2 hover:bg-orange-700 transition cursor-pointer"
+                                >
+                                    <FiPrinter />
+                                    Imprimir informe de inducción
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className={cardBase}>
+                            <div className="absolute top-0 left-0 right-0 h-3 bg-sky-600"></div>
+                            <div className="absolute -right-10 -top-10 w-32 h-32 bg-sky-50 rounded-full"></div>
+                            <div className="absolute right-5 top-3 w-10 h-10 bg-sky-600 text-white rounded-bl-3xl rounded-tr-[1.7rem] flex items-center justify-center">
+                                <FiMapPin size={19} />
+                            </div>
+
+                            <div className="relative flex items-start gap-5 mb-6">
+                                <div className="w-16 h-16 rounded-full bg-sky-100 text-sky-700 flex items-center justify-center shrink-0">
+                                    <FiMapPin size={30} />
+                                </div>
+
+                                <div className="flex-1">
+                                    <h2 className="text-2xl font-extrabold text-slate-900">
+                                        Reporte de kilómetros por instructor
+                                    </h2>
+                                    <p className="text-sm text-slate-500 mt-1">
+                                        Descarga en Excel los kilómetros recorridos según asistencias registradas.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="relative space-y-5">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className={labelBase}>Fecha Desde</label>
+                                        <input
+                                            type="date"
+                                            value={fechaKmDesde}
+                                            onChange={(e) => setFechaKmDesde(e.target.value)}
+                                            className={inputBase}
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className={labelBase}>Fecha Hasta</label>
+                                        <input
+                                            type="date"
+                                            value={fechaKmHasta}
+                                            onChange={(e) => setFechaKmHasta(e.target.value)}
+                                            className={inputBase}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className={labelBase}>Instructor</label>
+                                    <select
+                                        value={instructorKmSeleccionado}
+                                        onChange={(e) => setInstructorKmSeleccionado(e.target.value)}
+                                        className={inputBase}
+                                    >
+                                        <option value="">Seleccionar instructor</option>
+
+                                        {instructores.map((instructor) => (
+                                            <option key={instructor.id} value={instructor.id}>
+                                                {instructor.nombre} {instructor.apellido}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div className="border-t border-dashed border-slate-200 pt-4">
+                                    <div className={`${counterBase} bg-sky-50 text-sky-700`}>
+                                        <FiMapPin />
+                                        Registros encontrados:
+                                        <strong>{data.length}</strong>
+                                    </div>
+                                </div>
+
+                                <button
+                                    onClick={exportarReporteKilometros}
+                                    className="w-full h-12 rounded-2xl bg-sky-600 text-white font-bold flex items-center justify-center gap-2 hover:bg-sky-700 transition cursor-pointer"
+                                >
+                                    <FiFileText />
+                                    Exportar reporte de kilómetros
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
-
-            {loading ? (
-                <div className="bg-white border border-gray-200 rounded-2xl p-8 text-center text-gray-500">
-                    Cargando reportes...
-                </div>
-            ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-                        <div className="flex items-center gap-3 mb-5">
-                            <div className="w-11 h-11 rounded-full bg-green-100 flex items-center justify-center text-green-700">
-                                <FiUsers className="text-xl" />
-                            </div>
-
-                            <div>
-                                <h2 className="text-xl font-bold">Reporte de Matrícula por edades</h2>
-                                <p className="text-sm text-gray-500">
-                                    Filtra las matrículas según el rango de edad del estudiante.
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="space-y-4">
-                            <select
-                                value={filtroEdad}
-                                onChange={(e) => setFiltroEdad(e.target.value)}
-                                className="w-full border rounded-3xl focus:outline-none bg-white border-blue-500 h-11 px-4"
-                            >
-                                <option value="">Todas las edades</option>
-                                <option value="menores18">Menor a 18 años</option>
-                                <option value="18a20">18 a 20 años</option>
-                                <option value="21a25">21 a 25 años</option> 
-                                <option value="26a30">26 a 30 años</option> 
-                                <option value="31a35">31 a 35 años</option>
-                                <option value="36a40">36 a 40 años</option>
-                                <option value="41a45">41 a 45 años</option>
-                                <option value="46a50">46 a 50 años</option>
-                                <option value="mayores50">Mayores de 50 años</option>
-                            </select>
-
-                            <div className="text-sm text-gray-500">
-                                Registros encontrados: <strong>{datosPorEdad.length}</strong>
-                            </div>
-
-                            <button
-                                onClick={imprimirPorEdades}
-                                className="w-full h-11 rounded-3xl bg-green-500 text-white flex items-center justify-center gap-2 hover:bg-green-600 transition cursor-pointer"
-                            >
-                                <FiPrinter />
-                                Imprimir reporte de Matrícula por edades
-                            </button>
-                        </div>
-                    </div>
-
-                    <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-                        <div className="flex items-center gap-3 mb-5">
-                            <div className="w-11 h-11 rounded-full bg-blue-100 flex items-center justify-center text-blue-700">
-                                <FiCalendar className="text-xl" />
-                            </div>
-
-                            <div>
-                                <h2 className="text-xl font-bold">Reporte de Matrícula por fechas</h2>
-                                <p className="text-sm text-gray-500">
-                                    Filtra las matrículas por fecha de registro o matrícula.
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                <div>
-                                    <label className="text-sm text-gray-500 mb-1 block">
-                                        Desde
-                                    </label>
-
-                                    <input
-                                        type="date"
-                                        value={fechaDesde}
-                                        onChange={(e) => setFechaDesde(e.target.value)}
-                                        className="w-full px-4 py-2 border rounded-3xl bg-white border-blue-500 h-11"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="text-sm text-gray-500 mb-1 block">
-                                        Hasta
-                                    </label>
-
-                                    <input
-                                        type="date"
-                                        value={fechaHasta}
-                                        onChange={(e) => setFechaHasta(e.target.value)}
-                                        className="w-full px-4 py-2 border rounded-3xl bg-white border-blue-500 h-11"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="text-sm text-gray-500">
-                                Registros encontrados: <strong>{datosPorFecha.length}</strong>
-                            </div>
-
-                            <button
-                                onClick={imprimirPorFechas}
-                                className="w-full h-11 rounded-3xl bg-blue-500 text-white flex items-center justify-center gap-2 hover:bg-blue-600 transition cursor-pointer"
-                            >
-                                <FiPrinter />
-                                Imprimir reporte de Matrícula por fechas
-                            </button>
-                        </div>
-                    </div>
-
-                    <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-                        <div className="flex items-center gap-3 mb-5">
-                            <div className="w-11 h-11 rounded-full bg-purple-100 flex items-center justify-center text-purple-700">
-                                <FiFileText className="text-xl" />
-                            </div>
-
-                            <div>
-                                <h2 className="text-xl font-bold">Exportar recibos</h2>
-                                <p className="text-sm text-gray-500">
-                                    Descarga en Excel todos los recibos registrados en el sistema.
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="space-y-4">
-                            <div className="text-sm text-gray-500">
-                                Recibos encontrados: <strong>{recibosFiltradosPorFecha.length}</strong>
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                <div>
-                                    <label className="text-sm text-gray-500 mb-1 block">
-                                        Desde
-                                    </label>
-
-                                    <input
-                                        type="date"
-                                        value={fechaReciboDesde}
-                                        onChange={(e) => setFechaReciboDesde(e.target.value)}
-                                        className="w-full px-4 py-2 border rounded-3xl bg-white border-blue-500 h-11"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="text-sm text-gray-500 mb-1 block">
-                                        Hasta
-                                    </label>
-
-                                    <input
-                                        type="date"
-                                        value={fechaReciboHasta}
-                                        onChange={(e) => setFechaReciboHasta(e.target.value)}
-                                        className="w-full px-4 py-2 border rounded-3xl bg-white border-blue-500 h-11"
-                                    />
-                                </div>
-                            </div>
-
-                            <button
-                                onClick={exportarRecibosExcel}
-                                className="w-full h-11 rounded-3xl bg-purple-500 text-white flex items-center justify-center gap-2 hover:bg-purple-600 transition cursor-pointer"
-                            >
-                                <FiFileText />
-                                Exportar Recibos a Excel
-                            </button>
-                        </div>
-                    </div>
-
-                    <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-                        <div className="flex items-center gap-3 mb-5">
-                            <div className="w-11 h-11 rounded-full bg-green-100 flex items-center justify-center text-green-700">
-                                <FiFileText className="text-xl" />
-                            </div>
-
-                            <div>
-                                <h2 className="text-xl font-bold">
-                                    Reporte policial de instructores
-                                </h2>
-
-                                <p className="text-sm text-gray-500">
-                                    Exporta el expediente completo de instructores.
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
-                            <div>
-                                <label className="block text-sm text-gray-600 mb-1">
-                                    Fecha Desde
-                                </label>
-
-                                <input
-                                    type="date"
-                                    value={fechaPolicialDesde}
-                                    onChange={(e) => setFechaPolicialDesde(e.target.value)}
-                                    className="w-full border border-gray-300 rounded-xl px-4 py-2"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm text-gray-600 mb-1">
-                                    Fecha Hasta
-                                </label>
-
-                                <input
-                                    type="date"
-                                    value={fechaPolicialHasta}
-                                    onChange={(e) => setFechaPolicialHasta(e.target.value)}
-                                    className="w-full border border-gray-300 rounded-xl px-4 py-2"
-                                />
-                            </div>
-
-                        </div>
-
-                        <button
-                            onClick={exportarReporteInstructoresPolicial}
-                            className="w-full h-11 rounded-3xl bg-green-600 text-white flex items-center justify-center gap-2 hover:bg-green-700 transition cursor-pointer"
-                        >
-                            <FiFileText />
-                            Exportar reporte policial
-                        </button>
-                    </div>
-
-                    <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-                        <div className="flex items-center gap-3 mb-5">
-                            <div className="w-11 h-11 rounded-full bg-orange-100 flex items-center justify-center text-orange-700">
-                                <FiFileText className="text-xl" />
-                            </div>
-
-                            <div>
-                                <h2 className="text-xl font-bold">
-                                    Informe de inducción de instructores
-                                </h2>
-
-                                <p className="text-sm text-gray-500">
-                                    Descarga el informe de estudiantes atendidos con sus dos notas registradas.
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
-                            <div>
-                                <label className="block text-sm text-gray-600 mb-1">
-                                    Fecha Desde
-                                </label>
-
-                                <input
-                                    type="date"
-                                    value={fechaInduccionDesde}
-                                    onChange={(e) => setFechaInduccionDesde(e.target.value)}
-                                    className="w-full border border-gray-300 rounded-xl px-4 py-2"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm text-gray-600 mb-1">
-                                    Fecha Hasta
-                                </label>
-
-                                <input
-                                    type="date"
-                                    value={fechaInduccionHasta}
-                                    onChange={(e) => setFechaInduccionHasta(e.target.value)}
-                                    className="w-full border border-gray-300 rounded-xl px-4 py-2"
-                                />
-                            </div>
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium mb-1">
-                                Instructor
-                            </label>
-
-                            <select
-                                value={instructorSeleccionado}
-                                onChange={(e) => setInstructorSeleccionado(e.target.value)}
-                                className="w-full border rounded-lg px-3 py-2"
-                            >
-                                <option value="">
-                                    Seleccionar instructor
-                                </option>
-
-                                {instructores.map((instructor) => (
-                                    <option
-                                        key={instructor.id}
-                                        value={instructor.id}
-                                    >
-                                        {instructor.nombre} {instructor.apellido}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
-                        <button
-                             onClick={imprimirReporteInduccionInstructores}
-                            className="w-full h-11 rounded-3xl bg-orange-600 text-white flex items-center justify-center gap-2 hover:bg-orange-700 transition cursor-pointer"
-                        >
-                            <FiFileText />
-                            Imprimir informe de inducción
-                        </button>
-                    </div>
-
-                    <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-                        <div className="flex items-center gap-3 mb-5">
-                            <div className="w-11 h-11 rounded-full bg-sky-100 flex items-center justify-center text-sky-700">
-                                <FiFileText className="text-xl" />
-                            </div>
-
-                            <div>
-                                <h2 className="text-xl font-bold">
-                                    Reporte de kilómetros por instructor
-                                </h2>
-
-                                <p className="text-sm text-gray-500">
-                                    Descarga en Excel los kilómetros recorridos según asistencias registradas.
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
-                            <div>
-                                <label className="block text-sm text-gray-600 mb-1">
-                                    Fecha Desde
-                                </label>
-
-                                <input
-                                    type="date"
-                                    value={fechaKmDesde}
-                                    onChange={(e) => setFechaKmDesde(e.target.value)}
-                                    className="w-full border border-gray-300 rounded-xl px-4 py-2"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm text-gray-600 mb-1">
-                                    Fecha Hasta
-                                </label>
-
-                                <input
-                                    type="date"
-                                    value={fechaKmHasta}
-                                    onChange={(e) => setFechaKmHasta(e.target.value)}
-                                    className="w-full border border-gray-300 rounded-xl px-4 py-2"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="mb-4">
-                            <label className="block text-sm font-medium mb-1">
-                                Instructor
-                            </label>
-
-                            <select
-                                value={instructorKmSeleccionado}
-                                onChange={(e) => setInstructorKmSeleccionado(e.target.value)}
-                                className="w-full border rounded-lg px-3 py-2"
-                            >
-                                <option value="">
-                                    Seleccionar instructor
-                                </option>
-
-                                {instructores.map((instructor) => (
-                                    <option
-                                        key={instructor.id}
-                                        value={instructor.id}
-                                    >
-                                        {instructor.nombre} {instructor.apellido}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
-                        <button
-                            onClick={exportarReporteKilometros}
-                            className="w-full h-11 rounded-3xl bg-sky-600 text-white flex items-center justify-center gap-2 hover:bg-sky-700 transition cursor-pointer"
-                        >
-                            <FiFileText />
-                            Exportar reporte de kilómetros
-                        </button>
-                    </div>
-
-                </div>
-            )}
-        </div>
+        );
     );
 }
 

@@ -356,8 +356,6 @@ const cargarNotificaciones = async () => {
             <div className="w-11 h-11 rounded-full bg-blue-600 text-white flex items-center justify-center font-extrabold shadow-sm">
               {(user?.username || "A").charAt(0).toUpperCase()}
             </div>
-
-            <FiChevronDown className="text-slate-500" />
           </div>
         </div>
       </div>
