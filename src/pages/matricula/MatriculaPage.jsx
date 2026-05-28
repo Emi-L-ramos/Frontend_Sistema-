@@ -497,7 +497,7 @@ function MatriculaPage() {
                     </div>
 
                     <div className="max-h-[600px] overflow-y-auto w-full">
-                        <table className="">
+                        <table className="table-auto w-full">
                             <thead className="bg-gray-50 justify-center">
                                 <tr className="border-gray-300">
                                     <th className="p-3 w-[60px]">Código</th>
@@ -512,71 +512,56 @@ function MatriculaPage() {
                                 </tr>
                             </thead>
 
-            {/* TABLA */}
-            <div className="max-h-[600px] overflow-y-auto ">
-                <div className="overflow-x-auto">
-                    
-                    <table className="table-auto w-full">
-                        <thead className="bg-gray-50">
-                            <tr className="border-gray-300">
-                                <th className="p-3">Nombre</th>
-                                <th className="p-3">Cédula</th>
-                              
-                                <th className="p-3">Edad</th>
-                                <th className="p-3">Sexo</th>
-                                <th className="p-3">Teléfono</th>
-                                <th className="p-3">Categoría</th>
-                                <th className="p-3">Curso</th>
-                                <th className="p-3">Opciones</th>
-                                  {/*Tabla que muestra los datos */}
-                            </tr>
-                        </thead>
+                            <tbody className="justify-center text-center items-center">
+                                {loading ? (
+                                    <tr>
+                                        <td colSpan="9" className="p-6 text-center">
+                                            Cargando...
+                                        </td>
+                                    </tr>
+                                ) : displayData.length > 0 ? (
+                                    displayData.map((item) => (
+                                        <tr
+                                            key={item.id}
+                                            className="hover:bg-blue-200 transition justify-center"
+                                        >
+                                            <td className="px-2">{item.id}</td>
 
+                                            <td className="px-2">
+                                                {getNombre(item)}
+                                            </td>
 
+                                            <td className="px-2">
+                                                {formatearFecha(getFechaMatricula(item))}
+                                            </td>
 
-                        {/*Tabla que muestra los datos */}
-                        {/*Tabla que muestra los datos */}
-                        <tbody>
-                            {loading ? (
-                                <tr><td colSpan="9" className="p-6 text-center">Cargando...</td></tr>
-                            ) : displayData.length > 0 ? (
-                                displayData.map(item => (
-                                    <tr key={item.id} className="hover:bg-blue-200 transition">
-                                        <td className="px-2">{item.nombre} {item.apellido}</td>
-                                        <td className="px-2">{item.cedula}</td>
-                                      
-                                        <td className="px-5">{item.edad}</td>
-                                        <td className="px-5">{item.sexo}</td>
-                                        <td className="px-7">{item.telefono_movil}</td>
-                                        <td className="px-9  text-blue-800 font-bold ">{item.categoria}</td>
-                                        <td className="p-2">{item.tipo_curso}</td>
-                                        <td className="p-2">
-                                            <div className="flex items-center gap-3">
-                                                <button 
-                                                    onClick={() => eliminarMatricula(item.id)} 
-                                                    className="p-2 rounded-lg hover:bg-red-100" 
-                                                    title="Eliminar"
-                                                >
-                                                    <RiDeleteBinLine className="text-red-500 text-xl hover:text-red-700 hover:cursor-pointer" />
-                                                </button>
-                                                <button 
-                                                    onClick={() => { setEditData(item); setShowModal(true); }} 
-                                                    className="p-2 rounded-lg hover:bg-blue-100" 
-                                                    title="Editar"
-                                                >
-                                                    <CiEdit className="text-blue-500 text-xl hover:text-blue-700 hover:cursor-pointer" />
-                                                </button>
-                                                <button 
-                                                    onClick={() => imprimirMatriculaIndividual(item)} 
-                                                    className="p-2 rounded-lg hover:bg-green-100" 
-                                                    title="Imprimir Matrícula"
-                                                >
-                                                    <AiOutlinePrinter className="text-green-500 text-xl hover:text-green-700 hover:cursor-pointer" />
-                                                </button>
-                                                <button 
-                                                    onClick={() => enviarWhatsApp(item)}
-                                                    className="p-2 rounded-lg hover:bg-green-100"
-                                                    title="Enviar por WhatsApp"
+                                            <td className="px-2">
+                                                {getCedula(item)}
+                                            </td>
+
+                                            <td className="px-5">
+                                                {getEdad(item)}
+                                            </td>
+
+                                            <td className="px-7">
+                                                {getTelefono(item)}
+                                            </td>
+
+                                            <td className="p-2">
+                                                {getCurso(item) || getPlan(item)}
+                                            </td>
+
+                                            <td className="p-2">
+                                                <span
+                                                    className={`px-3 py-1 rounded-full text-xs font-bold ${
+                                                        item.estado === "matriculado"
+                                                            ? "bg-green-100 text-green-700"
+                                                            : item.estado === "cancelado"
+                                                            ? "bg-red-100 text-red-700"
+                                                            : item.estado === "aprobado"
+                                                            ? "bg-blue-100 text-blue-700"
+                                                            : "bg-yellow-100 text-yellow-700"
+                                                    }`}
                                                 >
                                                     {item.estado === "matriculado"
                                                         ? "Matriculado"
