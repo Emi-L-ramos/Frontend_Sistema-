@@ -1,7 +1,14 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import Swal from "sweetalert2";
-import { Plus } from "lucide-react";
+import {
+    Plus,
+    Search,
+    Filter,
+    Users,
+    Check,
+    UserX,
+} from "lucide-react";
 import api from "../../api/axios";
 
 function EstudiantesPage() {
@@ -12,6 +19,12 @@ function EstudiantesPage() {
     const [showModal, setShowModal] = useState(false);
     const [editData, setEditData] = useState(null);
     const [busqueda, setBusqueda] = useState("");
+
+    const [resumen, setResumen] = useState({
+        total: 0,
+        activos: 0,
+        inactivos: 0,
+    });
 
     const [form, setForm] = useState({
         nombre: "",
@@ -45,9 +58,25 @@ function EstudiantesPage() {
         }
     };
 
+    const cargarResumen = async () => {
+        try {
+            const response = await api.get("/estudiantes/resumen/");
+
+            setResumen({
+                total: response.data.total || 0,
+                activos: response.data.activos || 0,
+                inactivos: response.data.inactivos || 0,
+            });
+
+        } catch (error) {
+            console.error("Error cargando resumen:", error);
+        }
+    };
+
     useEffect(() => {
         if (token) {
             fetchEstudiantes();
+            cargarResumen();
         }
     }, [token]);
 
@@ -185,7 +214,7 @@ function EstudiantesPage() {
     });
 
     return (
-        <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
+        <div className="p-4 md:p-8 bg-gradient-to-br from-blue-50 via-white to-gray-50 min-h-screen">
             <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
                     <h1 className="text-3xl md:text-4xl font-bold text-gray-800">
@@ -209,14 +238,78 @@ function EstudiantesPage() {
                 </button>
             </div>
 
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 mb-6">
-                <input
-                    type="text"
-                    placeholder="Buscar por nombre, cédula, correo o teléfono..."
-                    value={busqueda}
-                    onChange={(e) => setBusqueda(e.target.value)}
-                    className="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-7">
+                <div className="rounded-3xl border border-blue-100 bg-blue-50/60 p-6 shadow-sm flex items-center gap-5">
+                    <div className="w-16 h-16 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center">
+                        <Users size={30} />
+                    </div>
+
+                    <div>
+                        <p className="text-sm font-bold text-gray-700">
+                            Total estudiantes
+                        </p>
+                        <h2 className="text-4xl font-extrabold text-gray-900 mt-1">
+                            {resumen.total}
+                        </h2>
+                        <p className="text-sm text-gray-500 mt-1">
+                            Todos los registros
+                        </p>
+                    </div>
+                </div>
+
+                <div className="rounded-3xl border border-green-100 bg-green-50/70 p-6 shadow-sm flex items-center justify-between gap-5">
+                    <div className="flex items-center gap-5">
+                        <div className="w-16 h-16 rounded-full bg-green-100 text-green-600 flex items-center justify-center">
+                            <Check size={32} />
+                        </div>
+
+                        <div>
+                            <p className="text-sm font-bold text-gray-700">
+                                Activos
+                            </p>
+                            <h2 className="text-4xl font-extrabold text-gray-900 mt-1">
+                                {resumen.activos}
+                            </h2>
+                            <p className="text-sm text-gray-500 mt-1">
+                                Estudiantes activos
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="rounded-3xl border border-red-100 bg-red-50/60 p-6 shadow-sm flex items-center gap-5">
+                    <div className="w-16 h-16 rounded-full bg-red-100 text-red-600 flex items-center justify-center">
+                        <UserX size={30} />
+                    </div>
+
+                    <div>
+                        <p className="text-sm font-bold text-gray-700">
+                            Inactivos
+                        </p>
+                        <h2 className="text-4xl font-extrabold text-gray-900 mt-1">
+                            {resumen.inactivos}
+                        </h2>
+                        <p className="text-sm text-gray-500 mt-1">
+                            Usuarios desactivados
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div className="bg-white rounded-3xl shadow-sm border border-gray-200 p-5 mb-6">
+                <div className="relative">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={22} />
+
+                    <input
+                        type="text"
+                        placeholder="Buscar por nombre, cédula, correo o teléfono..."
+                        value={busqueda}
+                        onChange={(e) => setBusqueda(e.target.value)}
+                        className="w-full h-14 pl-12 pr-12 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700"
+                    />
+
+                    <Filter className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" size={22} />
+                </div>
             </div>
 
             {loading ? (
@@ -224,8 +317,8 @@ function EstudiantesPage() {
                     Cargando estudiantes...
                 </div>
             ) : (
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                    <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                <div className="bg-white rounded-3xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div className="px-6 py-5 border-b border-gray-200 flex justify-between items-center">
                         <div>
                             <h2 className="text-xl font-bold text-gray-800">
                                 Lista de estudiantes
@@ -239,7 +332,7 @@ function EstudiantesPage() {
                     <div className="overflow-x-auto">
                         <table className="w-full">
                             <thead>
-                                <tr className="bg-gray-50 text-gray-500 text-sm border-b border-gray-200">
+                                <tr className="bg-slate-50 text-slate-500 text-sm border-b border-slate-200">
                                     <th className="p-4 text-left">Nombre</th>
                                     <th className="p-4 text-left">Cédula</th>
                                     <th className="p-4 text-left">Teléfono</th>
@@ -255,7 +348,7 @@ function EstudiantesPage() {
                                     estudiantesFiltrados.map((estudiante) => (
                                         <tr
                                             key={estudiante.id}
-                                            className="border-b border-gray-100 hover:bg-blue-50 transition"
+                                            className="border-b border-slate-100 hover:bg-blue-50/60 transition"
                                         >
                                             <td className="p-4">
                                                 <p className="font-semibold text-gray-800">
@@ -298,14 +391,14 @@ function EstudiantesPage() {
                                                 <div className="flex justify-center gap-2">
                                                     <button
                                                         onClick={() => abrirEditar(estudiante)}
-                                                        className="px-3 py-1.5 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 transition"
+                                                        className="px-4 py-2 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 transition text-sm font-semibold"
                                                     >
                                                         Editar
                                                     </button>
 
                                                     <button
                                                         onClick={() => eliminarEstudiante(estudiante)}
-                                                        className="px-3 py-1.5 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 transition"
+                                                        className="px-4 py-2 rounded-xl border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 transition text-sm font-semibold"
                                                     >
                                                         Eliminar
                                                     </button>

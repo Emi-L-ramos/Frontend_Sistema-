@@ -214,6 +214,52 @@ function InstructoresPage() {
         }
     };
 
+    const despedirInstructor = async (instructor) => {
+        const { isConfirmed } = await Swal.fire({
+            title: "Despedir instructor",
+            text: `¿Deseas desactivar a ${instructor.nombre_completo}?`,
+            icon: "warning",
+            input: "textarea",
+            inputLabel: "Motivo de salida",
+            inputPlaceholder: "Escriba el motivo...",
+            showCancelButton: true,
+            confirmButtonText: "Despedir",
+            cancelButtonText: "Cancelar",
+        });
+
+        if (!isConfirmed) return;
+
+        try {
+            const formData = new FormData();
+            formData.append(
+                "motivo_salida",
+                document.querySelector(".swal2-textarea")?.value || ""
+            );
+
+            await api.post(
+                `/instructores/${instructor.id}/despedir/`,
+                formData
+            );
+
+            Swal.fire(
+                "Instructor desactivado",
+                "El instructor ya no podrá iniciar sesión.",
+                "success"
+            );
+
+            cargarInstructores();
+
+        } catch (error) {
+            console.error(error);
+
+            Swal.fire(
+                "Error",
+                "No se pudo desactivar el instructor.",
+                "error"
+            );
+        }
+    };
+
     return (
         <div className="p-6 bg-gray-50 min-h-screen">
             <div className="mb-8 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -316,6 +362,14 @@ function InstructoresPage() {
                                                     Editar
                                                 </button>
 
+                                                <button
+                                                    onClick={() => despedirInstructor(inst)}
+                                                    className="px-3 py-1.5 rounded-lg bg-orange-100 text-orange-700 hover:bg-orange-200 transition"
+                                                >
+                                                    Despedir
+                                                </button>
+                                                
+                                                {/*borrar despues de las pruebas*/}
                                                 <button
                                                     onClick={() => eliminarInstructor(inst)}
                                                     className="px-3 py-1.5 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 transition"
