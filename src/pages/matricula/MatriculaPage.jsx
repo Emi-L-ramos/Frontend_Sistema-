@@ -29,7 +29,7 @@ function MatriculaPage() {
     const getPlan = (item) => item.plan_nombre || "";
     const getCurso = (item) => item.tipo_curso || "";
     const getModalidad = (item) => item.modalidad || "";
-    const getCategoria = (item) =>  item.categoria_nombre || item.categoria?.nombre || item.categoria || "";
+    const getCategoria = (item) => item.categoria || "";
     const getFechaMatricula = (item) => item.fecha_registro || item.fecha_matricula || "";
     const getEdad = (item) => item.estudiante_edad || item.edad || "";
     const getSexo = (item) => item.estudiante_sexo || item.sexo || "";
@@ -466,7 +466,7 @@ function MatriculaPage() {
             </div>
 
             <div className="w-full max-w-full overflow-x-auto">
-                <div className="max-w-[1225px]">
+                <div className="w-full min-w-[1100px]">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-xl mb-4">
                         <div className="relative w-full sm:w-[420px]">
                             <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -496,23 +496,23 @@ function MatriculaPage() {
                         </button>
                     </div>
 
-                    <div className="max-h-[600px] overflow-y-auto w-full">
-                        <table className="table-auto w-full">
-                            <thead className="bg-gray-50 justify-center">
+                    <div className="max-h-[650px] overflow-y-auto overflow-x-auto w-full rounded-2xl border border-gray-200 bg-white shadow-sm">
+                        <table className="w-full table-fixed border-collapse">
+                            <thead className="bg-gray-50 sticky top-0 z-10">
                                 <tr className="border-gray-300">
-                                    <th className="p-3 w-[60px]">Código</th>
-                                    <th className="p-3 w-[220px]">Nombre</th>
-                                    <th className="p-3 w-[150px]">Fecha Matrícula</th>
-                                    <th className="p-3 w-[180px]">Cédula</th>
-                                    <th className="p-3 w-[90px]">Edad</th>
-                                    <th className="p-3 w-[150px]">Teléfono</th>
-                                    <th className="p-3 w-[180px]">Curso</th>
-                                    <th className="p-3 w-[130px]">Estado</th>
-                                    <th className="p-3 w-[170px]">Opciones</th>
+                                    <th className="p-3 w-[7%] text-center text-xs font-semibold text-gray-600 uppercase">Código</th>
+                                    <th className="p-3 w-[20%] text-left text-xs font-semibold text-gray-600 uppercase">Nombre</th>
+                                    <th className="p-3 w-[14%] text-center text-xs font-semibold text-gray-600 uppercase">Fecha Matrícula</th>
+                                    <th className="p-3 w-[15%] text-center text-xs font-semibold text-gray-600 uppercase">Cédula</th>
+                                    <th className="p-3 w-[7%] text-center text-xs font-semibold text-gray-600 uppercase">Edad</th>
+                                    <th className="p-3 w-[13%] text-center text-xs font-semibold text-gray-600 uppercase">Teléfono</th>
+                                    <th className="p-3 w-[13%] text-center text-xs font-semibold text-gray-600 uppercase">Curso</th>
+                                    <th className="p-3 w-[11%] text-center text-xs font-semibold text-gray-600 uppercase">Estado</th>
+                                    <th className="p-3 w-[15%] text-center text-xs font-semibold text-gray-600 uppercase">Opciones</th>
                                 </tr>
                             </thead>
 
-                            <tbody className="justify-center text-center items-center">
+                            <tbody className="text-sm text-gray-700 divide-y divide-gray-100">
                                 {loading ? (
                                     <tr>
                                         <td colSpan="9" className="p-6 text-center">
@@ -523,31 +523,31 @@ function MatriculaPage() {
                                     displayData.map((item) => (
                                         <tr
                                             key={item.id}
-                                            className="hover:bg-blue-200 transition justify-center"
+                                            className="hover:bg-blue-50 transition"
                                         >
-                                            <td className="px-2">{item.id}</td>
+                                            <td className="p-3 text-center font-semibold text-gray-700">{item.id}</td>
 
-                                            <td className="px-2">
+                                            <td className="p-3 text-left font-semibold text-gray-800 truncate">
                                                 {getNombre(item)}
                                             </td>
 
-                                            <td className="px-2">
+                                            <td className="p-3 text-center whitespace-nowrap">
                                                 {formatearFecha(getFechaMatricula(item))}
                                             </td>
 
-                                            <td className="px-2">
+                                            <td className="p-3 text-center whitespace-nowrap">
                                                 {getCedula(item)}
                                             </td>
 
-                                            <td className="px-5">
+                                            <td className="p-3 text-center">
                                                 {getEdad(item)}
                                             </td>
 
-                                            <td className="px-7">
+                                            <td className="p-3 text-center whitespace-nowrap">
                                                 {getTelefono(item)}
                                             </td>
 
-                                            <td className="p-2">
+                                            <td className="p-3 text-center truncate">
                                                 {getCurso(item) || getPlan(item)}
                                             </td>
 
@@ -638,7 +638,7 @@ function MatriculaPage() {
                             overflowY: "auto",
                         }}
                     >
-                        <div className="flex justify-between p-4 border-b">
+                        <div className="flex justify-between p-4">
                             <h2 className="font-bold text-4xl">
                                 {editData ? "Editar Matrícula" : "Nueva Matrícula"}
                             </h2>
