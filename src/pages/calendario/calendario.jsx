@@ -121,19 +121,21 @@ export default function Calendario() {
   /* ============== VISTA INSTRUCTOR ============== */
   if (esInstructor) {
     return (
-      <div className="max-w-[1400px] mx-auto p-8">
+      <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 xl:px-8 py-6 overflow-x-hidden">
 
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold">Mi Calendario</h1>
+       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <h1 className="text-2xl font-bold">
+            Mi Calendario
+          </h1>
 
           <button
             type="button"
             onClick={() => setModalExamen(true)}
-            className="relative group overflow-hidden px-20 h-11 rounded-3xl bg-green-500 text-white flex items-center gap-2 transition-all duration-300 hover:bg-green-600 justify-end hover:cursor-pointer"
+            className="relative group overflow-hidden w-full sm:w-auto px-5 sm:px-8 h-11 rounded-3xl bg-green-500 text-white flex items-center justify-center gap-2 transition-all duration-300 hover:bg-green-600 hover:cursor-pointer"
           >
             <span className="absolute top-0 left-[-75%] w-[50%] h-full bg-gradient-to-r from-transparent via-white/60 to-transparent skew-x-12 group-hover:left-[125%] transition-all duration-700"></span>
 
-            <span className="relative z-10 flex items-center gap-2">
+            <span className="relative z-10 flex items-center justify-center gap-2 text-sm sm:text-base font-medium whitespace-nowrap">
               <Plus className="size-5" />
               Examen Policial
             </span>
@@ -185,8 +187,8 @@ export default function Calendario() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-6">
-          <div className="bg-white border border-gray-200 rounded-xl p-6">
+      <div className="grid grid-cols-1 2xl:grid-cols-[minmax(0,1fr)_360px] gap-6">
+          <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 min-w-0 overflow-hidden">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-semibold">
                 {MONTHS[vm]} {vy}
@@ -211,7 +213,7 @@ export default function Calendario() {
               </div>
             </div>
 
-            <div className="grid grid-cols-7 gap-2 mb-2">
+            <div className="grid grid-cols-7 gap-2 md:gap-3">
               {DAYS.map((d) => (
                 <div
                   key={d}
@@ -222,27 +224,48 @@ export default function Calendario() {
               ))}
             </div>
 
-            <div className="grid grid-cols-7 gap-1 sm:gap-2">
+            <div className="grid grid-cols-7 gap-3 sm:gap-2">
               {cells.map((c, idx) => {
-                if (!c) return <div key={idx} />;
+                if (!c) return <div key={idx} className="min-h-[74px] sm:min-h-[88px]" />;
 
                 const dia = citas.filter((a) => a.fecha === c.dateStr);
 
                 return (
-                  <div
+                 <div
                     key={idx}
                     onClick={() => setDiaSeleccionado(c.dateStr)}
-                    className={`min-h-[72px] sm:min-h-[100px] rounded-lg border p-1.5 sm:p-2 cursor-pointer transition-colors ${
+                    className={`relative min-h-[74px] sm:min-h-[88px] rounded-lg border-0 sm:border p-1 sm:p-2 cursor-pointer transition-all duration-200 flex flex-col items-center justify-center sm:items-start sm:justify-start ${
                       diaSeleccionado === c.dateStr
-                        ? "border-blue-400 bg-blue-50"
-                        : "border-gray-200 bg-white hover:bg-gray-50"
+                        ? "sm:border-blue-400 sm:bg-blue-50 sm:shadow-sm sm:scale-[1.03]"
+                        : "sm:border-gray-200 sm:bg-white sm:hover:bg-gray-50"
                     }`}
                   >
-                    <div className="text-sm font-medium mb-1.5">
-                      {c.day}
+                    <div className="relative w-10 h-10 sm:w-auto sm:h-auto flex items-center justify-center sm:block">
+                     
+
+                      <div className="relative flex items-center justify-center sm:block">
+                          {dia.length > 0 && (
+                            <span className="absolute -top-2 -right-2 sm:-top-3 sm:-right-3 min-w-[18px] h-[18px] px-1 rounded-full bg-red-600 text-white text-[10px] font-bold flex items-center justify-center shadow-md z-10">
+                              {dia.length}
+                            </span>
+                          )}
+
+                          <div
+                            className={`w-10 h-10 sm:w-auto sm:h-auto rounded-full sm:rounded-none border sm:border-0 flex items-center justify-center sm:justify-start bg-white sm:bg-transparent ${
+                              diaSeleccionado === c.dateStr
+                                ? "border-blue-600 text-blue-700 sm:text-gray-900"
+                                : "border-gray-300 text-gray-800"
+                            }`}
+                          >
+                            <span className="text-sm font-bold leading-none">
+                              {c.day}
+                            </span>
+                          </div>
+                        </div>
+
                     </div>
 
-                    <div className="space-y-1">
+                    <div className="hidden sm:block space-y-1 w-full mt-1">
                       {dia.map((a) => (
                         <div
                           key={a.id}
@@ -391,14 +414,14 @@ export default function Calendario() {
   /* ============== VISTA ESTUDIANTE ============== */
   if (esEstudiante) {
     return (
-      <div className="max-w-[1400px] mx-auto p-8">
+      <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 xl:px-8 py-6 overflow-x-hidden">
 
         <div className="mb-6">
           <h1 className="text-3xl font-bold">Mi Calendario</h1>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-6">
-          <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+      <div className="grid grid-cols-1 2xl:grid-cols-[minmax(0,1fr)_360px] gap-6">
+         <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 shadow-sm min-w-0 overflow-hidden">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold">
                 {MONTHS[vm]} {vy}
@@ -423,7 +446,7 @@ export default function Calendario() {
               </div>
             </div>
 
-            <div className="grid grid-cols-7 gap-2 mb-2">
+            <div className="grid grid-cols-7 gap-2 md:gap-3">
               {DAYS.map((d) => (
                 <div
                   key={d}
@@ -434,49 +457,69 @@ export default function Calendario() {
               ))}
             </div>
 
-            <div className="grid grid-cols-7 gap-1 sm:gap-2">
-
-              {cells.map((c, idx) => {
-
-                if (!c) return <div key={idx} />;
-
-                const dia = citas.filter((a) => a.fecha === c.dateStr);
-
+            <div className="grid grid-cols-7 gap-y-4 gap-x-10 sm:gap-2">
+            {cells.map((c, idx) => {
+              if (!c) {
                 return (
                   <div
                     key={idx}
-                    onClick={() => setDiaSeleccionado(c.dateStr)}
-                    className={`min-h-[100px] rounded-lg border p-2 cursor-pointer transition-colors ${
-                      diaSeleccionado === c.dateStr
-                        ? "border-blue-400 bg-blue-50"
-                        : "border-gray-200 bg-white hover:bg-gray-50"
-                    }`}
-                  >
-                    <div className="text-sm font-medium mb-1">
-                      {c.day}
-                    </div>
-
-                    <div className="space-y-1">
-                      {dia.map((a) => (
-                        <div
-                          key={a.id}
-                          className={`text-[11px] px-1.5 py-1 rounded truncate ${
-                            a.es_examen
-                              ? "bg-orange-300 text-orange-900"
-                              : INSTRUCTOR_COLORS[a.instructor] || "bg-gray-300 text-gray-900"
-                          }`}
-                        >
-                          {a.es_examen
-                            ? `Examen · ${a.hora_inicio?.slice(0, 5)}`
-                            : `Clase ${a.numero_clase} · ${a.hora_inicio?.slice(0, 5)}`}
-                        </div>
-                      ))}
-                    </div>
-
-                  </div>
+                    className="h-11 sm:h-[88px]"
+                  />
                 );
-              })}
-            </div>
+              }
+
+              const dia = citas.filter((a) => a.fecha === c.dateStr);
+
+              return (
+                <div
+                  key={idx}
+                  onClick={() => setDiaSeleccionado(c.dateStr)}
+                  className={`relative h-11 sm:h-auto sm:min-h-[88px] border-0 sm:border rounded-none sm:rounded-lg p-0 sm:p-2 cursor-pointer transition-all duration-200 flex items-center justify-center sm:flex-col sm:items-start sm:justify-start ${
+                    diaSeleccionado === c.dateStr
+                      ? "sm:border-blue-400 sm:bg-blue-50 sm:shadow-sm sm:scale-[1.03]"
+                      : "sm:border-gray-200 sm:bg-white sm:hover:bg-gray-50"
+                  }`}
+                >
+                  <div className="relative w-10 h-10 sm:w-auto sm:h-auto flex items-center justify-center sm:block">
+                    {dia.length > 0 && (
+                      <span className="absolute -top-2 -right-2 sm:hidden min-w-[18px] h-[18px] px-1 rounded-full bg-red-600 text-white text-[10px] font-bold flex items-center justify-center shadow-md z-10">
+                        {dia.length}
+                      </span>
+                    )}
+
+                    <div
+                      className={`w-10 h-10 sm:w-auto sm:h-auto rounded-full sm:rounded-none border sm:border-0 flex items-center justify-center sm:justify-start bg-white sm:bg-transparent ${
+                        diaSeleccionado === c.dateStr
+                          ? "border-blue-600 text-blue-700 sm:text-gray-900"
+                          : "border-gray-300 text-gray-800"
+                      }`}
+                    >
+                      <span className="text-sm font-bold leading-none">
+                        {c.day}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="hidden sm:block space-y-1 w-full mt-1">
+                    {dia.map((a) => (
+                      <div
+                        key={a.id}
+                        className={`text-[11px] px-1.5 py-1 rounded truncate ${
+                          a.es_examen
+                            ? "bg-orange-300 text-orange-900"
+                            : INSTRUCTOR_COLORS[a.instructor] || "bg-gray-300 text-gray-900"
+                        }`}
+                      >
+                        {a.es_examen
+                          ? `Examen · ${a.hora_inicio?.slice(0, 5)}`
+                          : `Clase ${a.numero_clase} · ${a.hora_inicio?.slice(0, 5)}`}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
           </div>
 
           <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm h-fit">
@@ -545,7 +588,7 @@ export default function Calendario() {
   
   /* ============== VISTA ADMIN ============== */
   return (
-    <div className="max-w-[1280px] mx-auto px-8 py-8">
+   <div className="w-full max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
       <div className="mb-6">
         <h1 className="text-3xl font-bold">Calendario</h1>
         <p className="text-sm text-gray-500 mt-1">Asignación de horarios y estudiantes</p>
@@ -599,7 +642,7 @@ export default function Calendario() {
               onClick={() => setModalNueva(true)}
               className="relative group overflow-hidden px-20 h-11 rounded-3xl bg-green-500 text-white flex items-center gap-2 transition-all duration-300 hover:bg-green-600 justify-end hover:cursor-pointer"
           >
-              <span className="absolute top-0 left-[-75%] w-[50%] h-full bg-gradient-to-r from-transparent via-white/60 to-transparent skew-x-12 group-hover:left-[125%] transition-all duration-700"></span>
+              <span className="absolute top-0 left-[-75%] w-[50%] h-full bg-gradient-to-r from-transparent via-white/60 to-transparent skew-x-12 group-hover:left-[125%] transition-all duration-700 "></span>
 
               <span className="relative z-10 flex items-center gap-2">
                   <Plus className="size-5" />
@@ -620,7 +663,7 @@ export default function Calendario() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_360px] gap-6">
         <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold">{MONTHS[vm]} {vy}</h2>
@@ -629,12 +672,12 @@ export default function Calendario() {
               <button type="button" onClick={goNext} className="p-2 rounded-md hover:bg-gray-100"><ChevronRight className="w-4 h-4" /></button>
             </div>
           </div>
-          <div className="grid grid-cols-7 gap-2 mb-2">
-            {DAYS.map((d) => <div key={d} className="text-center text-sm text-gray-500 py-2">{d}</div>)}
+          <div className="grid grid-cols-7 gap-y-5 gap-x-3 sm:gap-2 lg:gap-3">
+            {DAYS.map((d) => <div key={d} className="text-center text-[11px] sm:text-sm text-gray-500 py-2 font-semibold">{d}</div>)}
           </div>
-          <div className="grid grid-cols-7 gap-1 sm:gap-2">
+          <div className="grid grid-cols-7 gap-y-1 gap-x-5 sm:gap-2">
             {cells.map((c, idx) => {
-              if (!c) return <div key={idx} />;
+              if (!c) return <div key={idx} className="min-h-[52px] sm:min-h-[88px]" />;
               const dia = citas.filter((a) => a.fecha === c.dateStr);
               const visibles = dia.slice(0, 2);
               const extra = dia.length - visibles.length;
@@ -642,14 +685,30 @@ export default function Calendario() {
                 <div
                   key={idx}
                   onClick={() => setDiaSeleccionado(c.dateStr)}
-                  className={`min-h-[88px] rounded-lg border p-2 cursor-pointer transition-colors ${
+                  className={`relative min-h-[52px] sm:min-h-[90px] lg:min-h-[105px] rounded-lg border-0 sm:border p-1 sm:p-2 cursor-pointer transition-all duration-200 flex flex-col items-center justify-center sm:items-start sm:justify-start ${
                     diaSeleccionado === c.dateStr
-                      ? "border-blue-400 bg-blue-50"
-                      : "border-gray-200 bg-white hover:bg-gray-50"
+                      ? "sm:border-blue-400 sm:bg-blue-50 sm:shadow-sm sm:scale-[1.03]"
+                      : "sm:border-gray-200 sm:bg-white sm:hover:bg-gray-50"
                   }`}
                 >
-                  <div className="text-sm font-medium mb-1">{c.day}</div>
-                  <div className="space-y-1">
+                  {dia.length > 0 && (
+                    <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 rounded-full bg-red-600 text-white text-[10px] font-bold flex items-center justify-center shadow-md">
+                      {dia.length}
+                    </span>
+                  )}
+
+                 <div
+                    className={`w-10 h-10 rounded-full border flex items-center justify-center mb-1 ${
+                      diaSeleccionado === c.dateStr
+                        ? "bg-blue-600 border-blue-600 text-white"
+                        : "bg-white border-gray-300 text-gray-800"
+                    }`}
+                  >
+                    <span className="text-sm font-bold leading-none">
+                      {c.day}
+                    </span>
+                  </div>
+                  <div className="hidden sm:block space-y-1 w-full">
                     {visibles.map((a) => (
                       <div
                         key={a.id}
@@ -659,7 +718,7 @@ export default function Calendario() {
                             : INSTRUCTOR_COLORS[a.instructor] || "bg-gray-300 text-gray-900"
                         }`}
                       >
-                        {a.hora_inicio?.slice(0, 5)} Â· {a.estudiante_nombre}
+                        {a.hora_inicio?.slice(0, 5)} {a.estudiante_nombre}
                       </div>
                     ))}
                     {extra > 0 && <div className="text-[11px] text-gray-400">+{extra}</div>}
@@ -668,7 +727,7 @@ export default function Calendario() {
               );
             })}
           </div>
-          <div className="mt-6 border-t pt-4">
+          <div className="mt-6  pt-4">
             <h3 className="text-sm font-semibold text-gray-700 mb-3">
               Leyenda de instructores
             </h3>

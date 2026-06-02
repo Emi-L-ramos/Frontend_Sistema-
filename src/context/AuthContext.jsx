@@ -67,36 +67,12 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
     };
 
-    const tienePermiso = (permiso) => {
-        const permisos = {
-            admin: ["*"],
-            administrador: ["*"],
-            secretaria: [
-                "ver_matriculas",
-                "crear_matriculas",
-                "editar_matriculas",
-                "ver_recibos",
-                "crear_recibos",
-                "exportar",
-            ],
-            cajero: [
-                "ver_matriculas",
-                "ver_recibos",
-                "crear_recibos",
-                "editar_recibos",
-                "exportar",
-            ],
-            consulta: ["ver_matriculas", "ver_recibos"],
-            instructor: ["ver_calendario", "marcar_asistencia"],
-            estudiante: ["ver_calendario"],
-        };
-
+    const esRol = (...roles) => {
         const userRol = user?.rol?.toLowerCase() || "";
 
-        return (
-            permisos[userRol]?.includes("*") ||
-            permisos[userRol]?.includes(permiso)
-        );
+        return roles
+            .map((r) => r.toLowerCase())
+            .includes(userRol);
     };
 
     return (
@@ -107,7 +83,7 @@ export const AuthProvider = ({ children }) => {
                 loading,
                 login,
                 logout,
-                tienePermiso,
+                esRol,
             }}
         >
             {children}

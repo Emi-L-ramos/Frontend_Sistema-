@@ -254,15 +254,19 @@ function Dashboard() {
         return <DashboardHome />;
 
       case "reportes":
+         if (!esAdmin) return <DashboardHome />;
         return <ReportesPages userRole={rol} />;
 
       case "estudiantes":
+         if (!esAdmin) return <DashboardHome />;
         return <EstudiantesPage />;
 
       case "matricula":
+         if (!esAdmin) return <DashboardHome />;
         return <MatriculaPage />;
 
       case "recibos":
+         if (!esAdmin) return <DashboardHome />;
         return <RecibosPage />;
 
       case "calendario":
@@ -272,6 +276,7 @@ function Dashboard() {
         return <NotasPages userRole={rol} />;
 
       case "plan_studio":
+        //  if (!esAdmin) return <DashboardHome />;
         return <PlanStudio userRole={rol} />;
 
       case "asistencia":
@@ -281,15 +286,19 @@ function Dashboard() {
         return <PerfilEstudiante />;
 
       case "usuarios":
+        if (!esAdmin) return <DashboardHome />;
         return <UsuariosPage />;
 
       case "instructores":
+        if (!esAdmin) return <DashboardHome />;
         return <InstructoresPage />;
 
       case "ver_plan":
+          if (!esAdmin) return <DashboardHome />;
         return <VerPlanEstudio />;
 
       case "nuevo_plan":
+        if (!esAdmin) return <DashboardHome />;
         return <PlanEstudioForm />;
 
       default:
@@ -474,20 +483,20 @@ function Dashboard() {
             <span>Calendario</span>
           </button>
 
-            {!esEstudiante && (
+          {(esEstudiante || esAdmin || esInstructor) && (
             <button
               onClick={() => {
-                setActiveTab("asistencia");
+                setActiveTab("notas");
                 setIsSidebarOpen(false);
               }}
               className={`w-full flex items-center p-3 space-x-3 rounded-xl transition hover:cursor-pointer ${
-                activeTab === "asistencia"
+                activeTab === "notas"
                   ? "bg-blue-100 text-blue-500 font-bold"
                   : "text-gray-600 hover:bg-blue-50"
               }`}
             >
-              <LuClipboardCheck size="1.5rem" />
-              <span>Asistencia</span>
+              <IoSchoolOutline size="1.5rem" />
+              <span>Notas</span>
             </button>
           )}
 
@@ -506,22 +515,22 @@ function Dashboard() {
             <span>Plan de Estudio</span>
           </button>
 
-           {(esEstudiante || esAdmin || esInstructor) && (
+          {!esEstudiante && (
             <button
               onClick={() => {
-                setActiveTab("notas");
+                setActiveTab("asistencia");
                 setIsSidebarOpen(false);
               }}
               className={`w-full flex items-center p-3 space-x-3 rounded-xl transition hover:cursor-pointer ${
-                activeTab === "notas"
+                activeTab === "asistencia"
                   ? "bg-blue-100 text-blue-500 font-bold"
                   : "text-gray-600 hover:bg-blue-50"
               }`}
             >
-              <IoSchoolOutline size="1.5rem" />
-              <span>Notas</span>
+              <LuClipboardCheck size="1.5rem" />
+              <span>Asistencia</span>
             </button>
-          )} 
+          )}
 
           <button
             onClick={() => {
@@ -540,46 +549,53 @@ function Dashboard() {
         </nav>
 
         <div className="p-4 border-t border-gray-200 bg-white">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">
-              {user?.username?.charAt(0).toUpperCase() || "U"}
-            </div>
+          <div className="rounded-2xl bg-gradient-to-r from-slate-50 to-blue-50 border border-slate-200 p-3 shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <div className="w-11 h-11 bg-gradient-to-br from-blue-600 to-blue-500 rounded-3xl flex items-center justify-center text-white font-bold shadow-sm">
+                  {user?.username?.charAt(0).toUpperCase() || "U"}
+                </div>
 
-            <div className="flex-1">
-              <p className="text-sm font-medium text-gray-700">
-                {user?.username || "Usuario"}
-              </p>
+                <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full"></span>
+              </div>
 
-              <p className="text-xs text-gray-500 capitalize">
-                {rol || "sin rol"}
-              </p>
-            </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-slate-800 truncate">
+                  {user?.username || "Usuario"}
+                </p>
 
-            <button
-              onClick={() => {
-                logout();
-                navigate("/login");
-              }}
-              className="text-gray-400 hover:text-red-500 transition"
-              title="Cerrar sesión"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="w-5 h-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+                <p className="text-xs text-slate-500 capitalize mt-0.5">
+                  {rol || "sin rol"}
+                </p>
+              </div>
+
+              <button
+                onClick={() => {
+                  logout();
+                  navigate("/login");
+                }}
+                className="cursor-pointer group w-10 h-10 rounded-3xl bg-white border border-slate-200 text-slate-400 hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition flex items-center justify-center"
+                title="Cerrar sesión"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1"
-                />
-              </svg>
-            </button>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-5 h-5 transition-transform group-hover:translate-x-0.5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1"
+                  />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
+
       </aside>
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-opacity-100">

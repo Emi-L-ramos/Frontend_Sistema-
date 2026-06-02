@@ -255,7 +255,7 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
 
   const diasMes = obtenerDiasMes(mesActual);
   const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-  const diasSemana = ['Dom', 'Lun', 'Mar', 'MiÃ©', 'Jue', 'Vie', 'SÃ¡b'];
+  const diasSemana = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 
   const cambiarMes = (incremento) => {
     const nuevoMes = new Date(mesActual);
@@ -368,7 +368,7 @@ if (!form.fecha_inicio) {
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-all duration-300">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl transform transition-all duration-300 scale-100 opacity-100 max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 z-10 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-t-2xl p-6">
+        <div className="sticky top-0 z-10 bg-gradient-to-r from-blue-600 via-yellow-600 to-purple-600 rounded-t-2xl p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="bg-white/20 p-3 rounded-xl">
@@ -379,7 +379,7 @@ if (!form.fecha_inicio) {
                 <p className="text-sm text-blue-100">8 clases pràcticas + examen manual (opcional)</p>
               </div>
             </div>
-            <button onClick={onClose} className="text-white/80 hover:text-white hover:bg-white/10 rounded-xl p-2 transition-all duration-200">
+            <button onClick={onClose} className="text-white/80 hover:text-white hover:bg-white/10 rounded-xl p-2 transition-all duration-200  hover:cursor-pointer">
               <X className="w-5 h-5" />
             </button>
           </div>
@@ -396,7 +396,7 @@ if (!form.fecha_inicio) {
               required
               value={form.instructor_id}
               onChange={(e) => setForm({ ...form, instructor_id: e.target.value })}
-              className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 bg-gray-50 hover:bg-white cursor-pointer"
+              className="w-full border border-gray-300 rounded-2xl px-4 py-3.5 text-sm text-gray-700 bg-white shadow-sm focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-200 hover:border-blue-400 cursor-pointer"
             >
               <option value="">-- Seleccionar instructor --</option>
                  {instructores.map((i) => (
@@ -442,7 +442,7 @@ if (!form.fecha_inicio) {
                     }, 200);
                   }}
                   placeholder="Buscar por nombre, apellido o cédula..."
-                  className="w-full border-2 border-gray-200 rounded-xl pl-10 pr-10 py-3 text-sm focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all duration-200 bg-gray-50 hover:bg-white"
+                  className="w-full border border-gray-300 rounded-2xl pl-11 pr-11 py-3.5 text-sm text-gray-700 bg-white shadow-sm focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all duration-200 hover:border-green-400 placeholder:text-gray-400"
                 />
                 {estudianteSeleccionado && (
                   <button
@@ -520,7 +520,7 @@ if (!form.fecha_inicio) {
             <select
               value={horasPorDia}
               onChange={(e) => setHorasPorDia(parseInt(e.target.value))}
-              className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 bg-gray-50 hover:bg-white"
+             className="w-full border border-gray-300 rounded-2xl px-4 py-3.5 text-sm text-gray-700 bg-white shadow-sm focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all duration-200 hover:border-purple-400 cursor-pointer"
             >
               <option value={2}>2 horas por día</option>
               <option value={3}>3 horas por día</option>
@@ -528,6 +528,7 @@ if (!form.fecha_inicio) {
               <option value={5}>5 horas por día</option>
             </select>
           </div>
+
           <div className="group">
             <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
               <Calendar className="w-4 h-4 text-purple-600" />
@@ -535,90 +536,140 @@ if (!form.fecha_inicio) {
               <span className="text-red-500">*</span>
             </label>
             
-            <div className="relative">
-              <div 
-                className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-sm bg-gray-50 hover:bg-white cursor-pointer flex items-center justify-between transition-all duration-200"
-                onClick={() => setMostrarCalendarioSelector(!mostrarCalendarioSelector)}
-              >
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-purple-500" />
-                  <span className={form.fecha_inicio ? "text-gray-800" : "text-gray-400"}>
-                    {form.fecha_inicio ? formatearFecha(form.fecha_inicio) : "Seleccionar fecha"}
+            <div className="flex items-center gap-3">
+               <div className="flex-1 border border-gray-300 rounded-2xl px-4 py-3 bg-white shadow-sm">
+                  <span className={form.fecha_inicio ? "text-gray-700" : "text-gray-400"}>
+                    {form.fecha_inicio
+                      ? formatearFecha(form.fecha_inicio)
+                      : "Seleccione una fecha"}
                   </span>
                 </div>
-                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${mostrarCalendarioSelector ? 'rotate-180' : ''}`} />
-              </div>
+
+                <button
+                  type="button"
+                  onClick={() => setMostrarCalendarioSelector(true)}
+                  className="h-12 w-12 flex items-center justify-center rounded-2xl bg-purple-100 text-purple-600 hover:bg-purple-200 hover:scale-105 transition-all duration-200 shadow-sm  hover:cursor-pointer"
+                >
+                  <Calendar className="w-5 h-5" />
+                </button>
               
               {mostrarCalendarioSelector && (
-                <div className="absolute z-20 w-full mt-2 bg-white border-2 border-purple-200 rounded-xl shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-2">
-                  <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-4 py-3 flex items-center justify-between">
-                    <button type="button" onClick={() => cambiarMes(-1)} className="text-white/80 hover:text-white p-1 rounded-lg hover:bg-white/20 transition-colors">
-                      <ChevronLeft className="w-5 h-5" />
-                    </button>
-                    <span className="text-white font-semibold">{meses[mesActual.getMonth()]} {mesActual.getFullYear()}</span>
-                    <button type="button" onClick={() => cambiarMes(1)} className="text-white/80 hover:text-white p-1 rounded-lg hover:bg-white/20 transition-colors">
-                      <ChevronRight className="w-5 h-5" />
-                    </button>
-                  </div>
-                  
-                  <div className="grid grid-cols-7 gap-1 px-3 pt-3">
-                    {diasSemana.map((dia, idx) => (
-                      <div key={idx} className="text-center text-xs font-semibold text-gray-500 py-2">{dia}</div>
-                    ))}
-                  </div>
-                  
-                  <div className="grid grid-cols-7 gap-1 p-3">
-                    {diasMes.map((dia, idx) => {
-                      const fechaStr = dia.fecha.toISOString().split('T')[0];
-                      const hoy = new Date().toISOString().split('T')[0];
-                      const esHoy = fechaStr === hoy;
-                      const esSeleccionada = fechaStr === form.fecha_inicio;
-                      const modalidad = String(estudianteSeleccionado?.modalidad || "").toLowerCase();
-                      const diaNum = dia.fecha.getDay();
-                      const esFinSemana = diaNum === 0 || diaNum === 6;
+                <div className="fixed inset-0 z-[80] bg-black/40 backdrop-blur-sm flex items-center justify-center px-4">
+                  <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95">
+                    <div className="bg-gradient-to-r from-purple-600 to-yellow-600 px-5 py-4 flex items-center justify-between">
+                      <button
+                        type="button"
+                        onClick={() => cambiarMes(-1)}
+                        className="text-white/80 hover:text-white p-2 rounded-xl hover:bg-white/20 transition-colors"
+                      >
+                        <ChevronLeft className="w-5 h-5" />
+                      </button>
 
-                      const fechaBloqueada =
-                        modalidad === "extraordinario"
-                          ? !esFinSemana
-                          : esFinSemana;
+                      <div className="text-center">
+                        <p className="text-white font-bold text-lg">
+                          {meses[mesActual.getMonth()]} {mesActual.getFullYear()}
+                        </p>
+                        <p className="text-xs text-purple-100">
+                          Seleccione la fecha de inicio
+                        </p>
+                      </div>
 
-                      const esPasado = fechaMinima && dia.fecha < fechaMinima;
-                                            
-                      return (
+                      <button
+                        type="button"
+                        onClick={() => cambiarMes(1)}
+                        className="text-white/80 hover:text-white p-2 rounded-xl hover:bg-white/20 transition-colors hover:cursor-pointer"
+                      >
+                        <ChevronRight className="w-5 h-5" />
+                      </button>
+                    </div>
+
+                    <div className="p-5">
+                      <div className="grid grid-cols-7 gap-1 mb-2">
+                        {diasSemana.map((dia, idx) => (
+                          <div
+                            key={idx}
+                            className="text-center text-xs font-bold text-gray-500 py-2"
+                          >
+                            {dia}
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="grid grid-cols-7 gap-1">
+                        {diasMes.map((dia, idx) => {
+                          const fechaStr = dia.fecha.toISOString().split("T")[0];
+                          const hoy = new Date().toISOString().split("T")[0];
+                          const esHoy = fechaStr === hoy;
+                          const esSeleccionada = fechaStr === form.fecha_inicio;
+                          const modalidad = String(estudianteSeleccionado?.modalidad || "").toLowerCase();
+                          const diaNum = dia.fecha.getDay();
+                          const esFinSemana = diaNum === 0 || diaNum === 6;
+
+                          const fechaBloqueada =
+                            modalidad === "extraordinario"
+                              ? !esFinSemana
+                              : esFinSemana;
+
+                          const esPasado = fechaMinima && dia.fecha < fechaMinima;
+
+                          return (
+                            <button
+                              key={idx}
+                              type="button"
+                              onClick={() => !esPasado && !fechaBloqueada && seleccionarFecha(dia.fecha)}
+                              disabled={esPasado || fechaBloqueada}
+                              className={`
+                                relative h-11 rounded-xl text-sm font-semibold transition-all duration-200
+                                ${!dia.isCurrentMonth ? "text-gray-300" : "text-gray-700"}
+                                ${esHoy && dia.isCurrentMonth ? "ring-2 ring-purple-300" : ""}
+                                ${esSeleccionada ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md scale-105" : ""}
+                                ${!esSeleccionada && !esPasado && !fechaBloqueada && dia.isCurrentMonth ? "hover:bg-purple-100 hover:scale-105 cursor-pointer" : ""}
+                                ${fechaBloqueada && dia.isCurrentMonth ? "bg-red-50 text-red-300 cursor-not-allowed" : ""}
+                                ${esPasado && dia.isCurrentMonth ? "bg-gray-100 text-gray-300 cursor-not-allowed line-through" : ""}
+                              `}
+                            >
+                              {dia.day}
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {/* <div className="mt-5 rounded-xl bg-gray-50 border border-gray-200 p-3 space-y-2 text-xs">
+                        <div className="flex items-center gap-2">
+                          <span className="w-3 h-3 rounded-full bg-purple-600"></span>
+                          <span className="text-gray-600">Fecha seleccionada</span>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <span className="w-3 h-3 rounded-full bg-red-50 border border-red-200"></span>
+                          <span className="text-gray-600">
+                            {String(estudianteSeleccionado?.modalidad || "").toLowerCase() === "extraordinario"
+                              ? "Lunes a viernes bloqueado"
+                              : "Sábado y domingo bloqueado"}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <span className="w-3 h-3 rounded-full bg-gray-100 border border-gray-200"></span>
+                          <span className="text-gray-600">Fecha no disponible</span>
+                        </div>
+                      </div> */}
+
+                      <div className="flex justify-end gap-3 mt-5">
                         <button
-                          key={idx}
                           type="button"
-                          onClick={() => !esPasado && !fechaBloqueada && seleccionarFecha(dia.fecha)}
-                          disabled={esPasado || fechaBloqueada}
-                          className={`
-                            relative py-3 rounded-xl text-sm font-medium transition-all duration-200
-                            ${!dia.isCurrentMonth ? 'text-gray-300' : 'text-gray-700'}
-                            ${esHoy && dia.isCurrentMonth ? 'ring-2 ring-purple-300' : ''}
-                            ${esSeleccionada ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md scale-105' : ''}
-                            ${!esSeleccionada && !esPasado && !fechaBloqueada && dia.isCurrentMonth ? 'hover:bg-purple-100 hover:scale-105 cursor-pointer' : ''}
-                            ${fechaBloqueada && dia.isCurrentMonth ? 'bg-red-50 text-red-300 cursor-not-allowed' : ''}
-                            ${esPasado && dia.isCurrentMonth ? 'bg-gray-100 text-gray-300 cursor-not-allowed line-through' : ''}
-                          `}
+                          onClick={() => setMostrarCalendarioSelector(false)}
+                          className="px-4 py-2 rounded-xl bg-gray-100 text-gray-700 text-sm font-semibold hover:bg-gray-200 transition hover:cursor-pointer"
                         >
-                          {dia.day}
-                          {esPasado && dia.isCurrentMonth && <span className="absolute -top-1 -right-1 text-[8px]">❌</span>}
-                          {fechaBloqueada && dia.isCurrentMonth && <span className="absolute -top-1 -right-1 text-[8px]">📅</span>}
+                          Cerrar
                         </button>
-                      );
-                    })}
-                  </div>
-                  
-                  <div className="px-4 pb-3 pt-2 border-t border-gray-100 flex gap-3 text-xs">
-                    <div className="flex items-center gap-1"><div className="w-3 h-3 bg-purple-600 rounded-full"></div><span className="text-gray-500">Seleccionada</span></div>
-                    <span className="text-gray-500">
-                      {String(estudianteSeleccionado?.modalidad || "").toLowerCase() === "extraordinario"
-                        ? "Lunes a viernes bloqueado"
-                        : "Sábado y domingo bloqueado"}
-                    </span>
-                    <div className="flex items-center gap-1"><div className="w-3 h-3 bg-gray-100 rounded-full border border-gray-200"></div><span className="text-gray-500">No disponible</span></div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
+
+
             </div>
           </div>
 
@@ -676,11 +727,11 @@ if (!form.fecha_inicio) {
             </div>
           )} */}
 
-          <div className="flex justify-end gap-3 pt-4 border-t">
-            <button type="button" onClick={onClose} className="px-5 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 hover:scale-105 transition-all duration-200" disabled={cargando}>
+          <div className="flex justify-end gap-3 pt-4 ">
+            <button type="button" onClick={onClose} className="px-5 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 hover:scale-105 transition-all duration-200 hover:cursor-pointer" disabled={cargando}>
               Cancelar
             </button>
-            <button type="submit" disabled={cargando} className="px-5 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl hover:from-blue-700 hover:to-indigo-700 hover:scale-105 transition-all duration-200 shadow-md hover:shadow-xl disabled:opacity-50 disabled:hover:scale-100">
+            <button type="submit" disabled={cargando} className="px-5 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-yellow-600 to-indigo-600 rounded-xl hover:from-blue-700 hover:to-indigo-700 hover:scale-105 transition-all duration-200 shadow-md hover:shadow-xl disabled:opacity-50 disabled:hover:scale-100 hover:cursor-pointer">
               {cargando ? (
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>

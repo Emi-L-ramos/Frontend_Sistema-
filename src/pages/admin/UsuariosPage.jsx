@@ -401,78 +401,91 @@ function UsuariosPage() {
                 </div>
             )}
 
-            {showModal && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
-                    <div className="bg-white rounded-2xl w-full max-w-lg p-6 shadow-xl">
-                        <div className="flex items-center justify-between mb-5">
+           {showModal && (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 px-4">
+        <div className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-hidden">
+            <div className="sticky top-0 z-10 bg-gradient-to-r from-yellow-600 to-yellow-600 px-6 py-5 flex items-center justify-between">
+                <div>
+                    <h2 className="text-2xl font-bold text-white">
+                        {editData ? "Editar Usuario" : "Nuevo Usuario"}
+                    </h2>
+                    <p className="text-sm text-blue-100 mt-1">
+                        Complete la información de la cuenta
+                    </p>
+                </div>
+
+                <button
+                    type="button"
+                    onClick={() => setShowModal(false)}
+                    className="h-10 w-10 flex items-center justify-center rounded-full text-white/80 hover:text-white hover:bg-white/20 text-2xl transition hover:cursor-pointer"
+                >
+                    ×
+                </button>
+            </div>
+
+            <div className="overflow-y-auto max-h-[calc(90vh-88px)] p-6">
+                <form onSubmit={handleSubmit} className="space-y-5">
+                    <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5">
+                        <h3 className="text-lg font-bold text-gray-800 mb-4">
+                            Datos de acceso
+                        </h3>
+
+                        <div className="space-y-4">
                             <div>
-                                <h2 className="text-2xl font-bold text-gray-800">
-                                    {editData ? "Editar Usuario" : "Nuevo Usuario"}
-                                </h2>
-                                <p className="text-sm text-gray-500">
-                                    Complete la información de la cuenta
-                                </p>
-                            </div>
-
-                            <button
-                                type="button"
-                                onClick={() => setShowModal(false)}
-                                className="text-gray-400 hover:text-red-500 text-2xl"
-                            >
-                                ×
-                            </button>
-                        </div>
-
-                        <form onSubmit={handleSubmit} className="space-y-3">
-                            <input
-                                type="text"
-                                placeholder="Usuario"
-                                value={form.username}
-                                onChange={e => setForm({ ...form, username: e.target.value })}
-                                className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                required
-                            />
-
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                                    Usuario *
+                                </label>
                                 <input
-                                    type="password"
-                                    placeholder={editData ? "Nueva contraseña opcional" : "Contraseña"}
-                                    value={form.password}
-                                    onChange={e => setForm({ ...form, password: e.target.value })}
-                                    className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    required={!editData}
-                                />
-
-                                <input
-                                    type="password"
-                                    placeholder="Confirmar contraseña"
-                                    value={form.confirm_password}
-                                    onChange={e => setForm({ ...form, confirm_password: e.target.value })}
-                                    className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    required={!editData && form.password}
+                                    type="text"
+                                    placeholder="Nombre de usuario"
+                                    value={form.username}
+                                    onChange={e => setForm({ ...form, username: e.target.value })}
+                                    className="w-full p-3 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    required
                                 />
                             </div>
 
-                            {form.rol !== "estudiante" && form.rol !== "instructor" && (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                                        {editData ? "Nueva contraseña" : "Contraseña *"}
+                                    </label>
                                     <input
-                                        type="text"
-                                        placeholder="Nombres"
-                                        value={form.first_name}
-                                        onChange={e => setForm({ ...form, first_name: e.target.value })}
-                                        className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    />
-
-                                    <input
-                                        type="text"
-                                        placeholder="Apellidos"
-                                        value={form.last_name}
-                                        onChange={e => setForm({ ...form, last_name: e.target.value })}
-                                        className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        type="password"
+                                        placeholder={editData ? "Opcional" : "Contraseña"}
+                                        value={form.password}
+                                        onChange={e => setForm({ ...form, password: e.target.value })}
+                                        className="w-full p-3 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                        required={!editData}
                                     />
                                 </div>
-                            )}
 
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                                        Confirmar contraseña
+                                    </label>
+                                    <input
+                                        type="password"
+                                        placeholder="Confirmar contraseña"
+                                        value={form.confirm_password}
+                                        onChange={e => setForm({ ...form, confirm_password: e.target.value })}
+                                        className="w-full p-3 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                        required={!editData && form.password}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-blue-50 border border-blue-100 rounded-2xl p-5">
+                        <h3 className="text-lg font-bold text-gray-800 mb-4">
+                            Rol del usuario
+                        </h3>
+
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-1">
+                                Rol *
+                            </label>
                             <select
                                 value={form.rol}
                                 onChange={e => {
@@ -485,7 +498,7 @@ function UsuariosPage() {
                                     setBusquedaMatricula("");
                                     setBusquedaInstructor("");
                                 }}
-                                className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full p-3 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                 required
                             >
                                 <option value="" disabled>
@@ -498,137 +511,192 @@ function UsuariosPage() {
                                     </option>
                                 ))}
                             </select>
-
-                            {form.rol === "estudiante" && !editData && (
-                                <div className="relative">
-                                    <input
-                                        type="text"
-                                        placeholder="Buscar matrícula por nombre o cédula..."
-                                        value={busquedaMatricula}
-                                        onChange={e => {
-                                            setBusquedaMatricula(e.target.value);
-                                            setForm({ ...form, matricula_id: "" });
-                                        }}
-                                        className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        required={!form.matricula_id}
-                                    />
-
-                                    {busquedaMatricula && !form.matricula_id && (
-                                        <div className="absolute z-10 w-full bg-white border rounded-xl shadow-lg max-h-48 overflow-y-auto mt-1">
-                                            {matriculas
-                                                .filter(m => {
-                                                    const texto = `
-                                                        ${m.estudiante_nombre || ""}
-                                                        ${m.estudiante_cedula || ""}
-                                                        ${m.plan_nombre || ""}
-                                                    `.toLowerCase();
-
-                                                    return texto.includes(busquedaMatricula.toLowerCase());
-                                                })
-                                                .map(m => (
-                                                    <div
-                                                        key={m.id}
-                                                        onClick={() => {
-                                                            setForm({ ...form, matricula_id: m.id });
-                                                            setBusquedaMatricula(
-                                                                `${m.estudiante_nombre || "Estudiante"} - ${m.estudiante_cedula || "Sin cédula"}`
-                                                            );
-                                                        }}
-                                                        className="p-3 hover:bg-blue-50 cursor-pointer text-sm border-b last:border-b-0"
-                                                    >
-                                                        <p className="font-semibold text-gray-800">
-                                                            {m.estudiante_nombre || "Sin nombre"}
-                                                        </p>
-                                                        <p className="text-xs text-gray-500">
-                                                            Cédula: {m.estudiante_cedula || "N/A"}
-                                                        </p>
-                                                        <p className="text-xs text-gray-500">
-                                                            Estado: {m.estado || "N/A"}
-                                                        </p>
-                                                    </div>
-                                                ))}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-
-                            {form.rol === "instructor" && !editData && (
-                                <div className="relative">
-                                    <input
-                                        type="text"
-                                        placeholder="Buscar instructor por nombre..."
-                                        value={busquedaInstructor}
-                                        onChange={e => {
-                                            setBusquedaInstructor(e.target.value);
-                                            setForm({ ...form, instructor_id: "" });
-                                        }}
-                                        className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        required={!form.instructor_id}
-                                    />
-
-                                    {busquedaInstructor && !form.instructor_id && (
-                                        <div className="absolute z-10 w-full bg-white border rounded-xl shadow-lg max-h-48 overflow-y-auto mt-1">
-                                            {instructores
-                                                .filter(i => {
-                                                    const texto = `
-                                                        ${i.nombre || ""}
-                                                        ${i.apellido || ""}
-                                                        ${i.nombre_completo || ""}
-                                                        ${i.numero_telefono || ""}
-                                                    `.toLowerCase();
-
-                                                    return texto.includes(busquedaInstructor.toLowerCase());
-                                                })
-                                                .map(i => (
-                                                    <div
-                                                        key={i.id}
-                                                        onClick={() => {
-                                                            setForm({ ...form, instructor_id: i.id });
-                                                            setBusquedaInstructor(
-                                                                i.nombre_completo ||
-                                                                `${i.nombre || ""} ${i.apellido || ""}`.trim()
-                                                            );
-                                                        }}
-                                                        className="p-3 hover:bg-blue-50 cursor-pointer text-sm border-b last:border-b-0"
-                                                    >
-                                                        <p className="font-semibold text-gray-800">
-                                                            {i.nombre_completo || `${i.nombre || ""} ${i.apellido || ""}`.trim()}
-                                                        </p>
-
-                                                        <p className="text-xs text-gray-500">
-                                                            Teléfono: {i.numero_telefono || "N/A"}
-                                                        </p>
-
-                                                        <p className="text-xs text-gray-500">
-                                                            Categoría: {i.categoria_nombre || "N/A"}
-                                                        </p>
-                                                    </div>
-                                                ))}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-
-                            <div className="flex justify-end gap-3 pt-4">
-                                <button
-                                    type="button"
-                                    onClick={() => setShowModal(false)}
-                                    className="px-5 py-2.5 border rounded-xl text-gray-700 hover:bg-gray-100 transition"
-                                >
-                                    Cancelar
-                                </button>
-
-                                <button
-                                    type="submit"
-                                    className="px-5 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition"
-                                >
-                                    Guardar
-                                </button>
-                            </div>
-                        </form>
+                        </div>
                     </div>
-                </div>
-            )}
+
+                    {form.rol !== "estudiante" && form.rol !== "instructor" && (
+                        <div className="bg-white border border-gray-200 rounded-2xl p-5">
+                            <h3 className="text-lg font-bold text-gray-800 mb-4">
+                                Información personal
+                            </h3>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                                        Nombres
+                                    </label>
+                                    <input
+                                        type="text"
+                                        placeholder="Nombres"
+                                        value={form.first_name}
+                                        onChange={e => setForm({ ...form, first_name: e.target.value })}
+                                        className="w-full p-3 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                                        Apellidos
+                                    </label>
+                                    <input
+                                        type="text"
+                                        placeholder="Apellidos"
+                                        value={form.last_name}
+                                        onChange={e => setForm({ ...form, last_name: e.target.value })}
+                                        className="w-full p-3 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {form.rol === "estudiante" && !editData && (
+                        <div className="relative bg-green-50 border border-green-100 rounded-2xl p-5">
+                            <h3 className="text-lg font-bold text-gray-800 mb-4">
+                                Vincular matrícula
+                            </h3>
+
+                            <label className="block text-sm font-semibold text-gray-700 mb-1">
+                                Buscar matrícula *
+                            </label>
+
+                            <input
+                                type="text"
+                                placeholder="Buscar matrícula por nombre o cédula..."
+                                value={busquedaMatricula}
+                                onChange={e => {
+                                    setBusquedaMatricula(e.target.value);
+                                    setForm({ ...form, matricula_id: "" });
+                                }}
+                                className="w-full p-3 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                                required={!form.matricula_id}
+                            />
+
+                            {busquedaMatricula && !form.matricula_id && (
+                                <div className="absolute z-10 left-5 right-5 bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-y-auto mt-2">
+                                    {matriculas
+                                        .filter(m => {
+                                            const texto = `
+                                                ${m.estudiante_nombre || ""}
+                                                ${m.estudiante_cedula || ""}
+                                                ${m.plan_nombre || ""}
+                                            `.toLowerCase();
+
+                                            return texto.includes(busquedaMatricula.toLowerCase());
+                                        })
+                                        .map(m => (
+                                            <div
+                                                key={m.id}
+                                                onClick={() => {
+                                                    setForm({ ...form, matricula_id: m.id });
+                                                    setBusquedaMatricula(
+                                                        `${m.estudiante_nombre || "Estudiante"} - ${m.estudiante_cedula || "Sin cédula"}`
+                                                    );
+                                                }}
+                                                className="p-3 hover:bg-green-50 cursor-pointer text-sm border-b last:border-b-0"
+                                            >
+                                                <p className="font-semibold text-gray-800">
+                                                    {m.estudiante_nombre || "Sin nombre"}
+                                                </p>
+                                                <p className="text-xs text-gray-500">
+                                                    Cédula: {m.estudiante_cedula || "N/A"}
+                                                </p>
+                                                <p className="text-xs text-gray-500">
+                                                    Estado: {m.estado || "N/A"}
+                                                </p>
+                                            </div>
+                                        ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {form.rol === "instructor" && !editData && (
+                        <div className="relative bg-purple-50 border border-purple-100 rounded-2xl p-5">
+                            <h3 className="text-lg font-bold text-gray-800 mb-4">
+                                Vincular instructor
+                            </h3>
+
+                            <label className="block text-sm font-semibold text-gray-700 mb-1">
+                                Buscar instructor *
+                            </label>
+
+                            <input
+                                type="text"
+                                placeholder="Buscar instructor por nombre..."
+                                value={busquedaInstructor}
+                                onChange={e => {
+                                    setBusquedaInstructor(e.target.value);
+                                    setForm({ ...form, instructor_id: "" });
+                                }}
+                                className="w-full p-3 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                                required={!form.instructor_id}
+                            />
+
+                            {busquedaInstructor && !form.instructor_id && (
+                                <div className="absolute z-10 left-5 right-5 bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-y-auto mt-2">
+                                    {instructores
+                                        .filter(i => {
+                                            const texto = `
+                                                ${i.nombre || ""}
+                                                ${i.apellido || ""}
+                                                ${i.nombre_completo || ""}
+                                                ${i.numero_telefono || ""}
+                                            `.toLowerCase();
+
+                                            return texto.includes(busquedaInstructor.toLowerCase());
+                                        })
+                                        .map(i => (
+                                            <div
+                                                key={i.id}
+                                                onClick={() => {
+                                                    setForm({ ...form, instructor_id: i.id });
+                                                    setBusquedaInstructor(
+                                                        i.nombre_completo ||
+                                                        `${i.nombre || ""} ${i.apellido || ""}`.trim()
+                                                    );
+                                                }}
+                                                className="p-3 hover:bg-purple-50 cursor-pointer text-sm border-b last:border-b-0"
+                                            >
+                                                <p className="font-semibold text-gray-800">
+                                                    {i.nombre_completo || `${i.nombre || ""} ${i.apellido || ""}`.trim()}
+                                                </p>
+
+                                                <p className="text-xs text-gray-500">
+                                                    Teléfono: {i.numero_telefono || "N/A"}
+                                                </p>
+
+                                                <p className="text-xs text-gray-500">
+                                                    Categoría: {i.categoria_nombre || "N/A"}
+                                                </p>
+                                            </div>
+                                        ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    <div className="sticky bottom-0 bg-white border-t border-gray-100 pt-4 flex justify-end gap-3">
+                        <button
+                            type="button"
+                            onClick={() => setShowModal(false)}
+                            className="px-5 py-2.5 border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-100 transition font-semibold hover:cursor-pointer"
+                        >
+                            Cancelar
+                        </button>
+
+                        <button
+                            type="submit"
+                            className="px-6 py-2.5 bg-yellow-500 text-white rounded-xl hover:bg-yellow-600 transition font-semibold shadow-sm hover:cursor-pointer"
+                        >
+                            Guardar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+)}
         </div>
     );
 }

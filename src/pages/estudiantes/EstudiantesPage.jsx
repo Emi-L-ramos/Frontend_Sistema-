@@ -1,14 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import Swal from "sweetalert2";
-import {
-    Plus,
-    Search,
-    Filter,
-    Users,
-    Check,
-    UserX,
-} from "lucide-react";
+import { Plus } from "lucide-react";
 import api from "../../api/axios";
 
 function EstudiantesPage() {
@@ -19,12 +12,6 @@ function EstudiantesPage() {
     const [showModal, setShowModal] = useState(false);
     const [editData, setEditData] = useState(null);
     const [busqueda, setBusqueda] = useState("");
-
-    const [resumen, setResumen] = useState({
-        total: 0,
-        activos: 0,
-        inactivos: 0,
-    });
 
     const [form, setForm] = useState({
         nombre: "",
@@ -58,25 +45,9 @@ function EstudiantesPage() {
         }
     };
 
-    const cargarResumen = async () => {
-        try {
-            const response = await api.get("/estudiantes/resumen/");
-
-            setResumen({
-                total: response.data.total || 0,
-                activos: response.data.activos || 0,
-                inactivos: response.data.inactivos || 0,
-            });
-
-        } catch (error) {
-            console.error("Error cargando resumen:", error);
-        }
-    };
-
     useEffect(() => {
         if (token) {
             fetchEstudiantes();
-            cargarResumen();
         }
     }, [token]);
 
@@ -214,7 +185,7 @@ function EstudiantesPage() {
     });
 
     return (
-        <div className="p-4 md:p-8 bg-gradient-to-br from-blue-50 via-white to-gray-50 min-h-screen">
+        <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
             <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
                     <h1 className="text-3xl md:text-4xl font-bold text-gray-800">
@@ -238,78 +209,14 @@ function EstudiantesPage() {
                 </button>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-7">
-                <div className="rounded-3xl border border-blue-100 bg-blue-50/60 p-6 shadow-sm flex items-center gap-5">
-                    <div className="w-16 h-16 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center">
-                        <Users size={30} />
-                    </div>
-
-                    <div>
-                        <p className="text-sm font-bold text-gray-700">
-                            Total estudiantes
-                        </p>
-                        <h2 className="text-4xl font-extrabold text-gray-900 mt-1">
-                            {resumen.total}
-                        </h2>
-                        <p className="text-sm text-gray-500 mt-1">
-                            Todos los registros
-                        </p>
-                    </div>
-                </div>
-
-                <div className="rounded-3xl border border-green-100 bg-green-50/70 p-6 shadow-sm flex items-center justify-between gap-5">
-                    <div className="flex items-center gap-5">
-                        <div className="w-16 h-16 rounded-full bg-green-100 text-green-600 flex items-center justify-center">
-                            <Check size={32} />
-                        </div>
-
-                        <div>
-                            <p className="text-sm font-bold text-gray-700">
-                                Activos
-                            </p>
-                            <h2 className="text-4xl font-extrabold text-gray-900 mt-1">
-                                {resumen.activos}
-                            </h2>
-                            <p className="text-sm text-gray-500 mt-1">
-                                Estudiantes activos
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="rounded-3xl border border-red-100 bg-red-50/60 p-6 shadow-sm flex items-center gap-5">
-                    <div className="w-16 h-16 rounded-full bg-red-100 text-red-600 flex items-center justify-center">
-                        <UserX size={30} />
-                    </div>
-
-                    <div>
-                        <p className="text-sm font-bold text-gray-700">
-                            Inactivos
-                        </p>
-                        <h2 className="text-4xl font-extrabold text-gray-900 mt-1">
-                            {resumen.inactivos}
-                        </h2>
-                        <p className="text-sm text-gray-500 mt-1">
-                            Usuarios desactivados
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            <div className="bg-white rounded-3xl shadow-sm border border-gray-200 p-5 mb-6">
-                <div className="relative">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={22} />
-
-                    <input
-                        type="text"
-                        placeholder="Buscar por nombre, cédula, correo o teléfono..."
-                        value={busqueda}
-                        onChange={(e) => setBusqueda(e.target.value)}
-                        className="w-full h-14 pl-12 pr-12 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700"
-                    />
-
-                    <Filter className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" size={22} />
-                </div>
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 mb-6">
+                <input
+                    type="text"
+                    placeholder="Buscar por nombre, cédula, correo o teléfono..."
+                    value={busqueda}
+                    onChange={(e) => setBusqueda(e.target.value)}
+                    className="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
             </div>
 
             {loading ? (
@@ -317,8 +224,8 @@ function EstudiantesPage() {
                     Cargando estudiantes...
                 </div>
             ) : (
-                <div className="bg-white rounded-3xl shadow-sm border border-gray-200 overflow-hidden">
-                    <div className="px-6 py-5 border-b border-gray-200 flex justify-between items-center">
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
                         <div>
                             <h2 className="text-xl font-bold text-gray-800">
                                 Lista de estudiantes
@@ -332,7 +239,7 @@ function EstudiantesPage() {
                     <div className="overflow-x-auto">
                         <table className="w-full">
                             <thead>
-                                <tr className="bg-slate-50 text-slate-500 text-sm border-b border-slate-200">
+                                <tr className="bg-gray-50 text-gray-500 text-sm border-b border-gray-200">
                                     <th className="p-4 text-left">Nombre</th>
                                     <th className="p-4 text-left">Cédula</th>
                                     <th className="p-4 text-left">Teléfono</th>
@@ -348,7 +255,7 @@ function EstudiantesPage() {
                                     estudiantesFiltrados.map((estudiante) => (
                                         <tr
                                             key={estudiante.id}
-                                            className="border-b border-slate-100 hover:bg-blue-50/60 transition"
+                                            className="border-b border-gray-100 hover:bg-blue-50 transition"
                                         >
                                             <td className="p-4">
                                                 <p className="font-semibold text-gray-800">
@@ -391,14 +298,14 @@ function EstudiantesPage() {
                                                 <div className="flex justify-center gap-2">
                                                     <button
                                                         onClick={() => abrirEditar(estudiante)}
-                                                        className="px-4 py-2 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 transition text-sm font-semibold"
+                                                        className="px-3 py-1.5 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 transition"
                                                     >
                                                         Editar
                                                     </button>
 
                                                     <button
                                                         onClick={() => eliminarEstudiante(estudiante)}
-                                                        className="px-4 py-2 rounded-xl border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 transition text-sm font-semibold"
+                                                        className="px-3 py-1.5 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 transition"
                                                     >
                                                         Eliminar
                                                     </button>
@@ -419,126 +326,151 @@ function EstudiantesPage() {
                 </div>
             )}
 
-            {showModal && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
-                    <div className="bg-white rounded-2xl w-full max-w-4xl p-6 shadow-xl max-h-[90vh] overflow-y-auto">
-                        <div className="flex items-center justify-between mb-5">
+           {showModal && (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 px-4">
+        <div className="bg-white rounded-2xl w-full max-w-4xl shadow-2xl max-h-[90vh] overflow-hidden">
+            <div className="sticky top-0 z-10 bg-white px-6 py-5 border-gray-100 flex items-start justify-between">
+                <div>
+                    <h2 className="text-2xl font-bold text-gray-800">
+                        {editData ? "Editar Estudiante" : "Nuevo Estudiante"}
+                    </h2>
+                    <p className="text-sm text-gray-500 mt-1">
+                        Complete los datos personales del estudiante.
+                    </p>
+                </div>
+
+                <button
+                    type="button"
+                    onClick={() => setShowModal(false)}
+                    className="h-10 w-10 flex items-center justify-center rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50 text-3xl leading-none transition"
+                >
+                    ×
+                </button>
+            </div>
+
+            <div className="overflow-y-auto max-h-[calc(90vh-90px)] px-6 py-6">
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    <div className=" border border-blue-50 rounded-2xl p-5">
+                        <h3 className="text-lg font-bold text-gray-800 mb-4">
+                            Datos personales
+                        </h3>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <h2 className="text-2xl font-bold text-gray-800">
-                                    {editData ? "Editar Estudiante" : "Nuevo Estudiante"}
-                                </h2>
-                                <p className="text-sm text-gray-500">
-                                    Complete los datos personales del estudiante
-                                </p>
-                            </div>
-
-                            <button
-                                type="button"
-                                onClick={() => setShowModal(false)}
-                                className="text-gray-400 hover:text-red-500 text-2xl"
-                            >
-                                ×
-                            </button>
-                        </div>
-
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                                    Nombres *
+                                </label>
                                 <input
                                     type="text"
                                     name="nombre"
-                                    placeholder="Nombres"
+                                    placeholder="Ejemplo: Juan Carlos"
                                     value={form.nombre}
                                     onChange={handleChange}
-                                    className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="w-full p-3 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                     required
                                 />
+                            </div>
 
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                                    Apellidos *
+                                </label>
                                 <input
                                     type="text"
                                     name="apellido"
-                                    placeholder="Apellidos"
+                                    placeholder="Ejemplo: Pérez López"
                                     value={form.apellido}
                                     onChange={handleChange}
-                                    className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="w-full p-3 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                     required
                                 />
+                            </div>
 
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                                    Edad *
+                                </label>
                                 <input
                                     type="number"
                                     name="edad"
                                     placeholder="Edad"
                                     value={form.edad}
                                     onChange={handleChange}
-                                    className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="w-full p-3 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                     required
                                 />
+                            </div>
 
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                                    Sexo *
+                                </label>
                                 <select
                                     name="sexo"
                                     value={form.sexo}
                                     onChange={handleChange}
-                                    className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="w-full p-3 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                     required
                                 >
                                     <option value="">Seleccione sexo</option>
                                     <option value="M">Masculino</option>
                                     <option value="F">Femenino</option>
                                 </select>
+                            </div>
 
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                                    Nacionalidad *
+                                </label>
                                 <input
                                     type="text"
                                     name="nacionalidad"
                                     placeholder="Nacionalidad"
                                     value={form.nacionalidad}
                                     onChange={handleChange}
-                                    className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="w-full p-3 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                     required
                                 />
+                            </div>
 
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                                    Fecha de nacimiento *
+                                </label>
                                 <input
                                     type="date"
                                     name="fecha_nacimiento"
                                     value={form.fecha_nacimiento}
                                     onChange={handleChange}
-                                    className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="w-full p-3 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                     required
                                 />
+                            </div>
 
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                                    Cédula *
+                                </label>
                                 <input
                                     type="text"
                                     name="cedula"
-                                    placeholder="Cédula"
+                                    placeholder="Número de cédula"
                                     value={form.cedula}
                                     onChange={handleChange}
-                                    className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="w-full p-3 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                     required
                                 />
+                            </div>
 
-                                <input
-                                    type="email"
-                                    name="correo_electronico"
-                                    placeholder="Correo electrónico"
-                                    value={form.correo_electronico}
-                                    onChange={handleChange}
-                                    className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    required
-                                />
-
-                                <input
-                                    type="text"
-                                    name="telefono_movil"
-                                    placeholder="Teléfono móvil"
-                                    value={form.telefono_movil}
-                                    onChange={handleChange}
-                                    className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    required
-                                />
-
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                                    Nivel educativo *
+                                </label>
                                 <select
                                     name="nivel_educativo"
                                     value={form.nivel_educativo}
                                     onChange={handleChange}
-                                    className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="w-full p-3 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                     required
                                 >
                                     <option value="">Seleccione nivel educativo</option>
@@ -547,68 +479,146 @@ function EstudiantesPage() {
                                     <option value="Universidad">Universidad</option>
                                     <option value="Profesional">Profesional</option>
                                 </select>
+                            </div>
+                        </div>
+                    </div>
 
+                    <div className="border border-gray-200 rounded-2xl p-5">
+                        <h3 className="text-lg font-bold text-gray-800 mb-4">
+                            Contacto
+                        </h3>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                                    Correo electrónico *
+                                </label>
+                                <input
+                                    type="email"
+                                    name="correo_electronico"
+                                    placeholder="correo@ejemplo.com"
+                                    value={form.correo_electronico}
+                                    onChange={handleChange}
+                                    className="w-full p-3 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    required
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                                    Teléfono móvil *
+                                </label>
+                                <input
+                                    type="text"
+                                    name="telefono_movil"
+                                    placeholder="Número de teléfono"
+                                    value={form.telefono_movil}
+                                    onChange={handleChange}
+                                    className="w-full p-3 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    required
+                                />
+                            </div>
+
+                            <div className="md:col-span-2">
+                                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                                    Dirección *
+                                </label>
+                                <textarea
+                                    name="direccion"
+                                    placeholder="Dirección completa del estudiante"
+                                    value={form.direccion}
+                                    onChange={handleChange}
+                                    className="w-full p-3 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                                    rows="3"
+                                    required
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="border border-orange-100 rounded-2xl p-5">
+                        <h3 className="text-lg font-bold text-gray-800 mb-4">
+                            Contacto de emergencia
+                        </h3>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                                    Nombre del contacto *
+                                </label>
                                 <input
                                     type="text"
                                     name="nombre_emergencia"
-                                    placeholder="Contacto de emergencia"
+                                    placeholder="Nombre de la persona de emergencia"
                                     value={form.nombre_emergencia}
                                     onChange={handleChange}
-                                    className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="w-full p-3 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                     required
                                 />
+                            </div>
 
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                                    Teléfono de emergencia *
+                                </label>
                                 <input
                                     type="text"
                                     name="telefono_emergencia"
-                                    placeholder="Teléfono de emergencia"
+                                    placeholder="Número de emergencia"
                                     value={form.telefono_emergencia}
                                     onChange={handleChange}
-                                    className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="w-full p-3 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                     required
                                 />
                             </div>
-
-                            <textarea
-                                name="direccion"
-                                placeholder="Dirección"
-                                value={form.direccion}
-                                onChange={handleChange}
-                                className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                rows="3"
-                                required
-                            />
-
-                            <label className="flex items-center gap-2 text-gray-700">
-                                <input
-                                    type="checkbox"
-                                    name="activo"
-                                    checked={form.activo}
-                                    onChange={handleChange}
-                                />
-                                Estudiante activo
-                            </label>
-
-                            <div className="flex justify-end gap-3 pt-4">
-                                <button
-                                    type="button"
-                                    onClick={() => setShowModal(false)}
-                                    className="px-5 py-2.5 border rounded-xl text-gray-700 hover:bg-gray-100 transition"
-                                >
-                                    Cancelar
-                                </button>
-
-                                <button
-                                    type="submit"
-                                    className="px-5 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition"
-                                >
-                                    {editData ? "Actualizar" : "Guardar"}
-                                </button>
-                            </div>
-                        </form>
+                        </div>
                     </div>
-                </div>
-            )}
+
+                    <div className="flex items-center justify-between bg-white border border-gray-200 rounded-2xl p-4">
+                        <div>
+                            <p className="font-semibold text-gray-800">
+                                Estado del estudiante
+                            </p>
+                            <p className="text-sm text-gray-500">
+                                Si está activo, podrá usarse para matrícula y demás procesos.
+                            </p>
+                        </div>
+
+                        <label className="flex items-center gap-3 text-gray-700 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                name="activo"
+                                checked={form.activo}
+                                onChange={handleChange}
+                                className="h-5 w-5 accent-blue-600"
+                            />
+                            <span className="font-semibold">
+                                Activo
+                            </span>
+                        </label>
+                    </div>
+
+                    <div className="sticky bottom-0 bg-white border-t border-gray-100 pt-4 flex justify-end gap-3">
+                        <button
+                            type="button"
+                            onClick={() => setShowModal(false)}
+                            className="px-5 py-2.5 border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-100 transition font-semibold"
+                        >
+                            Cancelar
+                        </button>
+
+                        <button
+                            type="submit"
+                            className="px-6 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition font-semibold shadow-sm"
+                        >
+                            {editData ? "Actualizar estudiante" : "Guardar estudiante"}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+)}
         </div>
     );
 }
