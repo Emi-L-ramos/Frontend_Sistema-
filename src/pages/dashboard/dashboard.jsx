@@ -483,22 +483,24 @@ function Dashboard() {
             <span>Calendario</span>
           </button>
 
-          {(esEstudiante || esAdmin || esInstructor) && (
+
+             {!esEstudiante && (
             <button
               onClick={() => {
-                setActiveTab("notas");
+                setActiveTab("asistencia");
                 setIsSidebarOpen(false);
               }}
               className={`w-full flex items-center p-3 space-x-3 rounded-xl transition hover:cursor-pointer ${
-                activeTab === "notas"
+                activeTab === "asistencia"
                   ? "bg-blue-100 text-blue-500 font-bold"
                   : "text-gray-600 hover:bg-blue-50"
               }`}
             >
-              <IoSchoolOutline size="1.5rem" />
-              <span>Notas</span>
+              <LuClipboardCheck size="1.5rem" />
+              <span>Asistencia</span>
             </button>
           )}
+
 
           <button
             onClick={() => {
@@ -515,20 +517,22 @@ function Dashboard() {
             <span>Plan de Estudio</span>
           </button>
 
-          {!esEstudiante && (
+         
+
+          {(esEstudiante || esAdmin || esInstructor) && (
             <button
               onClick={() => {
-                setActiveTab("asistencia");
+                setActiveTab("notas");
                 setIsSidebarOpen(false);
               }}
               className={`w-full flex items-center p-3 space-x-3 rounded-xl transition hover:cursor-pointer ${
-                activeTab === "asistencia"
+                activeTab === "notas"
                   ? "bg-blue-100 text-blue-500 font-bold"
                   : "text-gray-600 hover:bg-blue-50"
               }`}
             >
-              <LuClipboardCheck size="1.5rem" />
-              <span>Asistencia</span>
+              <IoSchoolOutline size="1.5rem" />
+              <span>Notas</span>
             </button>
           )}
 
