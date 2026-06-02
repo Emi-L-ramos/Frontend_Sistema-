@@ -3,6 +3,9 @@ import Chart from "react-apexcharts";
 import Swal from "sweetalert2";
 import api from "../../api/axios";
 import { useAuth } from "../../context/AuthContext";
+import { FcGraduationCap } from "react-icons/fc";
+import { FcConferenceCall } from "react-icons/fc";
+import { FcApproval } from "react-icons/fc";
 
 import {
   FiBell,
@@ -332,7 +335,7 @@ const cargarNotificaciones = async () => {
             type="button"
             onClick={cargarNotificaciones}
             disabled={cargandoNotificaciones}
-            className="relative w-10 h-10 rounded-2xl border border-slate-200 bg-white text-slate-500 flex items-center justify-center shadow-sm hover:bg-slate-50 transition disabled:opacity-60"
+            className="relative w-10 h-10 rounded-3xl border border-slate-200 bg-white text-slate-500 flex items-center justify-center shadow-sm hover:bg-slate-50 transition disabled:opacity-60 hover:cursor-pointer"
             title="Ver notificaciones"
           >
             <FiBell size={18} />
@@ -364,13 +367,11 @@ const cargarNotificaciones = async () => {
 
         <div className="relative overflow-hidden bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
           <div className="absolute right-6 top-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-2xl">
-            👥
+            <FcConferenceCall />
           </div>
 
           <div className="relative flex items-center gap-5">
-            <div className="w-14 h-14 rounded-2xl bg-blue-600 text-white flex items-center justify-center text-2xl shadow-sm">
-              👤
-            </div>
+          
 
             <div>
               <p className="text-sm font-semibold text-slate-600">
@@ -392,13 +393,11 @@ const cargarNotificaciones = async () => {
 
         <div className="relative overflow-hidden bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
           <div className="absolute right-6 top-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 text-2xl">
-            🎓
+            <FcApproval />
           </div>
 
           <div className="relative flex items-center gap-5">
-            <div className="w-14 h-14 rounded-2xl bg-emerald-600 text-white flex items-center justify-center text-2xl shadow-sm">
-              👤
-            </div>
+            
 
             <div>
               <p className="text-sm font-semibold text-slate-600">
@@ -418,14 +417,11 @@ const cargarNotificaciones = async () => {
 
         <div className="relative overflow-hidden bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
           <div className="absolute right-6 top-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 text-2xl">
-            🏅
+            <FcGraduationCap />
           </div>
 
           <div className="relative flex items-center gap-5">
-            <div className="w-14 h-14 rounded-2xl bg-purple-600 text-white flex items-center justify-center text-2xl shadow-sm">
-              🎓
-            </div>
-
+            
             <div>
               <p className="text-sm font-semibold text-slate-600">
                 Egresados del Mes

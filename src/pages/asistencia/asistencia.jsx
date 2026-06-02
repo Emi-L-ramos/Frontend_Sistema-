@@ -184,7 +184,7 @@ function CalendarioRangoAsistencia({
             className="w-[330px] sm:w-[370px] bg-white border border-gray-200 rounded-3xl shadow-2xl overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="bg-gradient-to-r from-red-600 to-red-500 text-white px-5 py-5">
+            <div className="bg-gradient-to-r from-yellow-600 to-yellow-500 text-white px-5 py-5">
               <div className="flex items-center justify-between gap-4">
                 <button
                   type="button"
@@ -249,7 +249,7 @@ function CalendarioRangoAsistencia({
                       onClick={() => seleccionarDia(fechaISO)}
                       className={`h-11 w-11 mx-auto rounded-full text-sm font-semibold transition-all relative cursor-pointer ${
                         estaEnRango
-                          ? "bg-red-600 text-white shadow-md hover:bg-red-700"
+                          ? "bg-yellow-600 text-white shadow-md hover:bg-yellow-700"
                           : esHoy
                           ? "bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100"
                           : esDomingo
@@ -711,7 +711,7 @@ export default function Asistencia({ userRole }) {
       : `${fechaInicioTexto} al ${fechaFinTexto}`;
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-[1200px] mx-auto">
+    <div className="w-full max-w-full min-w-0 p-4 sm:p-6 lg:p-8">
       <div className="mb-6">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
           Control de Asistencia
@@ -795,13 +795,14 @@ export default function Asistencia({ userRole }) {
         />
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-x-auto">
+      <div className="w-full max-w-full bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
         {cargando ? (
           <div className="p-12 text-center text-gray-400">
             Cargando asistencia...
           </div>
         ) : (
-          <table className="w-full min-w-[760px] text-sm">
+          <div className="w-full overflow-x-auto overflow-y-auto max-h-[650px]">
+          <table className="w-full min-w-[1100px] table-fixed text-sm">
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50">
                 <th className="px-4 py-3 text-left font-semibold text-gray-700">
@@ -879,6 +880,7 @@ export default function Asistencia({ userRole }) {
               })}
             </tbody>
           </table>
+        </div>
         )}
       </div>
 

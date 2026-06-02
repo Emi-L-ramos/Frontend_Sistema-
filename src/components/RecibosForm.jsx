@@ -517,49 +517,61 @@ function RecibosForm({ onSave, initialData }) {
             : totalCurso > 0
                 ? redondearMonto(totalCurso - montoMostrado)
                 : null;
-    return (
-        <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                    <div>
-                        <p className="text-sm text-gray-600 font-medium">
-                            Total calculado
-                        </p>
-
-                        {tipoCurso === "principiante" ? (
-                            <p className="text-xs text-gray-500">
-                                Principiante: {horasActuales} horas · Total fijo{" "}
-                                <strong>C${totalCurso}</strong>
-                            </p>
-                        ) : horasActuales > 0 ? (
-                            <p className="text-xs text-gray-500">
-                                {etiquetaTipoCurso(tipoCurso)}: {horasActuales} hora
-                                {horasActuales !== 1 ? "s" : ""} × C$
-                                {redondearMonto(valorCursoActual?.precio_hora || form.monto_unitario || 0)} ={" "}
-                                <strong>C${totalCurso}</strong>
-                            </p>
-                        ) : (
-                            <p className="text-xs text-gray-400 italic">
-                                Seleccione un estudiante para ver el total
-                            </p>
-                        )}
-                    </div>
-
-                    <p className="text-3xl font-bold text-blue-600">
-                        {totalCurso > 0 ? `C$ ${totalCurso}` : "—"}
-                    </p>
-                </div>
-
+   return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+            <div className="bg-gradient-to-r from-blue-600 to-blue-500 px-6 py-5 text-white">
+                <h2 className="text-xl font-bold">Registro de recibo</h2>
+                <p className="text-sm text-blue-100">
+                    Seleccioná una matrícula pendiente y registrá el pago correspondiente.
+                </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="md:col-span-2">
-                    <label className="block text-sm font-medium mb-1">
-                        Buscar Estudiante *
+            <div className="p-6 space-y-6">
+                <div className="bg-blue-50 border border-blue-200 p-5 rounded-2xl">
+                    <div className="flex items-center justify-between flex-wrap gap-4">
+                        <div>
+                            <p className="text-sm text-gray-600 font-medium">
+                                Total calculado del curso
+                            </p>
+
+                            {tipoCurso === "principiante" ? (
+                                <p className="text-sm text-gray-500 mt-1">
+                                    Principiante: {horasActuales} horas · Total fijo{" "}
+                                    <strong>C${totalCurso}</strong>
+                                </p>
+                            ) : horasActuales > 0 ? (
+                                <p className="text-sm text-gray-500 mt-1">
+                                    {etiquetaTipoCurso(tipoCurso)}: {horasActuales} hora
+                                    {horasActuales !== 1 ? "s" : ""} × C$
+                                    {redondearMonto(valorCursoActual?.precio_hora || form.monto_unitario || 0)} ={" "}
+                                    <strong>C${totalCurso}</strong>
+                                </p>
+                            ) : (
+                                <p className="text-sm text-gray-400 italic mt-1">
+                                    Seleccione un estudiante para ver el total.
+                                </p>
+                            )}
+                        </div>
+
+                        <div className="text-right">
+                            <p className="text-xs uppercase tracking-wide text-blue-500 font-semibold">
+                                Monto total
+                            </p>
+                            <p className="text-4xl font-extrabold text-blue-700">
+                                {totalCurso > 0 ? `C$ ${totalCurso}` : "—"}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Buscar estudiante *
                     </label>
 
                     <div className="relative">
-                        <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                        <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
 
                         <input
                             type="text"
@@ -576,7 +588,7 @@ function RecibosForm({ onSave, initialData }) {
                                     }));
                                 }
                             }}
-                            className="w-full pl-10 pr-10 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                            className="w-full pl-11 pr-11 py-3 border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                             autoComplete="off"
                         />
 
@@ -584,7 +596,7 @@ function RecibosForm({ onSave, initialData }) {
                             <button
                                 type="button"
                                 onClick={limpiarSeleccion}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500"
+                                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500"
                             >
                                 <FiX size={18} />
                             </button>
@@ -592,16 +604,15 @@ function RecibosForm({ onSave, initialData }) {
                     </div>
 
                     {mostrarResultados && busquedaEstudiante && (
-                        <div className="mt-2 border rounded-lg max-h-60 overflow-y-auto bg-white shadow-lg z-10">
+                        <div className="mt-3 border border-slate-200 rounded-xl max-h-72 overflow-y-auto bg-white shadow-lg z-10">
                             {buscando ? (
-                                <div className="p-4 text-center text-gray-500">
+                                <div className="p-5 text-center text-gray-500">
                                     Buscando...
                                 </div>
                             ) : resultadosBusqueda.length > 0 ? (
                                 resultadosBusqueda.map((mat) => {
-                                    // ========== VALIDACIÓN CORREGIDA ==========
                                     const matriculaBloqueada =
-                                        mat.estado === "matriculado" || // ← CAMBIADO de "aprobado" a "matriculado"
+                                        mat.estado === "matriculado" ||
                                         mat.estado === "finalizado" ||
                                         mat.estado === "cancelado";
 
@@ -620,22 +631,22 @@ function RecibosForm({ onSave, initialData }) {
 
                                                 seleccionarEstudiante(mat);
                                             }}
-                                            className={`p-3 border-b flex justify-between items-center ${
+                                            className={`p-4 border-b last:border-b-0 flex justify-between items-start gap-4 transition ${
                                                 matriculaBloqueada
                                                     ? "bg-gray-100 cursor-not-allowed opacity-70"
                                                     : "hover:bg-blue-50 cursor-pointer"
                                             }`}
                                         >
                                             <div>
-                                                <p className="font-semibold">
+                                                <p className="font-bold text-gray-800">
                                                     {mat.estudiante_nombre || "Sin nombre"}
                                                 </p>
 
-                                                <p className="text-sm text-gray-500">
+                                                <p className="text-sm text-gray-500 mt-1">
                                                     Cédula: {mat.estudiante_cedula || "Sin cédula"}
                                                 </p>
 
-                                                <p className="text-xs text-blue-600">
+                                                <p className="text-xs text-blue-600 font-medium mt-1">
                                                     Matrícula #{mat.id} · Tipo de curso:{" "}
                                                     {etiquetaTipoCurso(normalizarTipoCurso(mat))}
                                                     {normalizarTipoCurso(mat) !== "principiante" &&
@@ -644,16 +655,16 @@ function RecibosForm({ onSave, initialData }) {
                                                         : ""}
                                                 </p>
 
-                                                <p className="text-xs text-gray-500">
+                                                <p className="text-xs text-gray-500 mt-1">
                                                     Categoría: {mat.categoria || "N/A"} · Horario:{" "}
                                                     {mat.horario || "N/A"} · Modalidad:{" "}
                                                     {mat.modalidad || "N/A"}
                                                 </p>
                                             </div>
 
-                                            <div className="text-right">
+                                            <div className="text-right shrink-0">
                                                 {matriculaBloqueada ? (
-                                                    <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700">
+                                                    <span className="text-xs px-3 py-1 rounded-full bg-green-100 text-green-700 font-semibold">
                                                         {mat.estado === "matriculado"
                                                             ? "Pagado"
                                                             : mat.estado === "cancelado"
@@ -661,7 +672,7 @@ function RecibosForm({ onSave, initialData }) {
                                                             : "Finalizado"}
                                                     </span>
                                                 ) : (
-                                                    <span className="text-xs px-2 py-1 rounded-full bg-yellow-100 text-yellow-700">
+                                                    <span className="text-xs px-3 py-1 rounded-full bg-yellow-100 text-yellow-700 font-semibold">
                                                         Pendiente
                                                     </span>
                                                 )}
@@ -670,28 +681,28 @@ function RecibosForm({ onSave, initialData }) {
                                     );
                                 })
                             ) : (
-                                <div className="p-4 text-center text-gray-500">
-                                    No se encontraron estudiantes con matrículas pendientes
+                                <div className="p-5 text-center text-gray-500">
+                                    No se encontraron estudiantes con matrículas pendientes.
                                 </div>
                             )}
                         </div>
                     )}
 
                     {matriculaSeleccionada && (
-                        <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
-                            <p className="text-sm text-green-800 font-medium">
-                                Estudiante seleccionado:
+                        <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-xl">
+                            <p className="text-sm text-green-800 font-semibold">
+                                Estudiante seleccionado
                             </p>
 
-                            <p className="font-semibold">
+                            <p className="font-bold text-gray-800 mt-1">
                                 {matriculaSeleccionada.estudiante_nombre}
                             </p>
 
-                            <p className="text-sm text-gray-600">
+                            <p className="text-sm text-gray-600 mt-1">
                                 Cédula: {matriculaSeleccionada.estudiante_cedula}
                             </p>
 
-                            <p className="text-sm text-gray-600">
+                            <p className="text-sm text-gray-600 mt-1">
                                 Tipo de curso:{" "}
                                 <span className="font-semibold">
                                     {etiquetaTipoCurso(tipoCurso)}
@@ -705,16 +716,15 @@ function RecibosForm({ onSave, initialData }) {
                                 ) : null}
                             </p>
 
-                            {/* Mostrar estado actual de la matrícula */}
-                            <p className="text-sm mt-1">
+                            <p className="text-sm mt-2">
                                 Estado actual:{" "}
-                                <span className={`font-semibold ${
-                                    matriculaSeleccionada.estado === "matriculado" 
-                                        ? "text-green-600" 
+                                <span className={`font-bold ${
+                                    matriculaSeleccionada.estado === "matriculado"
+                                        ? "text-green-600"
                                         : "text-yellow-600"
                                 }`}>
-                                    {matriculaSeleccionada.estado === "matriculado" 
-                                        ? "MATRICULADO (Curso pagado)" 
+                                    {matriculaSeleccionada.estado === "matriculado"
+                                        ? "MATRICULADO (Curso pagado)"
                                         : matriculaSeleccionada.estado === "pendiente"
                                         ? "PENDIENTE (Pago incompleto)"
                                         : matriculaSeleccionada.estado}
@@ -724,170 +734,175 @@ function RecibosForm({ onSave, initialData }) {
                     )}
                 </div>
 
-                <div>
-                    <label className="block text-sm font-medium mb-1">Fecha *</label>
-                    <input
-                        type="date"
-                        name="fecha_pago"
-                        value={form.fecha_pago}
-                        onChange={handleChange}
-                        className="w-full p-2 border rounded"
-                        required
-                    />
-                </div>
-
-                <div>
-                    <label className="block text-sm font-medium mb-1">
-                        N° de Recibo/Factura *
-                    </label>
-                    <input
-                        type="text"
-                        name="numero_recibo"
-                        value={form.numero_recibo}
-                        onChange={handleChange}
-                        className="w-full p-2 border rounded"
-                        required
-                    />
-                </div>
-
-                <div>
-                    <label className="block text-sm font-medium mb-1">
-                        Tipo de Curso
-                    </label>
-                    <input
-                        type="text"
-                        value={etiquetaTipoCurso(tipoCurso)}
-                        className="w-full p-2 border rounded bg-gray-100"
-                        readOnly
-                    />
-                </div>
-
-                {(tipoCurso === "intermedio" || tipoCurso === "avanzado") && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div>
-                        <label className="block text-sm font-medium mb-1">
-                            Horas del curso
+                        <label className="block text-sm font-semibold text-gray-700 mb-1">Fecha *</label>
+                        <input
+                            type="date"
+                            name="fecha_pago"
+                            value={form.fecha_pago}
+                            onChange={handleChange}
+                            className="w-full p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                            required
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-1">
+                            N° de Recibo/Factura *
                         </label>
-                        <div className="w-full p-2 border rounded bg-gray-100 text-gray-700 font-semibold">
-                            {form.horas_reforzamiento || 0} hora
-                            {Number(form.horas_reforzamiento) !== 1 ? "s" : ""}
+                        <input
+                            type="text"
+                            name="numero_recibo"
+                            value={form.numero_recibo}
+                            onChange={handleChange}
+                            className="w-full p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                            required
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-1">
+                            Tipo de Curso
+                        </label>
+                        <input
+                            type="text"
+                            value={etiquetaTipoCurso(tipoCurso)}
+                            className="w-full p-3 border border-slate-300 rounded-xl bg-gray-100 text-gray-700 font-semibold"
+                            readOnly
+                        />
+                    </div>
+
+                    {(tipoCurso === "intermedio" || tipoCurso === "avanzado") && (
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-1">
+                                Horas del curso
+                            </label>
+                            <div className="w-full p-3 border border-slate-300 rounded-xl bg-gray-100 text-gray-700 font-semibold">
+                                {form.horas_reforzamiento || 0} hora
+                                {Number(form.horas_reforzamiento) !== 1 ? "s" : ""}
+                            </div>
+                        </div>
+                    )}
+
+                    <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-1">
+                            Cantidad de horas
+                        </label>
+                        <input
+                            type="number"
+                            value={
+                                tipoCurso === "principiante"
+                                    ? valorCursoActual?.cantidad_horas || form.cantidad || ""
+                                    : form.horas_reforzamiento || ""
+                            }
+                            className="w-full p-3 border border-slate-300 rounded-xl bg-gray-100 text-gray-700 font-semibold"
+                            readOnly
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-1">
+                            Tipo de Pago *
+                        </label>
+                        <select
+                            name="tipo_pago"
+                            value={form.tipo_pago}
+                            onChange={handleChange}
+                            className="w-full p-3 border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                        >
+                            <option value="completo">Completo</option>
+                            <option value="anticipo">Anticipo</option>
+                            <option value="beneficio">Beneficio</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-1">
+                            Monto Pagado *
+                        </label>
+                        <input
+                            type="number"
+                            step="1"
+                            name="monto_pagado"
+                            value={form.monto_pagado}
+                            onChange={handleChange}
+                            className={`w-full p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none ${
+                                form.tipo_pago === "completo" || form.tipo_pago === "beneficio" || esSegundoAnticipo
+                                    ? "bg-gray-100 text-gray-700 font-semibold"
+                                    : "bg-white"
+                            }`}
+                            readOnly={form.tipo_pago === "completo" || esSegundoAnticipo}
+                            required={form.tipo_pago !== "beneficio"}
+                        />
+                    </div>
+
+                    <div className="md:col-span-2">
+                        <label className="block text-sm font-semibold text-gray-700 mb-1">
+                            Observaciones
+                        </label>
+                        <textarea
+                            name="observaciones"
+                            value={form.observaciones}
+                            onChange={handleChange}
+                            className="w-full p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none"
+                            rows="3"
+                            placeholder="Escriba una observación si es necesario..."
+                        />
+                    </div>
+                </div>
+
+                {saldoInfo && (
+                    <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200">
+                        <h3 className="text-lg font-bold mb-4 text-gray-800">
+                            Estado de pagos
+                        </h3>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+                            <div className="bg-white border border-slate-200 rounded-xl p-4">
+                                <p className="text-gray-500">Monto total</p>
+                                <p className="font-extrabold text-gray-800 text-xl mt-1">
+                                    C${redondearMonto(saldoInfo.monto_total || 0)}
+                                </p>
+                            </div>
+
+                            <div className="bg-white border border-slate-200 rounded-xl p-4">
+                                <p className="text-gray-500">Pagado</p>
+                                <p className="font-extrabold text-green-600 text-xl mt-1">
+                                    C${redondearMonto(saldoInfo.total_pagado || 0)}
+                                </p>
+                            </div>
+
+                            <div className="bg-white border border-slate-200 rounded-xl p-4">
+                                <p className="text-gray-500">Saldo pendiente</p>
+                                <p className="font-extrabold text-orange-600 text-xl mt-1">
+                                    C${redondearMonto(saldoInfo.saldo_pendiente || 0)}
+                                </p>
+                            </div>
+
+                            <div className="bg-white border border-slate-200 rounded-xl p-4">
+                                <p className="text-gray-500">Recibos</p>
+                                <p className="font-extrabold text-purple-600 text-xl mt-1">
+                                    {saldoInfo.cantidad_pagos} / {saldoInfo.pagos_permitidos}
+                                </p>
+                            </div>
                         </div>
                     </div>
                 )}
 
-                <div>
-                    <label className="block text-sm font-medium mb-1">Cantidad de horas</label>
-                    <input
-                        type="number"
-                        value={
-                            tipoCurso === "principiante"
-                                ? valorCursoActual?.cantidad_horas || form.cantidad || ""
-                                : form.horas_reforzamiento || ""
-                        }
-                        className="w-full p-2 border rounded bg-gray-100"
-                        readOnly
-                    />
-                </div>
-
-                <div>
-                    <label className="block text-sm font-medium mb-1">
-                        Tipo de Pago *
-                    </label>
-                    <select
-                        name="tipo_pago"
-                        value={form.tipo_pago}
-                        onChange={handleChange}
-                        className="w-full p-2 border rounded"
+                <div className="flex justify-end pt-2">
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed shadow-sm transition"
                     >
-                        <option value="completo">Completo</option>
-                        <option value="anticipo">Anticipo</option>
-                        <option value="beneficio">Beneficio</option>
-                    </select>
-                </div>
-
-               <div>
-                    <label className="block text-sm font-medium mb-1">
-                        Monto Pagado *
-                    </label>
-                    <input
-                        type="number"
-                        step="1"
-                        name="monto_pagado"
-                        value={form.monto_pagado}
-                        onChange={handleChange}
-                        className={`w-full p-2 border rounded ${
-                            form.tipo_pago === "completo" || form.tipo_pago === "beneficio" || esSegundoAnticipo
-                                ? "bg-gray-100"
-                                : ""
-                        }`}
-                        readOnly={form.tipo_pago === "completo" || esSegundoAnticipo}
-                        required={form.tipo_pago !== "beneficio"}
-                    />
-                </div>
-                
-                <div className="md:col-span-2">
-                    <label className="block text-sm font-medium mb-1">
-                        Observaciones
-                    </label>
-                    <textarea
-                        name="observaciones"
-                        value={form.observaciones}
-                        onChange={handleChange}
-                        className="w-full p-2 border rounded"
-                        rows="3"
-                    />
+                        {loading ? "Guardando..." : "Guardar Recibo"}
+                    </button>
                 </div>
             </div>
-
-            {saldoInfo && (
-                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                    <h3 className="text-lg font-semibold mb-3 text-blue-800">
-                        Estado de Pagos
-                    </h3>
-
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-                        <div>
-                            <p className="text-gray-600">Monto Total:</p>
-                            <p className="font-bold text-gray-800">
-                                C${redondearMonto(saldoInfo.monto_total || 0)}
-                            </p>
-                        </div>
-
-                        <div>
-                            <p className="text-gray-600">Pagado:</p>
-                            <p className="font-bold text-green-600">
-                                C${redondearMonto(saldoInfo.total_pagado || 0)}
-                            </p>
-                        </div>
-
-                        <div>
-                            <p className="text-gray-600">Saldo Pendiente:</p>
-                            <p className="font-bold text-orange-600">
-                                C${redondearMonto(saldoInfo.saldo_pendiente || 0)}
-                            </p>
-                        </div>
-
-                        <div>
-                            <p className="text-gray-600">Recibos:</p>
-                            <p className="font-bold text-purple-600">
-                                {saldoInfo.cantidad_pagos} /{" "}
-                                {saldoInfo.pagos_permitidos}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            <div className="flex justify-end gap-2">
-                <button
-                    type="submit"
-                    disabled={loading}
-                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-60"
-                >
-                    {loading ? "Guardando..." : "Guardar Recibo"}
-                </button>
-            </div>
-        </form>
-    );
+        </div>
+    </form>
+);
 }
 
 export default RecibosForm;

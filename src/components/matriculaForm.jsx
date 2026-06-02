@@ -311,7 +311,7 @@ function MatriculaForm({ initialData, onSave, onError }) {
                                         key={estudiante.id}
                                         type="button"
                                         onClick={() => seleccionarEstudiante(estudiante)}
-                                        className="w-full text-left p-3 hover:bg-blue-50 border-b last:border-b-0"
+                                        className="w-full text-left p-3 hover:bg-blue-50  last:border-b-0"
                                     >
                                         <p className="font-semibold text-gray-800">
                                             {estudiante.nombre} {estudiante.apellido}
@@ -510,7 +510,7 @@ function MatriculaForm({ initialData, onSave, onError }) {
                 </div>
             </div>
 
-            <div className="flex justify-end gap-3 border-t pt-4">
+            <div className="flex justify-end gap-3  pt-4">
                 <button
                     type="button"
                     onClick={() => onSave && onSave(null)}
