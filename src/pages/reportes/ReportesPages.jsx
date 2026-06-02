@@ -983,7 +983,7 @@ function ReportesPages() {
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-3 bg-white border border-slate-100 rounded-3xl px-4 py-3 shadow-sm">
+                        {/* <div className="flex items-center gap-3 bg-white border border-slate-100 rounded-3xl px-4 py-3 shadow-sm">
                             <div className="w-11 h-11 rounded-full bg-blue-600 text-white flex items-center justify-center font-extrabold">
                                 {(user?.username || "A").charAt(0).toUpperCase()}
                             </div>
@@ -996,7 +996,8 @@ function ReportesPages() {
                                     Admin
                                 </p>
                             </div>
-                        </div>
+                        </div> */}
+
                     </div>
                 </div>
 
