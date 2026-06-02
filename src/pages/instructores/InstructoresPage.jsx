@@ -101,6 +101,7 @@ const seleccionarFechaCalendario = (fecha) => {
         categoria_instructor: "",
         edad: "",
         foto: null,
+        foto_base64: "",
         eliminar_foto: false,
         cedula: "",
         nacionalidad: "",
@@ -154,6 +155,7 @@ const seleccionarFechaCalendario = (fecha) => {
             categoria_instructor: "",
             edad: "",
             foto: null,
+            foto_base64: "",
             eliminar_foto: false,
             cedula: "",
             nacionalidad: "",
@@ -187,6 +189,7 @@ const seleccionarFechaCalendario = (fecha) => {
             categoria_instructor: instructor.categoria_instructor || "",
             edad: instructor.edad || "",
             foto: null,
+            foto_base64: instructor.foto_base64 || "",
             eliminar_foto: false,
             cedula: instructor.cedula || "",
             nacionalidad: instructor.nacionalidad || "",
@@ -209,46 +212,54 @@ const seleccionarFechaCalendario = (fecha) => {
         limpiarForm();
     };
 
+    const convertirImagenABase64 = (file) => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+
+            reader.readAsDataURL(file);
+        });
+    };
+
     const guardarInstructor = async (e) => {
         e.preventDefault();
 
-        const formData = new FormData();
-
-        formData.append("nombre", form.nombre);
-        formData.append("apellido", form.apellido);
-        formData.append("numero_telefono", form.numero_telefono);
-        formData.append("direccion", form.direccion);
-        formData.append("categoria_instructor", form.categoria_instructor || "");
-        formData.append("edad", form.edad || "");
-        formData.append("cedula", form.cedula);
-        formData.append("nacionalidad", form.nacionalidad);
-        formData.append("nivel_escolar", form.nivel_escolar);
-        formData.append("antecedentes_penales", form.antecedentes_penales);
-        formData.append("centro_trabajo", form.centro_trabajo);
-        formData.append("cargo", form.cargo);
-        formData.append("curso_aprobado_instructor", form.curso_aprobado_instructor);
-        formData.append("fecha_ingreso", form.fecha_ingreso || "");
-        formData.append("fecha_salida", form.fecha_salida || "");
-        formData.append("motivo_salida", form.motivo_salida);
-        formData.append("infracciones_resoluciones", form.infracciones_resoluciones);
-
-        if (form.eliminar_foto) {
-            formData.append("foto", "");
-        } else if (form.foto instanceof File) {
-            formData.append("foto", form.foto);
-        }
-
         try {
-            const config = {
-                headers: {
-                    "Content-Type": "multipart/form-data",
-                },
+            let fotoBase64Final = form.foto_base64 || "";
+
+            if (form.eliminar_foto) {
+                fotoBase64Final = "";
+            } else if (form.foto instanceof File) {
+                fotoBase64Final = await convertirImagenABase64(form.foto);
+            }
+
+            const payload = {
+                nombre: form.nombre,
+                apellido: form.apellido,
+                numero_telefono: form.numero_telefono,
+                direccion: form.direccion,
+                categoria_instructor: form.categoria_instructor || "",
+                edad: form.edad || null,
+                cedula: form.cedula || null,
+                nacionalidad: form.nacionalidad || "",
+                nivel_escolar: form.nivel_escolar || "",
+                antecedentes_penales: form.antecedentes_penales || "No",
+                centro_trabajo: form.centro_trabajo || "",
+                cargo: form.cargo || "",
+                curso_aprobado_instructor: form.curso_aprobado_instructor || "",
+                fecha_ingreso: form.fecha_ingreso || null,
+                fecha_salida: form.fecha_salida || null,
+                motivo_salida: form.motivo_salida || "",
+                infracciones_resoluciones: form.infracciones_resoluciones || "",
+                foto_base64: fotoBase64Final,
             };
 
             if (editData) {
-                await api.patch(`/instructores/${editData.id}/`, formData, config);
+                await api.patch(`/instructores/${editData.id}/`, payload);
             } else {
-                await api.post("/instructores/", formData, config);
+                await api.post("/instructores/", payload);
             }
 
             Swal.fire(
@@ -406,9 +417,9 @@ const seleccionarFechaCalendario = (fecha) => {
 
                                             <div className="flex items-center gap-3">
                                                 <div className="w-12 h-12 rounded-full bg-gray-100 overflow-hidden flex items-center justify-center">
-                                                    {inst.foto_url ? (
+                                                    {inst.foto_base64 ? (
                                                         <img
-                                                            src={inst.foto_url}
+                                                            src={inst.foto_base64}
                                                             alt={inst.nombre_completo}
                                                             className="w-full h-full object-cover"
                                                         />
@@ -757,7 +768,7 @@ const seleccionarFechaCalendario = (fecha) => {
                                 </label>
                             </div>
 
-                            {editData?.foto_url && (
+                            {editData?.foto_base64 && (
                                 <button
                                     type="button"
                                     onClick={() =>
