@@ -184,7 +184,7 @@ function UsuariosPage() {
 
         try {
             if (editData) {
-                await api.put(`/usuarios/${editData.id}/`, userData);
+                await api.patch(`/usuarios/${editData.id}/`, userData);
             } else {
                 await api.post("/usuarios/", userData);
             }
@@ -367,6 +367,7 @@ function UsuariosPage() {
                                                                                 last_name: u.last_name || "",
                                                                                 rol: rolUsuario,
                                                                                 matricula_id: "",
+                                                                                instructor_id: "",
                                                                             });
 
                                                                             setShowModal(true);

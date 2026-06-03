@@ -1,7 +1,16 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import Swal from "sweetalert2";
-import { Plus } from "lucide-react";
+import {
+    Plus,
+    Search,
+    Pencil,
+    Trash2,
+    UserRound,
+    X,
+    CheckCircle2,
+    XCircle,
+} from "lucide-react";
 import api from "../../api/axios";
 
 function EstudiantesPage() {
@@ -184,69 +193,122 @@ function EstudiantesPage() {
         return texto.includes(busqueda.toLowerCase());
     });
 
+    const obtenerIniciales = (estudiante) => {
+        const nombre = estudiante.nombre?.charAt(0) || "";
+        const apellido = estudiante.apellido?.charAt(0) || "";
+        return `${nombre}${apellido}`.toUpperCase() || "E";
+    };
+
+    const obtenerSexo = (sexo) => {
+        if (sexo === "M") return "Masculino";
+        if (sexo === "F") return "Femenino";
+        return "No definido";
+    };
+
     return (
-        <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
-            <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div className="min-h-screen bg-[#f5f7fb] px-4 py-5 md:px-8 lg:px-10">
+        <div className="mx-auto max-w-[1500px]">
+            <div className="mb-7 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                    <h1 className="text-3xl md:text-4xl font-bold text-gray-800">
+                    <h1 className="mt-4 text-3xl font-black tracking-tight text-slate-900 md:text-4xl">
                         Estudiantes
                     </h1>
-                    <p className="text-gray-500 mt-1">
-                        Registro de estudiantes antes de realizar la matrícula
+
+                    <p className="mt-1 max-w-2xl text-sm text-slate-500 md:text-base">
+                        Registro de Estudiantes.
+                    </p>
+                </div>
+            </div>
+
+            <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
+                <div className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+                    <p className="text-sm font-medium text-slate-500">
+                        Total registrados
+                    </p>
+                    <p className="mt-2 text-3xl font-black text-slate-900">
+                        {estudiantes.length}
                     </p>
                 </div>
 
-                <button
-                    onClick={abrirCrear}
-                    className="relative group overflow-hidden px-20 h-11 rounded-3xl bg-green-500 text-white flex items-center gap-2 transition-all duration-300 hover:bg-green-600 justify-end hover:cursor-pointer"
-                >
-                    <span className="absolute top-0 left-[-75%] w-[50%] h-full bg-gradient-to-r from-transparent via-white/60 to-transparent skew-x-12 group-hover:left-[125%] transition-all duration-700"></span>
+                <div className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+                    <p className="text-sm font-medium text-slate-500">
+                        Activos
+                    </p>
+                    <p className="mt-2 text-3xl font-black text-emerald-600">
+                        {estudiantes.filter((estudiante) => estudiante.activo).length}
+                    </p>
+                </div>
 
-                    <span className="relative z-10 flex items-center gap-2">
-                        <Plus className="size-5" />
-                        Nuevo Estudiante
-                    </span>
-                </button>
+                <div className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+                    <p className="text-sm font-medium text-slate-500">
+                        Resultado actual
+                    </p>
+                    <p className="mt-2 text-3xl font-black text-blue-600">
+                        {estudiantesFiltrados.length}
+                    </p>
+                </div>
             </div>
 
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 mb-6">
-                <input
-                    type="text"
-                    placeholder="Buscar por nombre, cédula, correo o teléfono..."
-                    value={busqueda}
-                    onChange={(e) => setBusqueda(e.target.value)}
-                    className="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+            <div className="mb-6 rounded-[28px] bg-white p-4 shadow-sm ring-1 ring-slate-200">
+                <div className="flex flex-col gap-3 lg:flex-row">
+                    <div className="relative flex-1">
+                        <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+
+                        <input
+                            type="text"
+                            placeholder="Buscar por nombre, cédula, correo o teléfono..."
+                            value={busqueda}
+                            onChange={(e) => setBusqueda(e.target.value)}
+                            className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 pl-12 pr-4 text-sm text-slate-700 outline-none transition focus:border-blue-400 focus:bg-white focus:ring-4 focus:ring-blue-100"
+                        />
+                    </div>
+
+                    <button
+                        type="button"
+                        onClick={abrirCrear}
+                        className="cursor-pointer group inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-7 text-sm font-bold text-white shadow-lg shadow-emerald-500/20 transition-all duration-300 hover:-translate-y-0.5 hover:bg-emerald-600 hover:shadow-emerald-500/30"
+                    >
+                        <Plus className="h-5 w-5 transition-transform duration-300 group-hover:rotate-90" />
+                        Nuevo estudiante
+                    </button>
+                </div>
             </div>
 
             {loading ? (
-                <div className="bg-white rounded-2xl shadow p-8 text-center text-gray-500">
-                    Cargando estudiantes...
+                <div className="rounded-[28px] bg-white p-10 text-center shadow-sm ring-1 ring-slate-200">
+                    <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-blue-600"></div>
+                    <p className="font-semibold text-slate-500">
+                        Cargando estudiantes...
+                    </p>
                 </div>
             ) : (
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                    <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                <div className="overflow-hidden rounded-[28px] bg-white shadow-sm ring-1 ring-slate-200">
+                    <div className="flex flex-col gap-3 border-b border-slate-100 px-5 py-5 md:flex-row md:items-center md:justify-between md:px-7">
                         <div>
-                            <h2 className="text-xl font-bold text-gray-800">
+                            <h2 className="text-xl font-black text-slate-900">
                                 Lista de estudiantes
                             </h2>
-                            <p className="text-sm text-gray-500">
+
+                            <p className="mt-1 text-sm text-slate-500">
                                 {estudiantesFiltrados.length} estudiante(s) encontrados
                             </p>
+                        </div>
+
+                        <div className="rounded-full bg-slate-100 px-4 py-2 text-xs font-bold text-slate-500">
+                            Vista general
                         </div>
                     </div>
 
                     <div className="overflow-x-auto">
-                        <table className="w-full">
+                        <table className="w-full min-w-[1000px]">
                             <thead>
-                                <tr className="bg-gray-50 text-gray-500 text-sm border-b border-gray-200">
-                                    <th className="p-4 text-left">Nombre</th>
-                                    <th className="p-4 text-left">Cédula</th>
-                                    <th className="p-4 text-left">Teléfono</th>
-                                    <th className="p-4 text-left">Correo</th>
-                                    <th className="p-4 text-left">Nivel educativo</th>
-                                    <th className="p-4 text-center">Estado</th>
-                                    <th className="p-4 text-center">Acciones</th>
+                                <tr className="border-b border-slate-100 bg-slate-50/80 text-xs uppercase tracking-wide text-slate-500">
+                                    <th className="px-7 py-4 text-left">Nombre</th>
+                                    <th className="px-5 py-4 text-left">Cédula</th>
+                                    <th className="px-5 py-4 text-left">Teléfono</th>
+                                    <th className="px-5 py-4 text-left">Nivel educativo</th>
+                                    <th className="px-5 py-4 text-center">Estado</th>
+                                    <th className="px-7 py-4 text-center">Acciones</th>
                                 </tr>
                             </thead>
 
@@ -255,78 +317,95 @@ function EstudiantesPage() {
                                     estudiantesFiltrados.map((estudiante) => (
                                         <tr
                                             key={estudiante.id}
-                                            className="border-b border-gray-100 hover:bg-blue-50 transition"
+                                            className="group border-b border-slate-100 transition hover:bg-blue-50/40"
                                         >
-                                            <td className="p-4">
-                                                <p className="font-semibold text-gray-800">
-                                                    {estudiante.nombre} {estudiante.apellido}
-                                                </p>
-                                                <p className="text-xs text-gray-500">
-                                                    {estudiante.sexo === "M" ? "Masculino" : "Femenino"} · {estudiante.edad} años
-                                                </p>
+                                            <td className="px-7 py-4">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-blue-100 text-sm font-black text-slate-700">
+                                                        {obtenerIniciales(estudiante)}
+                                                    </div>
+
+                                                    <div>
+                                                        <p className="font-bold text-slate-900">
+                                                            {estudiante.nombre} {estudiante.apellido}
+                                                        </p>
+
+                                                        <p className="mt-0.5 text-xs text-slate-500">
+                                                            {obtenerSexo(estudiante.sexo)} · {estudiante.edad || "Sin edad"} años
+                                                        </p>
+                                                    </div>
+                                                </div>
                                             </td>
 
-                                            <td className="p-4 text-gray-700">
-                                                {estudiante.cedula}
+                                            <td className="px-5 py-4 text-sm font-medium text-slate-600">
+                                                {estudiante.cedula || "No registrado"}
                                             </td>
 
-                                            <td className="p-4 text-gray-700">
-                                                {estudiante.telefono_movil}
+                                            <td className="px-5 py-4 text-sm text-slate-600">
+                                                {estudiante.telefono_movil || "No registrado"}
                                             </td>
 
-                                            <td className="p-4 text-gray-700">
-                                                {estudiante.correo_electronico}
+                                            <td className="px-5 py-4 text-sm font-medium text-slate-700">
+                                                {estudiante.nivel_educativo || "No registrado"}
                                             </td>
 
-                                            <td className="p-4 text-gray-700">
-                                                {estudiante.nivel_educativo}
-                                            </td>
-
-                                            <td className="p-4 text-center">
+                                            <td className="px-5 py-4 text-center">
                                                 <span
-                                                    className={`px-3 py-1 rounded-full text-xs font-bold ${
+                                                    className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-black ${
                                                         estudiante.activo
-                                                            ? "bg-green-100 text-green-700"
-                                                            : "bg-red-100 text-red-700"
+                                                            ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
+                                                            : "bg-red-50 text-red-700 ring-1 ring-red-100"
                                                     }`}
                                                 >
+                                                    {estudiante.activo ? (
+                                                        <CheckCircle2 className="h-3.5 w-3.5" />
+                                                    ) : (
+                                                        <XCircle className="h-3.5 w-3.5" />
+                                                    )}
+
                                                     {estudiante.activo ? "Activo" : "Inactivo"}
                                                 </span>
                                             </td>
 
-                                            <td className="p-4">
+                                            <td className="px-7 py-4">
                                                 <div className="flex justify-center gap-2">
                                                     <button
+                                                        type="button"
                                                         onClick={() => abrirEditar(estudiante)}
-                                                        className="px-3 py-1.5 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 transition"
+                                                        title="Editar estudiante"
+                                                        className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 ring-1 ring-blue-100 transition hover:-translate-y-0.5 hover:bg-blue-100"
                                                     >
-                                                        Editar
+                                                        <Pencil className="h-4 w-4" />
                                                     </button>
 
                                                     <button
+                                                        type="button"
                                                         onClick={() => eliminarEstudiante(estudiante)}
-                                                        className="px-3 py-1.5 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 transition"
+                                                        title="Eliminar estudiante"
+                                                        className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-red-50 text-red-600 ring-1 ring-red-100 transition hover:-translate-y-0.5 hover:bg-red-100"
                                                     >
-                                                        Eliminar
+                                                        <Trash2 className="h-4 w-4" />
                                                     </button>
                                                 </div>
                                             </td>
                                         </tr>
                                     ))
                                 ) : (
-                                    <tr>
-                                        <td colSpan="7" className="p-8 text-center text-gray-400">
-                                            No hay estudiantes registrados.
-                                        </td>
-                                    </tr>
+                                    <td
+                                        colSpan="7"
+                                        className="px-7 py-12 text-center text-sm font-medium text-slate-400"
+                                    >
+                                        No hay estudiantes registrados.
+                                    </td>
                                 )}
                             </tbody>
                         </table>
                     </div>
                 </div>
             )}
+        </div>
 
-           {showModal && (
+        {showModal && (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 px-4">
         <div className="bg-white rounded-2xl w-full max-w-4xl shadow-2xl max-h-[90vh] overflow-hidden">
             <div className="sticky top-0 z-10 bg-white px-6 py-5 border-gray-100 flex items-start justify-between">
