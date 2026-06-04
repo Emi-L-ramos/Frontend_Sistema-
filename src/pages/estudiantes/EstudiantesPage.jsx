@@ -268,7 +268,7 @@ function EstudiantesPage() {
                 <div className="flex min-h-[150px] items-center justify-between rounded-[28px] bg-white px-7 py-6 shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:shadow-md md:col-span-2 xl:col-span-1">
                     <div>
                         <p className="text-base font-bold text-slate-600">
-                            Resultado actual
+                            Coincidencias.
                         </p>
 
                         <p className="mt-4 text-4xl font-black text-blue-600">
@@ -276,7 +276,7 @@ function EstudiantesPage() {
                         </p>
 
                         <p className="mt-3 text-base font-medium text-slate-400">
-                            Coincidencias según la búsqueda
+                            Estudiantes visibles en la tabla.
                         </p>
                     </div>
 
