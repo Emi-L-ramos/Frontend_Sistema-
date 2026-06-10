@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import DashboardHome from "./dashboardhome";
 import MatriculaPage from "../matricula/MatriculaPage";
@@ -43,8 +43,6 @@ function Dashboard() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [menuUsuarioAbierto, setMenuUsuarioAbierto] = useState(false);
 
-  const menuUsuarioRef = useRef(null);
-
   const rol = user?.rol?.toLowerCase() || "";
 
   const esAdmin = rol === "admin" || rol === "administrador";
@@ -56,22 +54,6 @@ function Dashboard() {
       obtenerNotificacionesAdmin();
     }
   }, [esAdmin]);
-
-  useEffect(() => {
-    const cerrarMenuUsuario = (event) => {
-      if (
-        menuUsuarioRef.current &&
-        !menuUsuarioRef.current.contains(event.target)
-      ) {
-        setMenuUsuarioAbierto(false);
-      }
-    };
-
-    document.addEventListener("mousedown", cerrarMenuUsuario);
-    return () => {
-      document.removeEventListener("mousedown", cerrarMenuUsuario);
-    };
-  }, []);
 
   const formatearFecha = (fecha) => {
     if (!fecha) return "Sin fecha";
@@ -268,13 +250,13 @@ function Dashboard() {
     <div className="flex h-screen bg-white font-sans">
       {isSidebarOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black bg-opacity-20"
+          className="fixed inset-0 z-40 bg-slate-950/45 md:hidden"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white transform transition-transform md:relative md:translate-x-0 flex flex-col h-screen border-r border-gray-100 ${
+        className={`fixed inset-y-0 left-0 z-50 w-[82vw] max-w-[320px] bg-white transition-transform duration-300 md:w-64 md:max-w-none md:relative md:translate-x-0 flex flex-col h-[100dvh] border-r border-gray-100 ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -503,7 +485,7 @@ function Dashboard() {
         </nav>
 
         <div className="p-4 border-t border-gray-200 bg-white">
-          <div className="relative" ref={menuUsuarioRef}>
+          <div className="relative">
             <div className="rounded-2xl bg-gradient-to-r from-slate-50 to-blue-50 border border-slate-200 p-3 shadow-sm">
               <div className="flex items-center gap-3">
                 <div className="relative">
@@ -536,48 +518,76 @@ function Dashboard() {
                 </button>
               </div>
             </div>
-
-            {menuUsuarioAbierto && (
-              <div className="absolute left-full bottom-0 ml-3 w-64 rounded-3xl bg-white border border-slate-200 shadow-2xl p-2 z-[9999]">
-                <div className="px-3 py-3 border-b border-slate-100">
-                  <p className="text-sm font-bold text-slate-800">Opciones del sistema</p>
-                  <p className="text-xs text-slate-500 mt-0.5">Configuración y sesión</p>
-                </div>
-
-                {esAdmin && (
-                  <button
-                    type="button"
-                    onClick={irConfiguracionSistema}
-                    className="cursor-pointer w-full flex items-center gap-3 px-3 py-3 mt-2 rounded-2xl text-sm font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition"
-                  >
-                    <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">
-                      <IoSettingsOutline size="1.25rem" />
-                    </div>
-                    <div className="text-left">
-                      <p>Configuración</p>
-                      <p className="text-xs font-normal text-slate-400">Ajustes generales</p>
-                    </div>
-                  </button>
-                )}
-
-                <button
-                  type="button"
-                  onClick={cerrarSesion}
-                  className="cursor-pointer w-full flex items-center gap-3 px-3 py-3 rounded-2xl text-sm font-semibold text-red-600 hover:bg-red-50 transition"
-                >
-                  <div className="w-10 h-10 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center">
-                    <IoLogOutOutline size="1.35rem" />
-                  </div>
-                  <div className="text-left">
-                    <p>Cerrar sesión</p>
-                    <p className="text-xs font-normal text-red-400">Salir del sistema</p>
-                  </div>
-                </button>
-              </div>
-            )}
           </div>
         </div>
       </aside>
+
+      {menuUsuarioAbierto && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-end justify-center bg-slate-950/45 md:items-end md:justify-start md:bg-transparent md:pl-[17rem] md:pb-4"
+          onClick={() => setMenuUsuarioAbierto(false)}
+        >
+          <div
+            className="mx-3 w-full max-h-[82dvh] overflow-y-auto rounded-t-[30px] bg-white border border-slate-200 shadow-2xl p-4 md:mx-0 md:w-72 md:max-h-none md:rounded-3xl md:p-2"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-3 px-3 py-3 border-b border-slate-100">
+              <div>
+                <p className="text-sm font-bold text-slate-800">
+                  Opciones del sistema
+                </p>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Configuración y sesión
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setMenuUsuarioAbierto(false)}
+                className="md:hidden w-9 h-9 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center text-xl font-bold"
+              >
+                ×
+              </button>
+            </div>
+
+            {esAdmin && (
+              <button
+                type="button"
+                onClick={irConfiguracionSistema}
+                className="cursor-pointer w-full flex items-center gap-3 px-3 py-3 mt-2 rounded-2xl text-sm font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition"
+              >
+                <div className="w-11 h-11 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
+                  <IoSettingsOutline size="1.25rem" />
+                </div>
+
+                <div className="text-left min-w-0">
+                  <p className="truncate">Configuración</p>
+                  <p className="text-xs font-normal text-slate-400 truncate">
+                    Ajustes generales
+                  </p>
+                </div>
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={cerrarSesion}
+              className="cursor-pointer w-full flex items-center gap-3 px-3 py-3 rounded-2xl text-sm font-semibold text-red-600 hover:bg-red-50 transition"
+            >
+              <div className="w-11 h-11 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center flex-shrink-0">
+                <IoLogOutOutline size="1.35rem" />
+              </div>
+
+              <div className="text-left min-w-0">
+                <p className="truncate">Cerrar sesión</p>
+                <p className="text-xs font-normal text-red-400 truncate">
+                  Salir del sistema
+                </p>
+              </div>
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {!isSidebarOpen && (
@@ -592,7 +602,7 @@ function Dashboard() {
           </div>
         )}
 
-        <main className="flex-1 overflow-y-auto p-4 bg-slate-50">
+        <main className="flex-1 overflow-y-auto p-3 md:p-4 bg-slate-50">
           {renderContent()}
         </main>
       </div>
