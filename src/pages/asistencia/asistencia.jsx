@@ -23,6 +23,16 @@ import {
   resumenKilometros,
 } from "../../api/asistencia";
 
+import {
+  FaClipboardCheck,
+  FaUsers,
+  FaUserCheck,
+  FaUserTimes,
+  FaClock,
+  FaSearch,
+  FaCalendarAlt,
+} from "react-icons/fa";
+
 const obtenerFechaHoy = () => {
   const hoy = new Date();
   const year = hoy.getFullYear();
@@ -405,24 +415,34 @@ export default function Asistencia({ userRole }) {
     });
   };
 
-  const obtenerDetalleKilometraje = (estudiante) => {
-    if (!estudiante?.asistencias) return [];
+const obtenerDetalleKilometraje = (estudiante) => {
+  if (!estudiante?.asistencias) return [];
 
-    return Object.entries(estudiante.asistencias)
-      .map(([numero, asistencia]) => ({
-        numero,
-        ...asistencia,
-      }))
-      .filter((item) => {
-        return (
-          item.km_inicial !== null ||
-          item.km_final !== null ||
-          item.km_recorridos !== null
-        );
-      })
-      .sort((a, b) => Number(a.numero) - Number(b.numero));
-  };
+  return Object.entries(estudiante.asistencias)
+    .map(([numero, asistencia]) => ({
+      numero,
+      ...asistencia,
+    }))
+    .filter((item) => {
+      const tieneKmInicial =
+        item.km_inicial !== null &&
+        item.km_inicial !== undefined &&
+        item.km_inicial !== "";
 
+      const tieneKmFinal =
+        item.km_final !== null &&
+        item.km_final !== undefined &&
+        item.km_final !== "";
+
+      const tieneKmRecorrido =
+        item.km_recorridos !== null &&
+        item.km_recorridos !== undefined &&
+        Number(item.km_recorridos) > 0;
+
+      return tieneKmInicial || tieneKmFinal || tieneKmRecorrido;
+    })
+    .sort((a, b) => Number(a.numero) - Number(b.numero));
+};
   const textoEstado = (data) => {
     if (!data) return "Sin marcar";
 
@@ -582,7 +602,7 @@ export default function Asistencia({ userRole }) {
 
             {tieneKmFinal ? (
               <span className="text-[9px] text-blue-600">
-                {data.km_recorridos} km
+                {calcularKmRecorrido(data)} km
               </span>
             ) : kmPendiente && rol === "instructor" ? (
               <button
@@ -681,36 +701,62 @@ export default function Asistencia({ userRole }) {
     );
   };
 
-  const resumenSeleccionado = buscarResumenKmEstudiante(modalDetalleEstudiante);
+ const resumenSeleccionado = buscarResumenKmEstudiante(modalDetalleEstudiante);
 
-  const detalleKmSeleccionado = obtenerDetalleKilometraje(
-    modalDetalleEstudiante
-  );
+const detalleKmSeleccionado = obtenerDetalleKilometraje(
+  modalDetalleEstudiante
+);
 
-  const instructorNombreSeleccionado =
-    modalDetalleEstudiante?.instructor_nombre ||
-    modalDetalleEstudiante?.conductor ||
-    detalleKmSeleccionado.find((item) => item.instructor_nombre)?.instructor_nombre ||
-    resumenSeleccionado?.instructor_nombre ||
-    "No asignado";
+const instructorNombreSeleccionado =
+  modalDetalleEstudiante?.instructor_nombre ||
+  modalDetalleEstudiante?.conductor ||
+  detalleKmSeleccionado.find((item) => item.instructor_nombre)?.instructor_nombre ||
+  resumenSeleccionado?.instructor_nombre ||
+  "No asignado";
 
-  const totalKmSeleccionado =
-    resumenSeleccionado?.total_km ??
-    detalleKmSeleccionado.reduce(
-      (total, item) => total + Number(item.km_recorridos || 0),
-      0
-    );
+const calcularKmRecorrido = (item) => {
+  const tieneKmInicial =
+    item.km_inicial !== null &&
+    item.km_inicial !== undefined &&
+    item.km_inicial !== "";
 
-  const totalClasesKmSeleccionado =
-    resumenSeleccionado?.total_clases ??
-    detalleKmSeleccionado.filter((item) => {
-      return (
-        item.km_inicial !== null &&
-        item.km_inicial !== undefined &&
-        item.km_final !== null &&
-        item.km_final !== undefined
-      );
-    }).length;
+  const tieneKmFinal =
+    item.km_final !== null &&
+    item.km_final !== undefined &&
+    item.km_final !== "";
+
+  if (tieneKmInicial && tieneKmFinal) {
+    const inicial = Number(item.km_inicial);
+    const final = Number(item.km_final);
+
+    if (!Number.isNaN(inicial) && !Number.isNaN(final)) {
+      return final - inicial;
+    }
+  }
+
+  return Number(item.km_recorridos || 0);
+};
+
+const totalKmSeleccionado = detalleKmSeleccionado.reduce((total, item) => {
+  return total + calcularKmRecorrido(item);
+}, 0);
+console.log("ESTUDIANTE MODAL:", modalDetalleEstudiante);
+console.log("DETALLE KM:", detalleKmSeleccionado);
+console.log("TOTAL KM:", totalKmSeleccionado);
+
+const totalClasesKmSeleccionado = detalleKmSeleccionado.filter((item) => {
+  const tieneKmInicial =
+    item.km_inicial !== null &&
+    item.km_inicial !== undefined &&
+    item.km_inicial !== "";
+
+  const tieneKmFinal =
+    item.km_final !== null &&
+    item.km_final !== undefined &&
+    item.km_final !== "";
+
+  return tieneKmInicial && tieneKmFinal;
+}).length;
 
   const fechaInicioTexto = convertirFechaLocal(fechaInicio).toLocaleDateString(
     "es-NI",
@@ -735,203 +781,327 @@ export default function Asistencia({ userRole }) {
       ? fechaInicioTexto
       : `${fechaInicioTexto} al ${fechaFinTexto}`;
 
+  const obtenerIniciales = (nombre = "") => {
+    const partes = String(nombre).trim().split(/\s+/).filter(Boolean);
+
+    if (partes.length === 0) return "E";
+
+    return partes
+      .slice(0, 2)
+      .map((parte) => parte[0])
+      .join("")
+      .toUpperCase();
+  };
+
   return (
-    <div className="w-full max-w-full min-w-0 p-4 sm:p-6 lg:p-8">
-      <div className="mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-          Control de Asistencia
-        </h1>
+    <div className="min-h-screen bg-[#f6f8fc] px-4 py-5 md:px-8 lg:px-10">
+      <div className="mx-auto max-w-[1500px]">
+        <div className="mb-7 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="flex items-start gap-4">
+            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-3xl bg-blue-50 text-blue-600 shadow-sm ring-1 ring-blue-100">
+              <FaClipboardCheck className="text-3xl" />
+            </div>
 
-        <p className="text-sm text-gray-500 mt-1">
-          Registro de asistencia de los encuentros — {textoRango}
-        </p>
-      </div>
+            <div>
+              <h1 className="text-4xl font-black tracking-tight text-slate-900">
+                Control de Asistencia
+              </h1>
 
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
-          <div className="flex items-center gap-2 text-gray-500 text-sm mb-1">
-            <Users className="w-4 h-4" />
-            Total Estudiantes
+              <p className="mt-2 text-base text-slate-500">
+                Registro de asistencia de los encuentros — {textoRango}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className="relative min-h-[150px] overflow-hidden rounded-[28px] border border-blue-100 bg-blue-50/60 px-6 py-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+            <div className="relative z-10 flex items-center gap-4">
+              <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-3xl bg-white text-blue-600 shadow-sm ring-1 ring-blue-100">
+                <FaUsers className="text-4xl" />
+              </div>
+
+              <div>
+                <p className="text-base font-bold text-slate-600">
+                  Total estudiantes
+                </p>
+
+                <p className="mt-2 text-4xl font-black text-blue-600">
+                  {totalEstudiantes}
+                </p>
+
+                <p className="mt-2 text-sm font-medium text-slate-500">
+                  Estudiantes registrados
+                </p>
+              </div>
+            </div>
+
+            <div className="pointer-events-none absolute -bottom-8 -right-6 text-blue-500 opacity-10">
+              <FaUsers className="text-[125px]" />
+            </div>
           </div>
 
-          <p className="text-3xl font-bold text-gray-900">
-            {totalEstudiantes}
-          </p>
-        </div>
+          <div className="relative min-h-[150px] overflow-hidden rounded-[28px] border border-emerald-100 bg-emerald-50/60 px-6 py-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+            <div className="relative z-10 flex items-center gap-4">
+              <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-3xl bg-white text-emerald-600 shadow-sm ring-1 ring-emerald-100">
+                <FaUserCheck className="text-4xl" />
+              </div>
 
-        <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
-          <div className="flex items-center gap-2 text-gray-500 text-sm mb-1">
-            <CheckCircle2 className="w-4 h-4 text-green-500" />
-            Presentes
+              <div>
+                <p className="text-base font-bold text-slate-600">
+                  Presentes
+                </p>
+
+                <p className="mt-2 text-4xl font-black text-emerald-600">
+                  {presentes}
+                </p>
+
+                <p className="mt-2 text-sm font-medium text-slate-500">
+                  Estudiantes presentes
+                </p>
+              </div>
+            </div>
+
+            <div className="pointer-events-none absolute -bottom-8 -right-6 text-emerald-500 opacity-10">
+              <FaUserCheck className="text-[125px]" />
+            </div>
           </div>
 
-          <p className="text-3xl font-bold text-green-600">{presentes}</p>
-        </div>
+          <div className="relative min-h-[150px] overflow-hidden rounded-[28px] border border-red-100 bg-red-50/60 px-6 py-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+            <div className="relative z-10 flex items-center gap-4">
+              <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-3xl bg-white text-red-600 shadow-sm ring-1 ring-red-100">
+                <FaUserTimes className="text-4xl" />
+              </div>
 
-        <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
-          <div className="flex items-center gap-2 text-gray-500 text-sm mb-1">
-            <UserX className="w-4 h-4" />
-            Ausentes
+              <div>
+                <p className="text-base font-bold text-slate-600">
+                  Ausentes
+                </p>
+
+                <p className="mt-2 text-4xl font-black text-red-600">
+                  {ausentes}
+                </p>
+
+                <p className="mt-2 text-sm font-medium text-slate-500">
+                  Estudiantes ausentes
+                </p>
+              </div>
+            </div>
+
+            <div className="pointer-events-none absolute -bottom-8 -right-6 text-red-500 opacity-10">
+              <FaUserTimes className="text-[125px]" />
+            </div>
           </div>
 
-          <p className="text-3xl font-bold text-red-600">{ausentes}</p>
+          <div className="relative min-h-[150px] overflow-hidden rounded-[28px] border border-orange-100 bg-orange-50/60 px-6 py-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+            <div className="relative z-10 flex items-center gap-4">
+              <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-3xl bg-white text-orange-600 shadow-sm ring-1 ring-orange-100">
+                <FaClock className="text-4xl" />
+              </div>
+
+              <div>
+                <p className="text-base font-bold text-slate-600">
+                  Pendientes
+                </p>
+
+                <p className="mt-2 text-4xl font-black text-orange-600">
+                  {pendientes}
+                </p>
+
+                <p className="mt-2 text-sm font-medium text-slate-500">
+                  Sin marcar
+                </p>
+              </div>
+            </div>
+
+            <div className="pointer-events-none absolute -bottom-8 -right-6 text-orange-500 opacity-10">
+              <FaClock className="text-[125px]" />
+            </div>
+          </div>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
-          <div className="flex items-center gap-2 text-gray-500 text-sm mb-1">
-            <Circle className="w-4 h-4 text-orange-500" />
-            Pendientes
+        {error && (
+          <div className="mb-5 flex items-center gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-600">
+            <AlertTriangle className="h-5 w-5 shrink-0" />
+
+            <span>{error}</span>
+
+            <button
+              type="button"
+              onClick={() => setError("")}
+              className="ml-auto flex h-8 w-8 items-center justify-center rounded-full hover:bg-red-100"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        )}
+
+        <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="relative w-full max-w-xl">
+            <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-slate-400" />
+
+            <input
+              type="text"
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              placeholder="Buscar estudiante..."
+              className="h-12 w-full rounded-2xl border border-slate-200 bg-white pl-11 pr-4 text-sm font-semibold text-slate-700 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+            />
           </div>
 
-          <p className="text-3xl font-bold text-orange-500">{pendientes}</p>
-        </div>
-      </div>
-
-      {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600 flex items-center gap-2">
-          <AlertTriangle className="w-4 h-4" />
-
-          {error}
-
-          <button onClick={() => setError("")} className="ml-auto">
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-      )}
-
-      <div className="flex items-center justify-between gap-4 mb-4 flex-wrap">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-
-          <input
-            type="text"
-            value={busqueda}
-            onChange={(e) => setBusqueda(e.target.value)}
-            placeholder="Buscar estudiante..."
-            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-red-400"
+          <CalendarioRangoAsistencia
+            fechaInicio={fechaInicio}
+            fechaFin={fechaFin}
+            setFechaInicio={setFechaInicio}
+            setFechaFin={setFechaFin}
           />
         </div>
 
-        <CalendarioRangoAsistencia
-          fechaInicio={fechaInicio}
-          fechaFin={fechaFin}
-          setFechaInicio={setFechaInicio}
-          setFechaFin={setFechaFin}
-        />
-      </div>
+        <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm">
+          <div className="flex flex-col gap-3 border-b border-slate-100 px-5 py-5 md:flex-row md:items-center md:justify-between md:px-7">
+            <div>
+              <h2 className="text-2xl font-black text-slate-900">
+                Registro de asistencia
+              </h2>
 
-      <div className="w-full max-w-full bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
-        {cargando ? (
-          <div className="p-12 text-center text-gray-400">
-            Cargando asistencia...
+              <p className="mt-1 text-sm font-medium text-slate-500">
+                Control diario por estudiante y encuentro
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-2 text-xs font-bold text-slate-500">
+              <div className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-2 text-emerald-700 ring-1 ring-emerald-100">
+                <CheckCircle2 className="h-4 w-4" />
+                Presente
+              </div>
+
+              <div className="inline-flex items-center gap-2 rounded-full bg-red-50 px-3 py-2 text-red-700 ring-1 ring-red-100">
+                <XCircle className="h-4 w-4" />
+                Ausente
+              </div>
+
+              <div className="inline-flex items-center gap-2 rounded-full bg-yellow-50 px-3 py-2 text-yellow-700 ring-1 ring-yellow-100">
+                <span className="flex h-4 w-4 items-center justify-center rounded-full bg-yellow-400 text-[8px] font-black text-white">
+                  J
+                </span>
+                Justificada
+              </div>
+
+              <div className="inline-flex items-center gap-2 rounded-full bg-slate-50 px-3 py-2 text-slate-500 ring-1 ring-slate-100">
+                <Circle className="h-4 w-4 text-slate-300" />
+                Sin marcar / bloqueada
+              </div>
+            </div>
           </div>
-        ) : (
-          <div className="w-full overflow-x-auto overflow-y-auto max-h-[650px]">
-          <table className="w-full min-w-[1100px] table-fixed text-sm">
-            <thead>
-              <tr className="border-b border-gray-100 bg-gray-50">
-                <th className="px-4 py-3 text-left font-semibold text-gray-700">
-                  Estudiante
-                </th>
 
-                <th className="px-4 py-3 text-left font-semibold text-gray-700">
-                  Cédula
-                </th>
+          {cargando ? (
+            <div className="p-12 text-center text-sm font-semibold text-slate-400">
+              Cargando asistencia...
+            </div>
+          ) : (
+            <div className="w-full overflow-x-auto overflow-y-auto max-h-[650px]">
+              <table className="w-full min-w-[1150px] table-fixed text-sm">
+                <thead className="sticky top-0 z-10">
+                  <tr className="border-b border-slate-100 bg-slate-50">
+                    <th className="w-[260px] px-6 py-4 text-left text-xs font-black uppercase tracking-wide text-slate-500">
+                      Estudiante
+                    </th>
 
-                {encuentrosDisponibles.map((e) => (
-                  <th
-                    key={e}
-                    className={`px-3 py-3 text-center font-semibold ${
-                      e === encuentroFiltro ? "text-red-600" : "text-gray-700"
-                    }`}
-                  >
-                    E{e}
-                  </th>
-                ))}
+                    <th className="w-[170px] px-4 py-4 text-left text-xs font-black uppercase tracking-wide text-slate-500">
+                      Cédula
+                    </th>
 
-                <th className="px-4 py-3 text-center font-semibold text-gray-700">
-                  Asistencia
-                </th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {filtrados.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={encuentrosDisponibles.length + 3}
-                    className="px-4 py-8 text-center text-gray-400"
-                  >
-                    No hay estudiantes programados para esta fecha o rango.
-                  </td>
-                </tr>
-              )}
-
-              {filtrados.map((est) => {
-                const color =
-                  est.porcentaje === 100
-                    ? "text-green-600"
-                    : est.porcentaje >= 75
-                    ? "text-yellow-600"
-                    : "text-red-600";
-
-                return (
-                  <tr
-                    key={est.matricula_id}
-                    onClick={() => setModalDetalleEstudiante(est)}
-                    className="border-b border-gray-50 hover:bg-red-50/40 transition-colors cursor-pointer"
-                  >
-                    <td className="px-4 py-4 font-medium text-gray-900">
-                      {est.nombre}
-                    </td>
-
-                    <td className="px-4 py-4 text-gray-500">{est.cedula}</td>
-
-                    {encuentrosDisponibles.map((num) => (
-                      <CeldaAsistencia
-                        key={num}
-                        data={est.asistencias?.[String(num)]}
-                        numero={num}
-                      />
+                    {encuentrosDisponibles.map((e) => (
+                      <th
+                        key={e}
+                        className={`w-[85px] px-3 py-4 text-center text-xs font-black uppercase tracking-wide ${
+                          e === encuentroFiltro
+                            ? "text-blue-600"
+                            : "text-slate-500"
+                        }`}
+                      >
+                        E{e}
+                      </th>
                     ))}
 
-                    <td
-                      className={`px-4 py-4 text-center font-bold text-base ${color}`}
-                    >
-                      {est.porcentaje}%
-                    </td>
+                    <th className="w-[130px] px-4 py-4 text-center text-xs font-black uppercase tracking-wide text-slate-500">
+                      Asistencia
+                    </th>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-        )}
-      </div>
+                </thead>
 
-      <div className="mt-4 flex flex-wrap gap-4 text-xs text-gray-500">
-        <div className="flex items-center gap-1.5">
-          <CheckCircle2 className="w-4 h-4 text-green-500" />
-          Presente
-        </div>
+                <tbody>
+                  {filtrados.length === 0 && (
+                    <tr>
+                      <td
+                        colSpan={encuentrosDisponibles.length + 3}
+                        className="px-4 py-10 text-center text-sm font-semibold text-slate-400"
+                      >
+                        No hay estudiantes programados para esta fecha o rango.
+                      </td>
+                    </tr>
+                  )}
 
-        <div className="flex items-center gap-1.5">
-          <XCircle className="w-4 h-4 text-red-500" />
-          Ausente
-        </div>
+                  {filtrados.map((est) => {
+                    const color =
+                      est.porcentaje === 100
+                        ? "text-emerald-600"
+                        : est.porcentaje >= 75
+                        ? "text-yellow-600"
+                        : "text-red-600";
 
-        <div className="flex items-center gap-1.5">
-          <div className="w-4 h-4 rounded-full bg-yellow-400 flex items-center justify-center">
-            <span className="text-white text-[8px] font-bold">J</span>
-          </div>
-          Justificada
-        </div>
+                    return (
+                      <tr
+                        key={est.matricula_id}
+                        onClick={() => setModalDetalleEstudiante(est)}
+                        className="group border-b border-slate-100 transition hover:bg-blue-50/40 cursor-pointer"
+                      >
+                        <td className="px-6 py-5">
+                          <div className="flex items-center gap-3">
+                            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-sm font-black text-blue-600 ring-1 ring-blue-100">
+                              {obtenerIniciales(est.nombre)}
+                            </div>
 
-        <div className="flex items-center gap-1.5">
-          <Circle className="w-4 h-4 text-gray-200" />
-          Sin marcar / bloqueada
-        </div>
-      </div>
+                            <div className="min-w-0">
+                              <p className="truncate text-base font-black text-slate-900">
+                                {est.nombre}
+                              </p>
+
+                              <p className="mt-1 text-xs font-semibold text-slate-400">
+                                Matrícula #{est.matricula_id}
+                              </p>
+                            </div>
+                          </div>
+                        </td>
+
+                        <td className="px-4 py-5 text-sm font-semibold text-slate-500">
+                          {est.cedula}
+                        </td>
+
+                        {encuentrosDisponibles.map((num) => (
+                          <CeldaAsistencia
+                            key={num}
+                            data={est.asistencias?.[String(num)]}
+                            numero={num}
+                          />
+                        ))}
+
+                        <td className="px-4 py-5 text-center">
+                          <span
+                            className={`inline-flex min-w-[72px] items-center justify-center rounded-full px-3 py-2 text-base font-black ${color}`}
+                          >
+                            {est.porcentaje}%
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>  
+    </div>
 
       {modalDetalleEstudiante && (
         <div
@@ -1087,7 +1257,7 @@ export default function Asistencia({ userRole }) {
                           </td>
 
                           <td className="px-4 py-3 text-right font-bold text-blue-600">
-                            {item.km_recorridos ?? 0} km
+                             {calcularKmRecorrido(item)} km
                           </td>
                         </tr>
                       ))}
