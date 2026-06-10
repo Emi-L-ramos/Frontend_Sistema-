@@ -15,6 +15,7 @@ import VerPlanEstudio from "./pages/plan_studio/VerPlanEstudio";
 import ExamenTeoricoPage from "./pages/examen_teorico/ExamenTeoricoPage";
 import ExamenTeoricoEstudiante from "./pages/examen_teorico/ExamenTeoricoEstudiante";
 import InstructoresPage from "./pages/instructores/InstructoresPage";
+import Configuraciones from "./pages/dashboard/configuraciones";
 
 import "./App.css";
 
@@ -103,15 +104,6 @@ function App() {
                     />
 
                     <Route
-                        path="/dashboard/mi-examen-teorico"
-                        element={
-                            <ProtectedRoute rolesPermitidos={["estudiante"]}>
-                                <ExamenTeoricoEstudiante />
-                            </ProtectedRoute>
-                        }
-                    />
-
-                    <Route
                         path="/dashboard/plan-estudio/ver"
                         element={
                             <ProtectedRoute rolesPermitidos={["admin"]}>
@@ -134,6 +126,24 @@ function App() {
                         element={
                             <ProtectedRoute rolesPermitidos={["admin"]}>
                                 <InstructoresPage />
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    <Route
+                        path="/dashboard/configuraciones"
+                        element={
+                            <ProtectedRoute rolesPermitidos={["admin"]}>
+                                <Configuraciones />
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    <Route
+                        path="/dashboard/mi-examen-teorico"
+                        element={
+                            <ProtectedRoute rolesPermitidos={["estudiante"]}>
+                                <ExamenTeoricoEstudiante />
                             </ProtectedRoute>
                         }
                     />
