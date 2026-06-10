@@ -1,600 +1,1085 @@
-import { useState, useEffect, useRef } from "react";
-import { useAuth } from "../../context/AuthContext";
-import DashboardHome from "./dashboardhome";
-import MatriculaPage from "../matricula/MatriculaPage";
-import RecibosPage from "../recibos/RecibosPage";
-import Calendario from "../calendario/calendario";
-import NotasPages from "../nota/notas";
-import PlanStudio from "../plan_studio/plan_studio";
-import Configuraciones from "./configuraciones";
-import Asistencia from "../asistencia/asistencia";
-import PerfilEstudiante from "../perfil_studiante/perfil_estudiante";
-import UsuariosPage from "../admin/UsuariosPage";
-import EstudiantesPage from "../estudiantes/EstudiantesPage";
-import ReportesPages from "../reportes/ReportesPages";
-import InstructoresPage from "../instructores/InstructoresPage";
-import VerPlanEstudio from "../plan_studio/VerPlanEstudio";
-import PlanEstudioForm from "../plan_studio/PlanEstudioForm";
+// src/pages/dashboard/configuraciones.jsx
 
-import { LuLayoutDashboard, LuClipboardCheck } from "react-icons/lu";
-import { TbMenu2, TbCalendarTime } from "react-icons/tb";
-import { HiOutlineDocumentCurrencyDollar } from "react-icons/hi2";
-import { FiUserPlus } from "react-icons/fi";
-import { IoMdBook } from "react-icons/io";
-import { MdPersonOutline } from "react-icons/md";
-import { IoSchoolOutline } from "react-icons/io5";
-import { FaUsers } from "react-icons/fa";
-import { PiStudent } from "react-icons/pi";
-import { FaSquarePollVertical } from "react-icons/fa6";
-
-import InstructorHome from "./instructorhome";
-import EstudianteHome from "./estudianteshome";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
 import Swal from "sweetalert2";
 import axios from "../../api/axios";
-import { BsThreeDotsVertical } from "react-icons/bs";
-import { IoSettingsOutline, IoLogOutOutline } from "react-icons/io5";
 
-function Dashboard() {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
+import {
+  IoSettingsOutline,
+  IoAddOutline,
+  IoSaveOutline,
+  IoCloseOutline,
+  IoCreateOutline,
+  IoTrashOutline,
+  IoRefreshOutline,
+  IoShieldCheckmarkOutline,
+  IoCarSportOutline,
+  IoCashOutline,
+  IoSchoolOutline,
+  IoBriefcaseOutline,
+  IoCheckmarkCircleOutline,
+  IoCloseCircleOutline,
+  IoInformationCircleOutline,
+} from "react-icons/io5";
 
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("dashboard");
-  const [menuUsuarioAbierto, setMenuUsuarioAbierto] = useState(false);
+function Configuraciones() {
+  const endpoints = {
+    roles: "/roles/",
+    categorias: "/categorias/",
+    pagosInstructor: "/pagos-instructor/",
+    valoresCurso: "/valores-curso/",
+    cargosInstitucionales: "/cargos-institucionales/",
+  };
 
-  const menuUsuarioRef = useRef(null);
+  const secciones = [
+    {
+      key: "roles",
+      titulo: "Roles",
+      subtitulo: "Control de permisos",
+      descripcion:
+        "Administra los roles que se usan para clasificar los accesos dentro del sistema, como administrador, instructor o estudiante.",
+      endpoint: endpoints.roles,
+      icono: IoShieldCheckmarkOutline,
+      color: "blue",
+      campos: [
+        {
+          name: "nombre",
+          label: "Nombre del rol",
+          type: "text",
+          placeholder: "Ejemplo: Administrador",
+          required: true,
+        },
+      ],
+      columnas: [
+        {
+          key: "nombre",
+          label: "Rol",
+        },
+      ],
+      formInicial: {
+        nombre: "",
+      },
+    },
+    {
+      key: "categorias",
+      titulo: "Categorías de vehículo",
+      subtitulo: "Categorías para matrícula",
+      descripcion:
+        "Administra las categorías de vehículo que se asignan durante el proceso de matrícula.",
+      endpoint: endpoints.categorias,
+      icono: IoCarSportOutline,
+      color: "emerald",
+      campos: [
+        {
+          name: "nombre",
+          label: "Nombre de la categoría",
+          type: "text",
+          placeholder: "Ejemplo: Profesional 1,2,3,5,6,7 y 8",
+          required: true,
+        },
+      ],
+      columnas: [
+        {
+          key: "nombre",
+          label: "Categoría",
+        },
+      ],
+      formInicial: {
+        nombre: "",
+      },
+    },
+    {
+      key: "pagosInstructor",
+      titulo: "Pago de instructores",
+      subtitulo: "Monto por alumno",
+      descripcion:
+        "Configura el monto que se le paga al instructor por alumno. Si registras un pago activo, el sistema puede usarlo como pago vigente.",
+      endpoint: endpoints.pagosInstructor,
+      icono: IoCashOutline,
+      color: "amber",
+      campos: [
+        {
+          name: "monto_por_alumno",
+          label: "Monto por alumno",
+          type: "number",
+          placeholder: "Ejemplo: 500",
+          required: true,
+        },
+        {
+          name: "fecha_inicio",
+          label: "Fecha de inicio",
+          type: "date",
+          required: true,
+        },
+        {
+          name: "fecha_fin",
+          label: "Fecha de finalización",
+          type: "date",
+          required: false,
+        },
+        {
+          name: "descripcion",
+          label: "Descripción",
+          type: "text",
+          placeholder: "Ejemplo: Pago vigente para cursos regulares",
+          required: false,
+        },
+        {
+          name: "activo",
+          label: "Pago activo",
+          type: "checkbox",
+          required: false,
+        },
+      ],
+      columnas: [
+        {
+          key: "monto_por_alumno",
+          label: "Monto",
+          money: true,
+        },
+        {
+          key: "fecha_inicio",
+          label: "Inicio",
+          date: true,
+        },
+        {
+          key: "fecha_fin",
+          label: "Fin",
+          date: true,
+        },
+        {
+          key: "descripcion",
+          label: "Descripción",
+        },
+        {
+          key: "activo",
+          label: "Estado",
+          boolean: true,
+        },
+      ],
+      formInicial: {
+        monto_por_alumno: "",
+        fecha_inicio: "",
+        fecha_fin: "",
+        descripcion: "",
+        activo: true,
+      },
+    },
+    {
+      key: "valoresCurso",
+      titulo: "Valores de curso",
+      subtitulo: "Precios y horas",
+      descripcion:
+        "Configura el precio por hora, cantidad de horas y precio total de los cursos Principiante, Intermedio y Avanzado.",
+      endpoint: endpoints.valoresCurso,
+      icono: IoSchoolOutline,
+      color: "purple",
+      campos: [
+        {
+          name: "tipo_curso",
+          label: "Tipo de curso",
+          type: "select",
+          required: true,
+          options: [
+            {
+              value: "Principiante",
+              label: "Principiante",
+            },
+            {
+              value: "Intermedio",
+              label: "Intermedio",
+            },
+            {
+              value: "Avanzado",
+              label: "Avanzado",
+            },
+          ],
+        },
+        {
+          name: "precio_hora",
+          label: "Precio por hora",
+          type: "number",
+          placeholder: "Ejemplo: 433.33",
+          required: true,
+        },
+        {
+          name: "cantidad_horas",
+          label: "Cantidad de horas",
+          type: "number",
+          placeholder: "Ejemplo: 15",
+          required: true,
+        },
+        {
+          name: "precio_total",
+          label: "Precio total",
+          type: "number",
+          placeholder: "Ejemplo: 6500",
+          required: true,
+        },
+        {
+          name: "activo",
+          label: "Curso activo",
+          type: "checkbox",
+          required: false,
+        },
+      ],
+      columnas: [
+        {
+          key: "tipo_curso",
+          label: "Curso",
+        },
+        {
+          key: "precio_hora",
+          label: "Precio/hora",
+          money: true,
+        },
+        {
+          key: "cantidad_horas",
+          label: "Horas",
+        },
+        {
+          key: "precio_total",
+          label: "Total",
+          money: true,
+        },
+        {
+          key: "activo",
+          label: "Estado",
+          boolean: true,
+        },
+      ],
+      formInicial: {
+        tipo_curso: "Principiante",
+        precio_hora: "",
+        cantidad_horas: 15,
+        precio_total: "",
+        activo: true,
+      },
+    },
+    {
+      key: "cargosInstitucionales",
+      titulo: "Cargos institucionales",
+      subtitulo: "Autoridades y cargos",
+      descripcion:
+        "Administra los cargos internos del instituto, como gerente, director, secretaria u otros cargos institucionales.",
+      endpoint: endpoints.cargosInstitucionales,
+      icono: IoBriefcaseOutline,
+      color: "rose",
+      campos: [
+        {
+          name: "nombre",
+          label: "Nombre completo",
+          type: "text",
+          placeholder: "Ejemplo: Juan Pérez",
+          required: true,
+        },
+        {
+          name: "cargo",
+          label: "Cargo",
+          type: "text",
+          placeholder: "Ejemplo: Director académico",
+          required: true,
+        },
+        {
+          name: "tipo",
+          label: "Tipo de cargo",
+          type: "select",
+          required: true,
+          options: [
+            {
+              value: "gerente",
+              label: "Gerente",
+            },
+            {
+              value: "director",
+              label: "Director",
+            },
+            {
+              value: "secretaria",
+              label: "Secretaria",
+            },
+            {
+              value: "otro",
+              label: "Otro",
+            },
+          ],
+        },
+        {
+          name: "activo",
+          label: "Cargo activo",
+          type: "checkbox",
+          required: false,
+        },
+      ],
+      columnas: [
+        {
+          key: "nombre",
+          label: "Nombre",
+        },
+        {
+          key: "cargo",
+          label: "Cargo",
+        },
+        {
+          key: "tipo",
+          label: "Tipo",
+        },
+        {
+          key: "activo",
+          label: "Estado",
+          boolean: true,
+        },
+      ],
+      formInicial: {
+        nombre: "",
+        cargo: "",
+        tipo: "otro",
+        activo: true,
+      },
+    },
+  ];
 
-  const rol = user?.rol?.toLowerCase() || "";
+  const [seccionActiva, setSeccionActiva] = useState("roles");
+  const [datos, setDatos] = useState({});
+  const [formulario, setFormulario] = useState({});
+  const [registroEditando, setRegistroEditando] = useState(null);
+  const [cargando, setCargando] = useState(false);
+  const [guardando, setGuardando] = useState(false);
 
-  const esAdmin = rol === "admin" || rol === "administrador";
-  const esInstructor = rol === "instructor";
-  const esEstudiante = rol === "estudiante";
+  const configActual = useMemo(() => {
+    return secciones.find((item) => item.key === seccionActiva);
+  }, [seccionActiva]);
+
+  const registrosActuales = datos[seccionActiva] || [];
 
   useEffect(() => {
-    if (esAdmin) {
-      obtenerNotificacionesAdmin();
+    if (!configActual) return;
+
+    setFormulario(configActual.formInicial);
+    setRegistroEditando(null);
+    cargarDatos(configActual);
+  }, [configActual]);
+
+  const obtenerClaseColor = (color) => {
+    const colores = {
+      blue: {
+        fondo: "bg-blue-50",
+        texto: "text-blue-600",
+        borde: "border-blue-200",
+        activo: "bg-blue-600 text-white border-blue-600",
+        hover: "hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200",
+      },
+      emerald: {
+        fondo: "bg-emerald-50",
+        texto: "text-emerald-600",
+        borde: "border-emerald-200",
+        activo: "bg-emerald-600 text-white border-emerald-600",
+        hover: "hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200",
+      },
+      amber: {
+        fondo: "bg-amber-50",
+        texto: "text-amber-600",
+        borde: "border-amber-200",
+        activo: "bg-amber-500 text-white border-amber-500",
+        hover: "hover:bg-amber-50 hover:text-amber-700 hover:border-amber-200",
+      },
+      purple: {
+        fondo: "bg-purple-50",
+        texto: "text-purple-600",
+        borde: "border-purple-200",
+        activo: "bg-purple-600 text-white border-purple-600",
+        hover: "hover:bg-purple-50 hover:text-purple-700 hover:border-purple-200",
+      },
+      rose: {
+        fondo: "bg-rose-50",
+        texto: "text-rose-600",
+        borde: "border-rose-200",
+        activo: "bg-rose-600 text-white border-rose-600",
+        hover: "hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200",
+      },
+    };
+
+    return colores[color] || colores.blue;
+  };
+
+  const obtenerMensajeError = (error) => {
+    const data = error.response?.data;
+
+    if (!data) {
+      return "No se pudo conectar con el servidor.";
     }
-  }, [esAdmin]);
 
-  useEffect(() => {
-    const cerrarMenuUsuario = (event) => {
-      if (
-        menuUsuarioRef.current &&
-        !menuUsuarioRef.current.contains(event.target)
-      ) {
-        setMenuUsuarioAbierto(false);
+    if (typeof data === "string") {
+      return data;
+    }
+
+    if (data.detail) {
+      return data.detail;
+    }
+
+    if (data.error) {
+      return data.error;
+    }
+
+    const primerCampo = Object.keys(data)[0];
+
+    if (primerCampo) {
+      const valor = data[primerCampo];
+
+      if (Array.isArray(valor)) {
+        return `${primerCampo}: ${valor[0]}`;
       }
-    };
 
-    document.addEventListener("mousedown", cerrarMenuUsuario);
-    return () => {
-      document.removeEventListener("mousedown", cerrarMenuUsuario);
-    };
-  }, []);
-
-  const formatearFecha = (fecha) => {
-    if (!fecha) return "Sin fecha";
-    try {
-      return new Date(fecha).toLocaleString("es-NI", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-    } catch {
-      return fecha;
+      return `${primerCampo}: ${valor}`;
     }
+
+    return "No se pudo procesar la solicitud.";
   };
 
-  const obtenerNotificacionesAdmin = async () => {
+  const cargarDatos = async (config = configActual) => {
+    if (!config) return;
+
+    setCargando(true);
+
     try {
-      const response = await axios.get("/notificaciones/admin-pendientes/");
-      const notificaciones = Array.isArray(response.data) ? response.data : [];
+      const response = await axios.get(config.endpoint);
 
-      if (notificaciones.length === 0) return;
+      const resultado = Array.isArray(response.data)
+        ? response.data
+        : response.data.results || [];
 
-      const mensajes = notificaciones
-        .map((n) => {
-          const faltaInstructor = n.tipo === "falta_instructor";
-          return `
-            <div style="
-              background:#fff;
-              border:1px solid #fecaca;
-              border-radius:14px;
-              padding:14px;
-              margin-bottom:12px;
-            ">
-              <div style="display:flex; gap:10px; align-items:flex-start;">
-                <div style="
-                  width:34px;
-                  height:34px;
-                  border-radius:10px;
-                  background:#dc2626;
-                  color:white;
-                  display:flex;
-                  align-items:center;
-                  justify-content:center;
-                  font-weight:bold;
-                  flex-shrink:0;
-                ">
-                  !
-                </div>
-                <div style="flex:1;">
-                  <div style="font-size:14px; font-weight:700; color:#b91c1c; margin-bottom:4px;">
-                    ${faltaInstructor ? "Falta check del instructor" : "Falta check del estudiante"}
-                  </div>
-                  <div style="display:inline-block; font-size:11px; color:#dc2626; background:#fef2f2; border:1px solid #fecaca; border-radius:999px; padding:3px 9px; margin-bottom:8px;">
-                    ${faltaInstructor ? "Pendiente para el estudiante" : "Pendiente para el instructor"}
-                  </div>
-                  <p style="margin:0 0 10px 0; color:#374151; font-size:13px; line-height:1.5;">
-                    ${n.mensaje || "Hay un check pendiente."}
-                  </p>
-                  <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px;">
-                    <div style="background:#fef2f2; border:1px solid #fee2e2; border-radius:10px; padding:8px;">
-                      <div style="font-size:11px; color:#9ca3af;">Estudiante</div>
-                      <div style="font-size:12px; color:#374151; font-weight:700;">${n.estudiante || "No asignado"}</div>
-                    </div>
-                    <div style="background:#fef2f2; border:1px solid #fee2e2; border-radius:10px; padding:8px;">
-                      <div style="font-size:11px; color:#9ca3af;">Tema</div>
-                      <div style="font-size:12px; color:#374151; font-weight:700;">${n.tema || "Sin tema"}</div>
-                    </div>
-                  </div>
-                  <div style="margin-top:9px; font-size:11px; color:#9ca3af;">
-                    ${formatearFecha(n.fecha_creacion)}
-                  </div>
-                </div>
-              </div>
-            </div>
-          `;
-        })
-        .join("");
-
-      await Swal.fire({
-        title: "Notificaciones pendientes",
-        html: `
-          <div style="text-align:left;">
-            <div style="background:linear-gradient(90deg,#b91c1c,#ef4444); color:white; padding:14px 16px; border-radius:16px; margin-bottom:14px;">
-              <div style="font-size:16px; font-weight:800;">Checks pendientes</div>
-              <div style="font-size:12px; opacity:.9;">Revisión requerida por el administrador</div>
-            </div>
-            <div style="max-height:390px; overflow-y:auto; background:#fef2f2; padding:12px; border-radius:16px; border:1px solid #fecaca;">
-              ${mensajes}
-            </div>
-          </div>
-        `,
-        width: 760,
-        showCancelButton: false,
-        confirmButtonText: "Entendido",
-        confirmButtonColor: "#dc2626",
-        background: "#ffffff",
-      });
+      setDatos((prev) => ({
+        ...prev,
+        [config.key]: resultado,
+      }));
     } catch (error) {
-      console.error("Error obteniendo notificaciones:", error);
+      console.error("Error cargando datos de configuración:", error);
+
+      Swal.fire({
+        icon: "error",
+        title: "No se pudo cargar",
+        text: `No se pudieron cargar los datos de ${config.titulo}.`,
+        confirmButtonColor: "#2563eb",
+      });
+    } finally {
+      setCargando(false);
     }
   };
 
-  const irConfiguracionSistema = () => {
-    setMenuUsuarioAbierto(false);
-    setActiveTab("configuracion");
-    setIsSidebarOpen(false);
+  const limpiarFormulario = () => {
+    if (!configActual) return;
+
+    setFormulario(configActual.formInicial);
+    setRegistroEditando(null);
   };
 
-  const cerrarSesion = () => {
-    setMenuUsuarioAbierto(false);
-    Swal.fire({
-      title: "¿Cerrar sesión?",
-      text: "Se cerrará tu sesión actual y volverás al inicio de sesión.",
+  const cambiarCampo = (campo, valor) => {
+    setFormulario((prev) => ({
+      ...prev,
+      [campo]: valor,
+    }));
+  };
+
+  const validarFormulario = () => {
+    const camposRequeridos = configActual.campos.filter(
+      (campo) => campo.required
+    );
+
+    for (const campo of camposRequeridos) {
+      const valor = formulario[campo.name];
+
+      if (valor === "" || valor === null || valor === undefined) {
+        Swal.fire({
+          icon: "warning",
+          title: "Campo requerido",
+          text: `Debes completar el campo: ${campo.label}.`,
+          confirmButtonColor: "#2563eb",
+        });
+
+        return false;
+      }
+    }
+
+    return true;
+  };
+
+  const prepararPayload = () => {
+    const payload = { ...formulario };
+
+    Object.keys(payload).forEach((key) => {
+      if (payload[key] === "") {
+        payload[key] = null;
+      }
+    });
+
+    return payload;
+  };
+
+  const guardarRegistro = async (e) => {
+    e.preventDefault();
+
+    if (!validarFormulario()) return;
+
+    setGuardando(true);
+
+    try {
+      const payload = prepararPayload();
+
+      if (registroEditando) {
+        await axios.patch(
+          `${configActual.endpoint}${registroEditando.id}/`,
+          payload
+        );
+
+        Swal.fire({
+          icon: "success",
+          title: "Registro actualizado",
+          text: "Los cambios se guardaron correctamente.",
+          timer: 1500,
+          showConfirmButton: false,
+        });
+      } else {
+        await axios.post(configActual.endpoint, payload);
+
+        Swal.fire({
+          icon: "success",
+          title: "Registro creado",
+          text: "El registro se guardó correctamente.",
+          timer: 1500,
+          showConfirmButton: false,
+        });
+      }
+
+      limpiarFormulario();
+      cargarDatos();
+    } catch (error) {
+      console.error("Error guardando registro:", error);
+
+      Swal.fire({
+        icon: "error",
+        title: "Error al guardar",
+        text: obtenerMensajeError(error),
+        confirmButtonColor: "#dc2626",
+      });
+    } finally {
+      setGuardando(false);
+    }
+  };
+
+  const editarRegistro = (registro) => {
+    const nuevoFormulario = { ...configActual.formInicial };
+
+    configActual.campos.forEach((campo) => {
+      nuevoFormulario[campo.name] =
+        registro[campo.name] !== null && registro[campo.name] !== undefined
+          ? registro[campo.name]
+          : configActual.formInicial[campo.name];
+    });
+
+    setFormulario(nuevoFormulario);
+    setRegistroEditando(registro);
+  };
+
+  const eliminarRegistro = async (registro) => {
+    const confirmacion = await Swal.fire({
+      title: "¿Eliminar registro?",
+      text: "Esta acción intentará eliminar el registro seleccionado. Si está relacionado con otros datos del sistema, el backend puede impedirlo.",
       icon: "warning",
       showCancelButton: true,
-      confirmButtonText: "Sí, salir",
+      confirmButtonText: "Sí, eliminar",
       cancelButtonText: "Cancelar",
       confirmButtonColor: "#dc2626",
       cancelButtonColor: "#64748b",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        logout();
-        navigate("/login");
-      }
     });
+
+    if (!confirmacion.isConfirmed) return;
+
+    try {
+      await axios.delete(`${configActual.endpoint}${registro.id}/`);
+
+      Swal.fire({
+        icon: "success",
+        title: "Registro eliminado",
+        timer: 1400,
+        showConfirmButton: false,
+      });
+
+      cargarDatos();
+    } catch (error) {
+      console.error("Error eliminando registro:", error);
+
+      Swal.fire({
+        icon: "error",
+        title: "No se pudo eliminar",
+        text:
+          obtenerMensajeError(error) ||
+          "Este registro puede estar relacionado con otros datos del sistema.",
+        confirmButtonColor: "#dc2626",
+      });
+    }
   };
 
-  function renderContent() {
-    switch (activeTab) {
-      case "dashboard":
-        if (esAdmin) return <DashboardHome />;
-        if (esInstructor) return <InstructorHome />;
-        if (esEstudiante) return <EstudianteHome setActiveTab={setActiveTab} />;
-        return <DashboardHome />;
+  const alternarActivo = async (registro) => {
+    try {
+      await axios.patch(`${configActual.endpoint}${registro.id}/`, {
+        activo: !registro.activo,
+      });
 
-      case "reportes":
-        if (!esAdmin) return <DashboardHome />;
-        return <ReportesPages userRole={rol} />;
+      cargarDatos();
+    } catch (error) {
+      console.error("Error cambiando estado:", error);
 
-      case "estudiantes":
-        if (!esAdmin) return <DashboardHome />;
-        return <EstudiantesPage />;
-
-      case "matricula":
-        if (!esAdmin) return <DashboardHome />;
-        return <MatriculaPage />;
-
-      case "recibos":
-        if (!esAdmin) return <DashboardHome />;
-        return <RecibosPage />;
-
-      case "calendario":
-        return <Calendario />;
-
-      case "notas":
-        return <NotasPages userRole={rol} />;
-
-      case "plan_studio":
-        return <PlanStudio userRole={rol} />;
-
-      case "asistencia":
-        return <Asistencia userRole={rol} />;
-
-      case "perfil_estudiante":
-        return <PerfilEstudiante />;
-
-      case "usuarios":
-        if (!esAdmin) return <DashboardHome />;
-        return <UsuariosPage />;
-
-      case "configuracion":
-        if (!esAdmin) return <DashboardHome />;
-        return <Configuraciones />;
-
-      case "instructores":
-        if (!esAdmin) return <DashboardHome />;
-        return <InstructoresPage />;
-
-      case "ver_plan":
-        if (!esAdmin) return <DashboardHome />;
-        return <VerPlanEstudio />;
-
-      case "nuevo_plan":
-        if (!esAdmin) return <DashboardHome />;
-        return <PlanEstudioForm />;
-
-      default:
-        return <DashboardHome />;
+      Swal.fire({
+        icon: "error",
+        title: "No se pudo cambiar el estado",
+        text: obtenerMensajeError(error),
+        confirmButtonColor: "#dc2626",
+      });
     }
-  }
+  };
 
-  return (
-    <div className="flex h-screen bg-white font-sans">
-      {isSidebarOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black bg-opacity-20"
-          onClick={() => setIsSidebarOpen(false)}
-        />
-      )}
+  const formatearFecha = (valor) => {
+    if (!valor) return "—";
 
-      <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white transform transition-transform md:relative md:translate-x-0 flex flex-col h-screen border-r border-gray-100 ${
-          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
-      >
-        <div className="p-4 border-b border-gray-100">
-          <div className="flex items-center gap-3 flex-nowrap">
-            <img
-              src="/Logo.png"
-              alt="Logo"
-              className="w-12 h-12 object-contain flex-shrink-0"
-            />
-            <div className="flex flex-col justify-center">
-              <span className="text-indigo-500 font-bold text-sm whitespace-nowrap">
-                Escuela de Manejo
-              </span>
-              <span className="text-indigo-400 font-bold text-sm whitespace-nowrap">
-                Cacique ADIACT
-              </span>
-            </div>
-          </div>
-        </div>
+    try {
+      const fecha = new Date(`${valor}T00:00:00`);
 
-        <nav className="mt-4 px-4 space-y-2 overflow-y-auto flex-1">
-          <div className="pt-2">
-            <p className="text-xs text-gray-400 px-3 mb-2">GENERAL</p>
-          </div>
+      return fecha.toLocaleDateString("es-NI", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      });
+    } catch {
+      return valor;
+    }
+  };
 
-          <button
-            onClick={() => {
-              setActiveTab("dashboard");
-              setIsSidebarOpen(false);
-            }}
-            className={`w-full flex items-center p-3 space-x-3 rounded-xl transition hover:cursor-pointer ${
-              activeTab === "dashboard"
-                ? "bg-blue-100 text-blue-500 font-bold"
-                : "text-gray-600 hover:bg-blue-50"
-            }`}
+  const formatearDinero = (valor) => {
+    return `C$ ${Number(valor || 0).toLocaleString("es-NI", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
+  };
+
+  const formatearValor = (registro, columna) => {
+    const valor = registro[columna.key];
+
+    if (columna.boolean) {
+      return valor ? (
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-100">
+          <IoCheckmarkCircleOutline />
+          Activo
+        </span>
+      ) : (
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-50 text-red-700 text-xs font-bold border border-red-100">
+          <IoCloseCircleOutline />
+          Inactivo
+        </span>
+      );
+    }
+
+    if (columna.money) {
+      return formatearDinero(valor);
+    }
+
+    if (columna.date) {
+      return formatearFecha(valor);
+    }
+
+    if (valor === null || valor === undefined || valor === "") {
+      return "—";
+    }
+
+    return valor;
+  };
+
+  const renderCampo = (campo) => {
+    if (campo.type === "select") {
+      return (
+        <div key={campo.name}>
+          <label className="block text-sm font-bold text-slate-700 mb-2">
+            {campo.label}
+          </label>
+
+          <select
+            value={formulario[campo.name] ?? ""}
+            onChange={(e) => cambiarCampo(campo.name, e.target.value)}
+            className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none focus:bg-white focus:border-blue-400 focus:ring-4 focus:ring-blue-100 transition"
           >
-            <LuLayoutDashboard size="1.5rem" />
-            <span>Dashboard</span>
-          </button>
+            {campo.options.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      );
+    }
 
-          {esAdmin && (
-            <button
-              onClick={() => {
-                setActiveTab("reportes");
-                setIsSidebarOpen(false);
-              }}
-              className={`w-full flex items-center p-3 space-x-3 rounded-xl transition hover:cursor-pointer ${
-                activeTab === "reportes"
-                  ? "bg-blue-100 text-blue-500 font-bold"
-                  : "text-gray-600 hover:bg-blue-50"
-              }`}
-            >
-              <FaSquarePollVertical size="1.5rem" />
-              <span>Reportes</span>
-            </button>
-          )}
+    if (campo.type === "checkbox") {
+      return (
+        <div
+          key={campo.name}
+          className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 flex items-center justify-between gap-4"
+        >
+          <div>
+            <p className="text-sm font-bold text-slate-700">{campo.label}</p>
 
-          {esAdmin && (
-            <>
-              <div className="pt-4 mt-4 border-t border-gray-200">
-                <p className="text-xs text-gray-400 px-3 mb-2">
-                  GESTIÓN ADMINISTRATIVA
-                </p>
-              </div>
-
-              <button
-                onClick={() => {
-                  setActiveTab("estudiantes");
-                  setIsSidebarOpen(false);
-                }}
-                className={`w-full flex items-center p-3 space-x-3 rounded-xl transition hover:cursor-pointer ${
-                  activeTab === "estudiantes"
-                    ? "bg-blue-100 text-blue-500 font-bold"
-                    : "text-gray-600 hover:bg-blue-50"
-                }`}
-              >
-                <PiStudent size="1.5rem" />
-                <span>Estudiantes</span>
-              </button>
-
-              <button
-                onClick={() => {
-                  setActiveTab("matricula");
-                  setIsSidebarOpen(false);
-                }}
-                className={`w-full flex items-center p-3 space-x-3 rounded-xl transition hover:cursor-pointer ${
-                  activeTab === "matricula"
-                    ? "bg-blue-100 text-blue-500 font-bold"
-                    : "text-gray-600 hover:bg-blue-50"
-                }`}
-              >
-                <FiUserPlus size="1.5rem" />
-                <span>Matrículas</span>
-              </button>
-
-              <button
-                onClick={() => {
-                  setActiveTab("recibos");
-                  setIsSidebarOpen(false);
-                }}
-                className={`w-full flex items-center p-3 space-x-3 rounded-xl transition hover:cursor-pointer ${
-                  activeTab === "recibos"
-                    ? "bg-blue-100 text-blue-500 font-bold"
-                    : "text-gray-600 hover:bg-blue-50"
-                }`}
-              >
-                <HiOutlineDocumentCurrencyDollar size="1.5rem" />
-                <span>Solvencia</span>
-              </button>
-
-              <button
-                onClick={() => {
-                  setActiveTab("usuarios");
-                  setIsSidebarOpen(false);
-                }}
-                className={`w-full flex items-center p-3 space-x-3 rounded-xl transition hover:cursor-pointer ${
-                  activeTab === "usuarios"
-                    ? "bg-blue-100 text-blue-500 font-bold"
-                    : "text-gray-600 hover:bg-blue-50"
-                }`}
-              >
-                <FaUsers size="1.5rem" />
-                <span>Usuarios</span>
-              </button>
-
-              <button
-                onClick={() => {
-                  setActiveTab("instructores");
-                  setIsSidebarOpen(false);
-                }}
-                className={`w-full flex items-center p-3 space-x-3 rounded-xl transition hover:cursor-pointer ${
-                  activeTab === "instructores"
-                    ? "bg-blue-100 text-blue-500 font-bold"
-                    : "text-gray-600 hover:bg-blue-50"
-                }`}
-              >
-                <MdPersonOutline size="1.5rem" />
-                <span>Instructores</span>
-              </button>
-            </>
-          )}
-
-          <div className="pt-4 mt-4 border-t border-gray-200">
-            <p className="text-xs text-gray-400 px-3 mb-2">
-              GESTIÓN ACADÉMICA
+            <p className="text-xs text-slate-400 mt-0.5">
+              Define si este registro estará disponible para usarse en el
+              sistema.
             </p>
           </div>
 
-          <button
-            onClick={() => {
-              setActiveTab("calendario");
-              setIsSidebarOpen(false);
-            }}
-            className={`w-full flex items-center p-3 space-x-3 rounded-xl transition hover:cursor-pointer ${
-              activeTab === "calendario"
-                ? "bg-blue-100 text-blue-500 font-bold"
-                : "text-gray-600 hover:bg-blue-50"
-            }`}
-          >
-            <TbCalendarTime size="1.5rem" />
-            <span>Calendario</span>
-          </button>
+          <input
+            type="checkbox"
+            checked={Boolean(formulario[campo.name])}
+            onChange={(e) => cambiarCampo(campo.name, e.target.checked)}
+            className="w-5 h-5 accent-blue-600 cursor-pointer"
+          />
+        </div>
+      );
+    }
 
-          {!esEstudiante && (
-            <button
-              onClick={() => {
-                setActiveTab("asistencia");
-                setIsSidebarOpen(false);
-              }}
-              className={`w-full flex items-center p-3 space-x-3 rounded-xl transition hover:cursor-pointer ${
-                activeTab === "asistencia"
-                  ? "bg-blue-100 text-blue-500 font-bold"
-                  : "text-gray-600 hover:bg-blue-50"
-              }`}
-            >
-              <LuClipboardCheck size="1.5rem" />
-              <span>Asistencia</span>
-            </button>
-          )}
+    return (
+      <div key={campo.name}>
+        <label className="block text-sm font-bold text-slate-700 mb-2">
+          {campo.label}
+        </label>
 
-          <button
-            onClick={() => {
-              setActiveTab("plan_studio");
-              setIsSidebarOpen(false);
-            }}
-            className={`w-full flex items-center p-3 space-x-3 rounded-xl transition hover:cursor-pointer ${
-              activeTab === "plan_studio"
-                ? "bg-blue-100 text-blue-500 font-bold"
-                : "text-gray-600 hover:bg-blue-50"
-            }`}
-          >
-            <IoMdBook size="1.5rem" />
-            <span>Plan de Estudio</span>
-          </button>
+        <input
+          type={campo.type}
+          value={formulario[campo.name] ?? ""}
+          onChange={(e) => cambiarCampo(campo.name, e.target.value)}
+          placeholder={campo.placeholder || ""}
+          step={campo.type === "number" ? "0.01" : undefined}
+          min={campo.type === "number" ? "0" : undefined}
+          className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none focus:bg-white focus:border-blue-400 focus:ring-4 focus:ring-blue-100 transition"
+        />
+      </div>
+    );
+  };
 
-          <button
-            onClick={() => {
-              setActiveTab("notas");
-              setIsSidebarOpen(false);
-            }}
-            className={`w-full flex items-center p-3 space-x-3 rounded-xl transition hover:cursor-pointer ${
-              activeTab === "notas"
-                ? "bg-blue-100 text-blue-500 font-bold"
-                : "text-gray-600 hover:bg-blue-50"
-            }`}
-          >
-            <IoSchoolOutline size="1.5rem" />
-            <span>Notas</span>
-          </button>
+  const colorActual = obtenerClaseColor(configActual?.color);
+  const IconoActual = configActual?.icono || IoSettingsOutline;
 
-          <button
-            onClick={() => {
-              setActiveTab("perfil_estudiante");
-              setIsSidebarOpen(false);
-            }}
-            className={`w-full flex items-center p-3 space-x-3 rounded-xl transition hover:cursor-pointer ${
-              activeTab === "perfil_estudiante"
-                ? "bg-blue-100 text-blue-500 font-bold"
-                : "text-gray-600 hover:bg-blue-50"
-            }`}
-          >
-            <MdPersonOutline size="1.5rem" />
-            <span>Perfiles</span>
-          </button>
-        </nav>
+  return (
+    <div className="min-h-full bg-slate-50 rounded-3xl p-4 md:p-8">
+      <div className="max-w-7xl mx-auto space-y-6">
+        <section className="bg-white border border-slate-200 rounded-3xl shadow-sm p-6 md:p-8">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
+            <div className="flex items-start gap-4">
+              <div className="w-14 h-14 rounded-3xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
+                <IoSettingsOutline size="1.8rem" />
+              </div>
 
-        <div className="p-4 border-t border-gray-200 bg-white">
-          <div className="relative" ref={menuUsuarioRef}>
-            <div className="rounded-2xl bg-gradient-to-r from-slate-50 to-blue-50 border border-slate-200 p-3 shadow-sm">
-              <div className="flex items-center gap-3">
-                <div className="relative">
-                  <div className="w-11 h-11 bg-gradient-to-br from-blue-600 to-blue-500 rounded-3xl flex items-center justify-center text-white font-bold shadow-sm">
-                    {user?.username?.charAt(0).toUpperCase() || "U"}
-                  </div>
-                  <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full"></span>
-                </div>
+              <div>
+                <h1 className="text-2xl md:text-3xl font-black text-slate-800">
+                  Configuración del sistema
+                </h1>
 
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-slate-800 truncate">
-                    {user?.username || "Usuario"}
-                  </p>
-                  <p className="text-xs text-slate-500 capitalize mt-0.5">
-                    {rol || "sin rol"}
-                  </p>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setMenuUsuarioAbierto(!menuUsuarioAbierto)}
-                  className={`cursor-pointer w-10 h-10 rounded-3xl border transition flex items-center justify-center ${
-                    menuUsuarioAbierto
-                      ? "bg-blue-50 border-blue-200 text-blue-600"
-                      : "bg-white border-slate-200 text-slate-500 hover:bg-slate-50 hover:border-slate-300 hover:text-slate-700"
-                  }`}
-                  title="Opciones"
-                >
-                  <BsThreeDotsVertical size="1.25rem" />
-                </button>
+                <p className="text-sm text-slate-500 mt-1 max-w-3xl">
+                  Administra los catálogos principales que usa el sistema en
+                  usuarios, matrículas, pagos, cursos e información
+                  institucional.
+                </p>
               </div>
             </div>
 
-            {menuUsuarioAbierto && (
-              <div className="absolute left-full bottom-0 ml-3 w-64 rounded-3xl bg-white border border-slate-200 shadow-2xl p-2 z-[9999]">
-                <div className="px-3 py-3 border-b border-slate-100">
-                  <p className="text-sm font-bold text-slate-800">Opciones del sistema</p>
-                  <p className="text-xs text-slate-500 mt-0.5">Configuración y sesión</p>
-                </div>
-
-                {esAdmin && (
-                  <button
-                    type="button"
-                    onClick={irConfiguracionSistema}
-                    className="cursor-pointer w-full flex items-center gap-3 px-3 py-3 mt-2 rounded-2xl text-sm font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition"
-                  >
-                    <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">
-                      <IoSettingsOutline size="1.25rem" />
-                    </div>
-                    <div className="text-left">
-                      <p>Configuración</p>
-                      <p className="text-xs font-normal text-slate-400">Ajustes generales</p>
-                    </div>
-                  </button>
-                )}
-
-                <button
-                  type="button"
-                  onClick={cerrarSesion}
-                  className="cursor-pointer w-full flex items-center gap-3 px-3 py-3 rounded-2xl text-sm font-semibold text-red-600 hover:bg-red-50 transition"
-                >
-                  <div className="w-10 h-10 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center">
-                    <IoLogOutOutline size="1.35rem" />
-                  </div>
-                  <div className="text-left">
-                    <p>Cerrar sesión</p>
-                    <p className="text-xs font-normal text-red-400">Salir del sistema</p>
-                  </div>
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      </aside>
-
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {!isSidebarOpen && (
-          <div className="md:hidden flex justify-between items-center p-4 bg-white border-b border-gray-100">
-            <h1 className="text-xl font-bold text-slate-800">Panel de Inicio</h1>
             <button
-              onClick={() => setIsSidebarOpen(true)}
-              className="p-2 rounded-lg active:scale-95 transition-all"
+              type="button"
+              onClick={() => cargarDatos()}
+              className="cursor-pointer inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-slate-900 text-white text-sm font-bold hover:bg-slate-800 transition shadow-sm"
             >
-              <TbMenu2 className="text-black text-xl" />
+              <IoRefreshOutline size="1.2rem" />
+              Actualizar datos
             </button>
           </div>
-        )}
+        </section>
 
-        <main className="flex-1 overflow-y-auto p-4 bg-slate-50">
-          {renderContent()}
-        </main>
+        <section className="grid grid-cols-1 xl:grid-cols-[320px_1fr] gap-6">
+          <aside className="bg-white border border-slate-200 rounded-3xl shadow-sm p-4 h-fit">
+            <p className="text-xs font-black text-slate-400 px-3 mb-3">
+              CATÁLOGOS DEL SISTEMA
+            </p>
+
+            <div className="space-y-2">
+              {secciones.map((seccion) => {
+                const Icono = seccion.icono;
+                const color = obtenerClaseColor(seccion.color);
+                const activo = seccionActiva === seccion.key;
+                const total = datos[seccion.key]?.length || 0;
+
+                return (
+                  <button
+                    key={seccion.key}
+                    type="button"
+                    onClick={() => setSeccionActiva(seccion.key)}
+                    className={`cursor-pointer w-full text-left flex items-center gap-3 px-3 py-3 rounded-2xl border transition ${
+                      activo
+                        ? color.activo
+                        : `bg-white border-transparent text-slate-600 ${color.hover}`
+                    }`}
+                  >
+                    <div
+                      className={`w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 ${
+                        activo
+                          ? "bg-white/20 text-white"
+                          : `${color.fondo} ${color.texto}`
+                      }`}
+                    >
+                      <Icono size="1.25rem" />
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-black truncate">
+                        {seccion.titulo}
+                      </p>
+
+                      <p
+                        className={`text-xs truncate ${
+                          activo ? "text-white/80" : "text-slate-400"
+                        }`}
+                      >
+                        {seccion.subtitulo}
+                      </p>
+                    </div>
+
+                    <span
+                      className={`min-w-7 h-7 px-2 rounded-full text-xs font-black flex items-center justify-center ${
+                        activo
+                          ? "bg-white/20 text-white"
+                          : "bg-slate-100 text-slate-500"
+                      }`}
+                    >
+                      {total}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="mt-5 rounded-2xl bg-blue-50 border border-blue-100 p-4">
+              <div className="flex items-start gap-3">
+                <IoInformationCircleOutline
+                  className="text-blue-600 flex-shrink-0 mt-0.5"
+                  size="1.3rem"
+                />
+
+                <p className="text-xs text-blue-700 leading-relaxed">
+                  Estos registros son catálogos base. Si un dato ya está siendo
+                  usado en matrículas, usuarios, recibos o reportes, puede que
+                  no se pueda eliminar directamente.
+                </p>
+              </div>
+            </div>
+          </aside>
+
+          <main className="space-y-6">
+            <section className="bg-white border border-slate-200 rounded-3xl shadow-sm p-6">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                <div className="flex items-start gap-4">
+                  <div
+                    className={`w-14 h-14 rounded-3xl ${colorActual.fondo} ${colorActual.texto} flex items-center justify-center flex-shrink-0`}
+                  >
+                    <IconoActual size="1.7rem" />
+                  </div>
+
+                  <div>
+                    <h2 className="text-xl md:text-2xl font-black text-slate-800">
+                      {configActual.titulo}
+                    </h2>
+
+                    <p className="text-sm text-slate-500 mt-1 max-w-2xl">
+                      {configActual.descripcion}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="rounded-2xl bg-slate-50 border border-slate-200 px-4 py-3">
+                  <p className="text-xs text-slate-400 font-bold">
+                    Registros guardados
+                  </p>
+
+                  <p className="text-2xl font-black text-slate-800">
+                    {registrosActuales.length}
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            <section className="grid grid-cols-1 2xl:grid-cols-[420px_1fr] gap-6">
+              <form
+                onSubmit={guardarRegistro}
+                className="bg-white border border-slate-200 rounded-3xl shadow-sm p-6 h-fit"
+              >
+                <div className="flex items-center justify-between gap-4 mb-5">
+                  <div>
+                    <h3 className="text-lg font-black text-slate-800">
+                      {registroEditando ? "Editar registro" : "Nuevo registro"}
+                    </h3>
+
+                    <p className="text-sm text-slate-500 mt-1">
+                      Completa los campos requeridos.
+                    </p>
+                  </div>
+
+                  {registroEditando && (
+                    <button
+                      type="button"
+                      onClick={limpiarFormulario}
+                      className="cursor-pointer w-10 h-10 rounded-2xl bg-slate-100 text-slate-500 hover:bg-red-50 hover:text-red-600 transition flex items-center justify-center"
+                      title="Cancelar edición"
+                    >
+                      <IoCloseOutline size="1.4rem" />
+                    </button>
+                  )}
+                </div>
+
+                <div className="space-y-4">
+                  {configActual.campos.map((campo) => renderCampo(campo))}
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={guardando}
+                  className="cursor-pointer mt-6 w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-blue-600 text-white text-sm font-black hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed transition shadow-sm"
+                >
+                  {registroEditando ? (
+                    <>
+                      <IoSaveOutline size="1.2rem" />
+                      Guardar cambios
+                    </>
+                  ) : (
+                    <>
+                      <IoAddOutline size="1.3rem" />
+                      Crear registro
+                    </>
+                  )}
+                </button>
+              </form>
+
+              <section className="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
+                <div className="p-5 border-b border-slate-100 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                  <div>
+                    <h3 className="text-lg font-black text-slate-800">
+                      Registros guardados
+                    </h3>
+
+                    <p className="text-sm text-slate-500">
+                      Lista actual de {configActual.titulo.toLowerCase()}.
+                    </p>
+                  </div>
+
+                  {cargando && (
+                    <span className="text-sm font-bold text-blue-600">
+                      Cargando...
+                    </span>
+                  )}
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-slate-50 border-b border-slate-100">
+                      <tr>
+                        {configActual.columnas.map((columna) => (
+                          <th
+                            key={columna.key}
+                            className="px-5 py-4 text-left text-xs font-black text-slate-500 uppercase whitespace-nowrap"
+                          >
+                            {columna.label}
+                          </th>
+                        ))}
+
+                        <th className="px-5 py-4 text-right text-xs font-black text-slate-500 uppercase whitespace-nowrap">
+                          Acciones
+                        </th>
+                      </tr>
+                    </thead>
+
+                    <tbody className="divide-y divide-slate-100">
+                      {!cargando && registrosActuales.length === 0 && (
+                        <tr>
+                          <td
+                            colSpan={configActual.columnas.length + 1}
+                            className="px-5 py-12 text-center"
+                          >
+                            <div className="mx-auto w-14 h-14 rounded-3xl bg-slate-50 text-slate-400 flex items-center justify-center mb-3">
+                              <IoSettingsOutline size="1.6rem" />
+                            </div>
+
+                            <p className="font-black text-slate-700">
+                              No hay registros
+                            </p>
+
+                            <p className="text-sm text-slate-400 mt-1">
+                              Crea el primer registro desde el formulario.
+                            </p>
+                          </td>
+                        </tr>
+                      )}
+
+                      {registrosActuales.map((registro) => (
+                        <tr
+                          key={registro.id}
+                          className="hover:bg-slate-50/70 transition"
+                        >
+                          {configActual.columnas.map((columna) => (
+                            <td
+                              key={columna.key}
+                              className="px-5 py-4 text-slate-700 font-medium whitespace-nowrap"
+                            >
+                              {formatearValor(registro, columna)}
+                            </td>
+                          ))}
+
+                          <td className="px-5 py-4">
+                            <div className="flex items-center justify-end gap-2">
+                              {Object.prototype.hasOwnProperty.call(
+                                registro,
+                                "activo"
+                              ) && (
+                                <button
+                                  type="button"
+                                  onClick={() => alternarActivo(registro)}
+                                  className={`cursor-pointer px-3 py-2 rounded-xl text-xs font-black transition ${
+                                    registro.activo
+                                      ? "bg-red-50 text-red-600 hover:bg-red-100"
+                                      : "bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
+                                  }`}
+                                >
+                                  {registro.activo ? "Desactivar" : "Activar"}
+                                </button>
+                              )}
+
+                              <button
+                                type="button"
+                                onClick={() => editarRegistro(registro)}
+                                className="cursor-pointer w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 hover:bg-blue-100 transition flex items-center justify-center"
+                                title="Editar"
+                              >
+                                <IoCreateOutline size="1.2rem" />
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => eliminarRegistro(registro)}
+                                className="cursor-pointer w-10 h-10 rounded-2xl bg-red-50 text-red-600 hover:bg-red-100 transition flex items-center justify-center"
+                                title="Eliminar"
+                              >
+                                <IoTrashOutline size="1.2rem" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            </section>
+          </main>
+        </section>
       </div>
     </div>
   );
