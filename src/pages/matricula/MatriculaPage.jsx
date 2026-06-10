@@ -215,7 +215,7 @@ function MatriculaPage() {
                     </div>
 
                     <div class="titulo">
-                        HOJA DE MATRÍCULA DE ADULTOS A CURSO DE: EDUCACIÓN VIAL Y MANEJO RESPONSABLE.
+                        HOJA DE MATRÍCULA PARA CURSO DE: EDUCACIÓN VIAL Y MANEJO RESPONSABLE.
                         <br/>
                         Fecha: ${new Date(getFechaMatricula(matricula)).toLocaleDateString("es-NI")}
                     </div>
@@ -456,27 +456,126 @@ function MatriculaPage() {
 
     const displayData = filteredData;
 
+    const totalMatriculas = data.length;
+
+    const totalMatriculados = data.filter(
+        (item) => String(item.estado || "").toLowerCase() === "matriculado"
+    ).length;
+
+    const totalResultados = displayData.length;
+
     return (
-        <div className="w-full max-w-full min-w-0 overflow-hidden px-4">
-            <div className="mb-4 space-y-2">
-                <h1 className="text-4xl font-bold">Matrículas</h1>
-                <p className="text-gray-600">
-                    Registro y gestión de matrículas vinculadas a estudiantes ya registrados.
-                </p>
+        <div className="w-full max-w-full min-w-0 overflow-hidden bg-[#f6f8fc] px-4 py-5">
+            <div className="mb-7 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div className="flex items-start gap-4">
+                    <div className="hidden h-16 w-16 shrink-0 items-center justify-center rounded-3xl bg-blue-50 text-3xl shadow-sm ring-1 ring-blue-100 md:flex">
+                        📋
+                    </div>
+
+                    <div>
+                        <h1 className="text-4xl font-black tracking-tight text-slate-900">
+                            Matrículas
+                        </h1>
+
+                        <p className="mt-2 max-w-3xl text-base text-slate-500">
+                            Registro y gestión de matrículas vinculadas a estudiantes ya registrados.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                <div className="relative overflow-hidden rounded-[28px] border border-blue-100 bg-blue-50/60 px-6 py-5 shadow-sm">
+                    <div className="flex items-center gap-4">
+                        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-3xl bg-white text-3xl shadow-sm ring-1 ring-blue-100">
+                            🎓
+                        </div>
+
+                        <div>
+                            <p className="text-base font-bold text-slate-600">
+                                Total matrículas
+                            </p>
+
+                            <p className="mt-2 text-4xl font-black text-blue-600">
+                                {totalMatriculas}
+                            </p>
+
+                            <p className="mt-2 text-sm font-medium text-slate-500">
+                                Registros en el sistema
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="pointer-events-none absolute -bottom-5 -right-4 text-8xl opacity-10">
+                        🎓
+                    </div>
+                </div>
+
+                <div className="relative overflow-hidden rounded-[28px] border border-emerald-100 bg-emerald-50/60 px-6 py-5 shadow-sm">
+                    <div className="flex items-center gap-4">
+                        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-3xl bg-white text-3xl shadow-sm ring-1 ring-emerald-100">
+                            ✅
+                        </div>
+
+                        <div>
+                            <p className="text-base font-bold text-slate-600">
+                                Matriculados
+                            </p>
+
+                            <p className="mt-2 text-4xl font-black text-emerald-600">
+                                {totalMatriculados}
+                            </p>
+
+                            <p className="mt-2 text-sm font-medium text-slate-500">
+                                Matrículas vigentes
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="pointer-events-none absolute -bottom-5 -right-4 text-8xl opacity-10">
+                        ✅
+                    </div>
+                </div>
+
+                <div className="relative overflow-hidden rounded-[28px] border border-violet-100 bg-violet-50/60 px-6 py-5 shadow-sm md:col-span-2 xl:col-span-1">
+                    <div className="flex items-center gap-4">
+                        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-3xl bg-white text-3xl shadow-sm ring-1 ring-violet-100">
+                            🔎
+                        </div>
+
+                        <div>
+                            <p className="text-base font-bold text-slate-600">
+                                Resultados
+                            </p>
+
+                            <p className="mt-2 text-4xl font-black text-violet-600">
+                                {totalResultados}
+                            </p>
+
+                            <p className="mt-2 text-sm font-medium text-slate-500">
+                                Coincidencias encontradas
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="pointer-events-none absolute -bottom-5 -right-4 text-8xl opacity-10">
+                        🔎
+                    </div>
+                </div>
             </div>
 
             <div className="w-full max-w-full overflow-x-auto">
-                <div className="w-full min-w-[1100px]">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-xl mb-4">
-                        <div className="relative w-full sm:w-[420px]">
-                            <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <div className="w-full min-w-[1150px]">
+                    <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="relative w-full sm:w-[520px]">
+                            <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
 
                             <input
                                 type="text"
                                 placeholder="Buscar por nombre, cédula o estado..."
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2 border rounded-3xl bg-white border-blue-500 transition h-11"
+                                className="h-12 w-full rounded-2xl border border-slate-200 bg-white pl-12 pr-4 text-sm text-slate-700 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
                             />
                         </div>
 
@@ -485,140 +584,178 @@ function MatriculaPage() {
                                 setEditData(null);
                                 setShowModal(true);
                             }}
-                            className="relative group overflow-hidden w-full sm:w-auto px-6 sm:px-12 h-11 rounded-3xl bg-green-500 text-white flex items-center justify-center gap-2 transition-all duration-300 hover:bg-green-600 hover:cursor-pointer"
+                            className="group inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-8 text-sm font-black text-white shadow-lg shadow-emerald-500/25 transition-all duration-300 hover:-translate-y-0.5 hover:bg-emerald-600 hover:shadow-emerald-500/35 sm:w-auto"
                         >
-                            <span className="absolute top-0 left-[-75%] w-[50%] h-full bg-gradient-to-r from-transparent via-white/60 to-transparent skew-x-12 group-hover:left-[125%] transition-all duration-700"></span>
-
-                            <span className="relative z-10 flex items-center gap-2">
-                                <FiUserPlus className="size-5" />
-                                Nueva Matrícula
-                            </span>
+                            <FiUserPlus className="size-5" />
+                            Nueva Matrícula
                         </button>
                     </div>
 
-                    <div className="max-h-[650px] overflow-y-auto overflow-x-auto w-full rounded-2xl border border-gray-200 bg-white shadow-sm">
+                    <div className="max-h-[650px] w-full overflow-x-auto overflow-y-auto rounded-[28px] border border-slate-200 bg-white shadow-sm">
                         <table className="w-full table-fixed border-collapse">
-                            <thead className="bg-gray-50 sticky top-0 z-10">
-                                <tr className="border-gray-300">
-                                    <th className="p-3 w-[7%] text-center text-xs font-semibold text-gray-600 uppercase">Código</th>
-                                    <th className="p-3 w-[20%] text-left text-xs font-semibold text-gray-600 uppercase">Nombre</th>
-                                    <th className="p-3 w-[14%] text-center text-xs font-semibold text-gray-600 uppercase">Fecha Matrícula</th>
-                                    <th className="p-3 w-[15%] text-center text-xs font-semibold text-gray-600 uppercase">Cédula</th>
-                                    <th className="p-3 w-[7%] text-center text-xs font-semibold text-gray-600 uppercase">Edad</th>
-                                    <th className="p-3 w-[13%] text-center text-xs font-semibold text-gray-600 uppercase">Teléfono</th>
-                                    <th className="p-3 w-[13%] text-center text-xs font-semibold text-gray-600 uppercase">Curso</th>
-                                    <th className="p-3 w-[11%] text-center text-xs font-semibold text-gray-600 uppercase">Estado</th>
-                                    <th className="p-3 w-[15%] text-center text-xs font-semibold text-gray-600 uppercase">Opciones</th>
+                            <thead className="sticky top-0 z-10 bg-slate-50/95 backdrop-blur">
+                                <tr className="border-b border-slate-100">
+                                    <th className="w-[7%] px-4 py-4 text-center text-xs font-black uppercase tracking-wide text-slate-500">
+                                        Código
+                                    </th>
+
+                                    <th className="w-[20%] px-4 py-4 text-left text-xs font-black uppercase tracking-wide text-slate-500">
+                                        Nombre
+                                    </th>
+
+                                    <th className="w-[14%] px-4 py-4 text-center text-xs font-black uppercase tracking-wide text-slate-500">
+                                        Fecha matrícula
+                                    </th>
+
+                                    <th className="w-[15%] px-4 py-4 text-center text-xs font-black uppercase tracking-wide text-slate-500">
+                                        Cédula
+                                    </th>
+
+                                    <th className="w-[7%] px-4 py-4 text-center text-xs font-black uppercase tracking-wide text-slate-500">
+                                        Edad
+                                    </th>
+
+                                    <th className="w-[13%] px-4 py-4 text-center text-xs font-black uppercase tracking-wide text-slate-500">
+                                        Teléfono
+                                    </th>
+
+                                    <th className="w-[13%] px-4 py-4 text-center text-xs font-black uppercase tracking-wide text-slate-500">
+                                        Tipo de Curso
+                                    </th>
+
+                                    <th className="w-[11%] px-4 py-4 text-center text-xs font-black uppercase tracking-wide text-slate-500">
+                                        Estado
+                                    </th>
+
+                                    <th className="w-[15%] px-4 py-4 text-center text-xs font-black uppercase tracking-wide text-slate-500">
+                                        Opciones
+                                    </th>
                                 </tr>
                             </thead>
 
-                            <tbody className="text-sm text-gray-700 divide-y divide-gray-100">
+                            <tbody className="divide-y divide-slate-100 text-sm text-slate-700">
                                 {loading ? (
                                     <tr>
-                                        <td colSpan="9" className="p-6 text-center">
-                                            Cargando...
+                                        <td colSpan="9" className="p-8 text-center font-semibold text-slate-400">
+                                            Cargando matrículas...
                                         </td>
                                     </tr>
                                 ) : displayData.length > 0 ? (
-                                    displayData.map((item) => (
-                                        <tr
-                                            key={item.id}
-                                            className="hover:bg-blue-50 transition"
-                                        >
-                                            <td className="p-3 text-center font-semibold text-gray-700">{item.id}</td>
+                                    displayData.map((item) => {
+                                        const estado = String(item.estado || "").toLowerCase();
 
-                                            <td className="p-3 text-left font-semibold text-gray-800 truncate">
-                                                {getNombre(item)}
-                                            </td>
+                                        return (
+                                            <tr
+                                                key={item.id}
+                                                className="transition hover:bg-blue-50/50"
+                                            >
+                                                <td className="px-4 py-4 text-center">
+                                                    <span className="inline-flex h-9 min-w-9 items-center justify-center rounded-xl bg-blue-50 px-3 text-sm font-black text-blue-600 ring-1 ring-blue-100">
+                                                        {item.id}
+                                                    </span>
+                                                </td>
 
-                                            <td className="p-3 text-center whitespace-nowrap">
-                                                {formatearFecha(getFechaMatricula(item))}
-                                            </td>
+                                                <td className="px-4 py-4">
+                                                    <div className="min-w-0">
+                                                        <p className="truncate font-black text-slate-900">
+                                                            {getNombre(item)}
+                                                        </p>
+                                                    </div>
+                                                </td>
 
-                                            <td className="p-3 text-center whitespace-nowrap">
-                                                {getCedula(item)}
-                                            </td>
+                                                <td className="px-4 py-4 text-center whitespace-nowrap">
+                                                    <span className="inline-flex rounded-xl bg-blue-50 px-3 py-2 text-sm font-bold text-slate-700 ring-1 ring-blue-100">
+                                                        {formatearFecha(getFechaMatricula(item))}
+                                                    </span>
+                                                </td>
 
-                                            <td className="p-3 text-center">
-                                                {getEdad(item)}
-                                            </td>
+                                                <td className="px-4 py-4 text-center font-semibold whitespace-nowrap text-slate-600">
+                                                    {getCedula(item)}
+                                                </td>
 
-                                            <td className="p-3 text-center whitespace-nowrap">
-                                                {getTelefono(item)}
-                                            </td>
+                                                <td className="px-4 py-4 text-center font-semibold text-slate-600">
+                                                    {getEdad(item)}
+                                                </td>
 
-                                            <td className="p-3 text-center truncate">
-                                                {getCurso(item) || getPlan(item)}
-                                            </td>
+                                                <td className="px-4 py-4 text-center font-semibold whitespace-nowrap text-slate-600">
+                                                    {getTelefono(item)}
+                                                </td>
 
-                                            <td className="p-2">
-                                                <span
-                                                    className={`px-3 py-1 rounded-full text-xs font-bold ${
-                                                        item.estado === "matriculado"
-                                                            ? "bg-green-100 text-green-700"
-                                                            : item.estado === "cancelado"
-                                                            ? "bg-red-100 text-red-700"
-                                                            : item.estado === "aprobado"
-                                                            ? "bg-blue-100 text-blue-700"
-                                                            : "bg-yellow-100 text-yellow-700"
-                                                    }`}
-                                                >
-                                                    {item.estado === "matriculado"
-                                                        ? "Matriculado"
-                                                        : item.estado === "cancelado"
-                                                        ? "Cancelado"
-                                                        : item.estado === "aprobado"
-                                                        ? "Aprobado"
-                                                        : "Pendiente"}
-                                                </span>
-                                            </td>
+                                                <td className="px-4 py-4 text-center">
+                                                    <span className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-700">
+                                                        {getCurso(item) || getPlan(item)}
+                                                    </span>
+                                                </td>
 
-                                            <td className="p-2">
-                                                <div className="flex items-center gap-3 justify-center">
-                                                    <button
-                                                        onClick={() => eliminarMatricula(item.id)}
-                                                        className="p-2 rounded-lg hover:bg-red-100"
-                                                        title="Eliminar"
+                                                <td className="px-4 py-4 text-center">
+                                                    <span
+                                                        className={`inline-flex items-center justify-center rounded-full px-3 py-1.5 text-xs font-black ring-1 ${
+                                                            estado === "matriculado"
+                                                                ? "bg-emerald-50 text-emerald-700 ring-emerald-100"
+                                                                : estado === "cancelado"
+                                                                ? "bg-red-50 text-red-700 ring-red-100"
+                                                                : estado === "aprobado"
+                                                                ? "bg-blue-50 text-blue-700 ring-blue-100"
+                                                                : "bg-amber-50 text-amber-700 ring-amber-100"
+                                                        }`}
                                                     >
-                                                        <RiDeleteBinLine className="text-red-500 text-xl hover:text-red-700 hover:cursor-pointer" />
-                                                    </button>
+                                                        {estado === "matriculado"
+                                                            ? "Matriculado"
+                                                            : estado === "cancelado"
+                                                            ? "Cancelado"
+                                                            : estado === "aprobado"
+                                                            ? "Aprobado"
+                                                            : "Pendiente"}
+                                                    </span>
+                                                </td>
 
-                                                    <button
-                                                        onClick={() => {
-                                                            setEditData(item);
-                                                            setShowModal(true);
-                                                        }}
-                                                        className="p-2 rounded-lg hover:bg-blue-100"
-                                                        title="Editar"
-                                                    >
-                                                        <CiEdit className="text-blue-500 text-xl hover:text-blue-700 hover:cursor-pointer" />
-                                                    </button>
+                                                <td className="px-4 py-4">
+                                                    <div className="flex items-center justify-center gap-2">
+                                                        <button
+                                                            onClick={() => eliminarMatricula(item.id)}
+                                                            className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-red-50 text-red-600 ring-1 ring-red-100 transition hover:-translate-y-0.5 hover:bg-red-100 hover:cursor-pointer"
+                                                            title="Eliminar"
+                                                        >
+                                                            <RiDeleteBinLine className="text-xl" />
+                                                        </button>
 
-                                                    <button
-                                                        onClick={() => enviarWhatsApp(item)}
-                                                        className="p-2 rounded-lg hover:bg-green-100"
-                                                        title="Enviar por WhatsApp"
-                                                    >
-                                                        <IoLogoWhatsapp className="text-green-600 text-xl hover:text-green-700 hover:cursor-pointer" />
-                                                    </button>
+                                                        <button
+                                                            onClick={() => {
+                                                                setEditData(item);
+                                                                setShowModal(true);
+                                                            }}
+                                                            className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 ring-1 ring-blue-100 transition hover:-translate-y-0.5 hover:bg-blue-100 hover:cursor-pointer"
+                                                            title="Editar"
+                                                        >
+                                                            <CiEdit className="text-xl" />
+                                                        </button>
 
-                                                    <button
-                                                        onClick={() => {
-                                                            console.log("MATRÍCULA A IMPRIMIR:", item);
-                                                            imprimirMatriculaIndividual(item);
-                                                        }}
-                                                        className="p-2 rounded-lg hover:bg-green-100"
-                                                        title="Imprimir Matrícula"
-                                                    >
-                                                        <AiOutlinePrinter className="text-green-500 text-xl hover:text-green-700 hover:cursor-pointer" />
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))
+                                                        <button
+                                                            onClick={() => enviarWhatsApp(item)}
+                                                            className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100 transition hover:-translate-y-0.5 hover:bg-emerald-100 hover:cursor-pointer"
+                                                            title="Enviar por WhatsApp"
+                                                        >
+                                                            <IoLogoWhatsapp className="text-xl" />
+                                                        </button>
+
+                                                        <button
+                                                            onClick={() => {
+                                                                console.log("MATRÍCULA A IMPRIMIR:", item);
+                                                                imprimirMatriculaIndividual(item);
+                                                            }}
+                                                            className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-50 text-slate-600 ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:bg-slate-100 hover:cursor-pointer"
+                                                            title="Imprimir Matrícula"
+                                                        >
+                                                            <AiOutlinePrinter className="text-xl" />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })
                                 ) : (
                                     <tr>
-                                        <td colSpan="9" className="p-6 text-center text-gray-400">
+                                        <td colSpan="9" className="p-8 text-center font-semibold text-slate-400">
                                             No hay registros
                                         </td>
                                     </tr>
@@ -628,7 +765,7 @@ function MatriculaPage() {
                     </div>
                 </div>
             </div>
-
+            
             {showModal && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
                     <div

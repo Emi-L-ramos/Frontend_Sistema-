@@ -308,7 +308,7 @@ function ExamenTeoricoPage() {
         </div>
 
         <button
-          onClick={() => navigate(-1)}
+          onClick={() => navigate("/dashboard/plan-estudio")}
           className="flex items-center gap-2 bg-slate-700 hover:bg-slate-800 text-white px-5 py-3 rounded-2xl transition hover:cursor-pointer"
         >
           <ArrowLeft className="w-5 h-5" />

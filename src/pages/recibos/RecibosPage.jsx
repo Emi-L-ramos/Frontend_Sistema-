@@ -1,7 +1,13 @@
 // frontend/src/pages/recibos/RecibosPage.jsx
 
 import { useEffect, useState } from "react";
-import { FiPlus, FiSearch } from "react-icons/fi";
+import {
+    FiPlus,
+    FiSearch,
+    FiFileText,
+    FiTrendingUp,
+    FiCreditCard,
+} from "react-icons/fi";
 import { RiDeleteBinLine } from "react-icons/ri";
 import Swal from "sweetalert2";
 import * as XLSX from 'xlsx';
@@ -146,7 +152,7 @@ function RecibosPage() {
 
     const exportarAExcel = () => {
         const datosExcel = filtrados.map(recibo => ({
-            'N° Recibo/Factura': recibo.numero_recibo || 'N/A',
+            'N° Rec/Fac': recibo.numero_recibo || 'N/A',
             'Fecha': formatearFecha(recibo.fecha_pago),
             'Estudiante': recibo.estudiante_nombre || `${recibo.matricula_data?.estudiante_nombre || ''} ${recibo.matricula_data?.estudiante_apellido || ''}`.trim(),
             'Cédula': recibo.estudiante_cedula || recibo.matricula_data?.estudiante_cedula || 'N/A',
@@ -163,121 +169,272 @@ function RecibosPage() {
     };
 
     return (
-        <div className="h-full">
-            <div className="mb-4">
-                <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Solvencia</h1>
-                <p className="text-sm text-gray-500">Gestión de pagos y recibos emitidos</p>
+        <div className="min-h-screen bg-[#f6f8fc] px-4 py-5">
+            <br />
+            <div className="mb-7 flex items-start gap-4">
+                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-3xl bg-emerald-50 text-3xl shadow-sm ring-1 ring-emerald-100">
+                    💵
+                </div>
+
+                <div>
+                    <h1 className="text-4xl font-black tracking-tight text-slate-900">
+                        Solvencia
+                    </h1>
+
+                    <p className="mt-2 text-base text-slate-500">
+                        Gestión de pagos y recibos emitidos
+                    </p>
+                </div>
             </div>
 
             {/* Tarjetas de resumen */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
-                <div className="bg-white p-3 md:p-4 rounded-xl shadow-sm border border-gray-100">
-                    <p className="text-gray-500 text-xs md:text-sm">Ingresos Mensuales</p>
-                    <h2 className="text-xl md:text-2xl font-bold text-green-600">C${totalMes.toFixed(2)}</h2>
-                </div>
-                
-                <div className="bg-white p-3 md:p-4 rounded-xl shadow-sm border border-gray-100">
-                    <p className="text-gray-500 text-xs md:text-sm">Recibos este Mes</p>
-                    <h2 className="text-xl md:text-2xl font-bold text-blue-600">{recibosMes.length}</h2>
-                    <p className="text-xs text-gray-400">Total: C${totalMes.toFixed(2)}</p>
+            <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                <div className="relative min-h-[150px] overflow-hidden rounded-[28px] border border-emerald-100 bg-emerald-50/60 px-6 py-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+                    <div className="relative z-10 flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-4">
+                            <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-3xl bg-white text-4xl text-emerald-600 shadow-sm ring-1 ring-emerald-100">
+                                <FiCreditCard />
+                            </div>
+
+                            <div>
+                                <p className="text-base font-bold text-slate-600">
+                                    Ingresos Mensuales
+                                </p>
+
+                                <h2 className="mt-2 text-2xl font-black text-emerald-600">
+                                    C${totalMes.toFixed(2)}
+                                </h2>
+
+                                <p className="mt-2 text-sm font-medium text-slate-500">
+                                    Total este mes
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="pointer-events-none absolute -bottom-8 -right-6 text-[120px] text-emerald-500 opacity-10">
+                        <FiCreditCard />
+                    </div>
                 </div>
 
-                <div className="bg-white p-3 md:p-4 rounded-xl shadow-sm border border-gray-100">
-                    <p className="text-gray-500 text-xs md:text-sm">Ingresos Totales</p>
-                    <h2 className="text-xl md:text-2xl font-bold text-purple-600">C${totalIngresos.toFixed(2)}</h2>
+                <div className="relative min-h-[150px] overflow-hidden rounded-[28px] border border-emerald-100 bg-emerald-50/60 px-6 py-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+                    <div className="relative z-10 flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-4">
+                            <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-3xl bg-white text-4xl text-emerald-600 shadow-sm ring-1 ring-emerald-100">
+                                <FiFileText />
+                            </div>
+
+                            <div>
+                                <p className="text-base font-bold text-slate-600">
+                                    Recibos este Mes
+                                </p>
+
+                                <h2 className="mt-2 text-2xl font-black text-emerald-600">
+                                    {recibosMes.length}
+                                </h2>
+
+                                <p className="mt-2 text-sm font-medium text-slate-500">
+                                    Total: C${totalMes.toFixed(2)}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="pointer-events-none absolute -bottom-8 -right-6 text-[120px] text-emerald-500 opacity-10">
+                        <FiFileText />
+                    </div>
+                </div>
+
+                <div className="relative min-h-[150px] overflow-hidden rounded-[28px] border border-emerald-100 bg-emerald-50/60 px-6 py-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md md:col-span-2 xl:col-span-1">
+                    <div className="relative z-10 flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-4">
+                            <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-3xl bg-white text-4xl text-emerald-600 shadow-sm ring-1 ring-emerald-100">
+                                <FiTrendingUp />
+                            </div>
+
+                            <div>
+                                <p className="text-base font-bold text-slate-600">
+                                    Ingresos Totales
+                                </p>
+
+                                <h2 className="mt-2 text-2xl font-black text-emerald-600">
+                                    C${totalIngresos.toFixed(2)}
+                                </h2>
+
+                                <p className="mt-2 text-sm font-medium text-slate-500">
+                                    Total acumulado
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="pointer-events-none absolute -bottom-8 -right-6 text-[120px] text-emerald-500 opacity-10">
+                        <FiTrendingUp />
+                    </div>
                 </div>
             </div>
 
-            {/* Barra de búsqueda y botones */}
-            <div className="flex flex-col sm:flex-row justify-between gap-3 mb-4">
+            {/* Barra de búsqueda y botón */}
+            <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="relative flex-1">
-                    <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+
                     <input
                         type="text"
-                        placeholder="Buscar por N° Recibo/Factura, estudiante o cédula..."
+                        placeholder="Buscar por N° Rec/Fac, estudiante o cédula..."
                         value={busqueda}
                         onChange={(e) => setBusqueda(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 border border-blue-300 rounded-3xl focus:outline-none focus:ring-2 focus:ring-blue-300 cursor-pointer text-sm"
+                        className="h-12 w-full rounded-2xl border border-slate-200 bg-white pl-12 pr-4 text-sm text-slate-700 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100"
                     />
                 </div>
-                
-                <div className="flex flex-wrap gap-2">                    
-                    <button 
-                        onClick={() => { setEditData(null); setShowModal(true); }} 
-                        className="relative group overflow-hidden px-5 h-11 rounded-3xl hover:cursor-pointer bg-green-500 text-white flex items-center gap-2 transition-all duration-300 hover:bg-green-600 justify-end"
-                    >
-                        <span className="absolute top-0 left-[-75%] w-[50%] h-full bg-gradient-to-r from-transparent via-white/60 to-transparent skew-x-12 group-hover:left-[125%] transition-all duration-700"></span>
-                        <FiPlus size={16} /> Nuevo Recibo
-                    </button>
-                </div>
+
+                <button
+                    onClick={() => {
+                        setEditData(null);
+                        setShowModal(true);
+                    }}
+                    className="group inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-8 text-sm font-black text-white shadow-lg shadow-emerald-600/25 transition-all duration-300 hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-emerald-600/35 sm:w-auto"
+                >
+                    <FiPlus size={18} />
+                    Nuevo Recibo
+                </button>
             </div>
 
             {/* Tabla de recibos */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto">
+            <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm">
                 {loading ? (
-                    <div className="p-8 text-center text-gray-500">Cargando recibos...</div>
+                    <div className="p-10 text-center font-semibold text-slate-400">
+                        Cargando recibos...
+                    </div>
                 ) : (
-                    <table className="w-full text-sm">
-                        <thead className="bg-gray-50">
-                            <tr>
-                                <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">N° Recibo/Factura</th>
-                                <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
-                                <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estudiante</th>
-                                <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cédula</th>
-                                <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monto</th>
-                                <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Método</th>
-                                <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo Pago</th>
-                                <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
-                            </tr>
-                        </thead>
-                        
-                        <tbody className="divide-y divide-gray-200">
-                            {filtrados.length === 0 ? (
-                                <tr>
-                                    <td colSpan="8" className="p-8 text-center text-gray-400">
-                                        No se encontraron recibos
-                                    </td>
+                    <div className="overflow-x-auto">
+                        <table className="w-full min-w-[1100px] text-sm">
+                            <thead className="bg-slate-50/95">
+                                <tr className="border-b border-slate-100">
+                                    <th className="px-5 py-4 text-left text-xs font-black uppercase tracking-wide text-slate-500">
+                                        N° Rec/Fac
+                                    </th>
+
+                                    <th className="px-5 py-4 text-left text-xs font-black uppercase tracking-wide text-slate-500">
+                                        Fecha
+                                    </th>
+
+                                    <th className="px-5 py-4 text-left text-xs font-black uppercase tracking-wide text-slate-500">
+                                        Estudiante
+                                    </th>
+
+                                    <th className="px-5 py-4 text-left text-xs font-black uppercase tracking-wide text-slate-500">
+                                        Cédula
+                                    </th>
+
+                                    <th className="px-5 py-4 text-left text-xs font-black uppercase tracking-wide text-slate-500">
+                                        Monto
+                                    </th>
+
+                                    <th className="px-5 py-4 text-left text-xs font-black uppercase tracking-wide text-slate-500">
+                                        Método
+                                    </th>
+
+                                    <th className="px-5 py-4 text-left text-xs font-black uppercase tracking-wide text-slate-500">
+                                        Tipo pago
+                                    </th>
+
+                                    <th className="px-5 py-4 text-center text-xs font-black uppercase tracking-wide text-slate-500">
+                                        Acciones
+                                    </th>
                                 </tr>
-                            ) : (
-                                filtrados.map((r) => (
-                                    <tr key={r.id} className="hover:bg-gray-50 transition">
-                                        <td className="p-3 font-semibold text-blue-600 text-sm">{r.numero_recibo}</td>
-                                        <td className="p-3 text-sm">{formatearFecha(r.fecha_pago)}</td>
-                                        <td className="p-3 text-sm">{r.estudiante_nombre || r.matricula_data?.estudiante_nombre || "N/A"}</td>
-                                        <td className="p-3 text-sm font-mono">{r.estudiante_cedula || r.matricula_data?.estudiante_cedula || "N/A"}</td>
-                                        <td className="p-3 font-bold text-green-600 text-sm">
-                                            C${parseFloat(r.monto_pagado || r.monto_cordobas || 0).toFixed(2)}
-                                        </td>
-                                        <td className="p-3 text-sm capitalize">{r.metodo_pago || "Efectivo"}</td>
-                                        <td className="p-3">
-                                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${obtenerClaseEstado(r)}`}>
-                                                {obtenerEstado(r)}
-                                            </span>
-                                        </td>
-                                        <td className="p-3">
-                                            <div className="flex gap-2">
-                                                <button 
-                                                    onClick={() => { setEditData(r); setShowModal(true); }} 
-                                                    className="p-2 rounded-lg hover:bg-blue-100" 
-                                                    title="Editar"
-                                                >
-                                                    <CiEdit size={18} />
-                                                </button>
-                                                
-                                                <button
-                                                    onClick={() => eliminarRecibo(r.id)}
-                                                    className="p-2 rounded-lg hover:bg-red-100"
-                                                    title="Eliminar recibo"
-                                                >
-                                                    <RiDeleteBinLine size={18} className="text-red-500 hover:text-red-700" />
-                                                </button>
-                                            </div>
+                            </thead>
+
+                            <tbody className="divide-y divide-slate-100">
+                                {filtrados.length === 0 ? (
+                                    <tr>
+                                        <td
+                                            colSpan="8"
+                                            className="p-10 text-center font-semibold text-slate-400"
+                                        >
+                                            No se encontraron recibos
                                         </td>
                                     </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
+                                ) : (
+                                    filtrados.map((r) => (
+                                        <tr
+                                            key={r.id}
+                                            className="transition hover:bg-emerald-50/40"
+                                        >
+                                            <td className="px-5 py-4">
+                                                <span className="inline-flex min-w-[82px] items-center justify-center rounded-xl bg-emerald-50 px-3 py-1.5 text-sm font-black text-emerald-700 ring-1 ring-emerald-100">
+                                                    {r.numero_recibo || "N/A"}
+                                                </span>
+                                            </td>
+
+                                            <td className="px-5 py-4 whitespace-nowrap font-semibold text-slate-700">
+                                                {formatearFecha(r.fecha_pago)}
+                                            </td>
+
+                                            <td className="px-5 py-4">
+                                                <p className="font-bold text-slate-900">
+                                                    {r.estudiante_nombre || r.matricula_data?.estudiante_nombre || "N/A"}
+                                                </p>
+                                            </td>
+
+                                            <td className="px-5 py-4 whitespace-nowrap font-semibold text-slate-600">
+                                                {r.estudiante_cedula || r.matricula_data?.estudiante_cedula || "N/A"}
+                                            </td>
+
+                                            <td className="px-5 py-4 whitespace-nowrap font-black text-emerald-600">
+                                                C${parseFloat(r.monto_pagado || r.monto_cordobas || 0).toFixed(2)}
+                                            </td>
+
+                                            <td className="px-5 py-4">
+                                                <span className="inline-flex rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-black capitalize text-emerald-700 ring-1 ring-emerald-100">
+                                                    {r.metodo_pago || "Efectivo"}
+                                                </span>
+                                            </td>
+
+                                            <td className="px-5 py-4">
+                                                <span
+                                                    className={`inline-flex rounded-full px-3 py-1.5 text-xs font-black ring-1 ${
+                                                        obtenerEstado(r) === "Completo"
+                                                            ? "bg-emerald-50 text-emerald-700 ring-emerald-100"
+                                                            : obtenerEstado(r) === "Beneficio"
+                                                            ? "bg-purple-50 text-purple-700 ring-purple-100"
+                                                            : obtenerEstado(r) === "Anticipo"
+                                                            ? "bg-amber-50 text-amber-700 ring-amber-100"
+                                                            : "bg-slate-50 text-slate-600 ring-slate-100"
+                                                    }`}
+                                                >
+                                                    {obtenerEstado(r)}
+                                                </span>
+                                            </td>
+
+                                            <td className="px-5 py-4">
+                                                <div className="flex items-center justify-center gap-2">
+                                                    <button
+                                                        onClick={() => {
+                                                            setEditData(r);
+                                                            setShowModal(true);
+                                                        }}
+                                                        className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-slate-700 ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:bg-blue-50 hover:text-blue-600 hover:ring-blue-100"
+                                                        title="Editar"
+                                                    >
+                                                        <CiEdit size={20} />
+                                                    </button>
+
+                                                    <button
+                                                        onClick={() => eliminarRecibo(r.id)}
+                                                        className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-red-50 text-red-500 ring-1 ring-red-100 transition hover:-translate-y-0.5 hover:bg-red-100 hover:text-red-700"
+                                                        title="Eliminar recibo"
+                                                    >
+                                                        <RiDeleteBinLine size={19} />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 )}
             </div>
 

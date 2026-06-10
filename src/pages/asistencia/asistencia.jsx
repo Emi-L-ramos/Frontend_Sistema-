@@ -687,6 +687,31 @@ export default function Asistencia({ userRole }) {
     modalDetalleEstudiante
   );
 
+  const instructorNombreSeleccionado =
+    modalDetalleEstudiante?.instructor_nombre ||
+    modalDetalleEstudiante?.conductor ||
+    detalleKmSeleccionado.find((item) => item.instructor_nombre)?.instructor_nombre ||
+    resumenSeleccionado?.instructor_nombre ||
+    "No asignado";
+
+  const totalKmSeleccionado =
+    resumenSeleccionado?.total_km ??
+    detalleKmSeleccionado.reduce(
+      (total, item) => total + Number(item.km_recorridos || 0),
+      0
+    );
+
+  const totalClasesKmSeleccionado =
+    resumenSeleccionado?.total_clases ??
+    detalleKmSeleccionado.filter((item) => {
+      return (
+        item.km_inicial !== null &&
+        item.km_inicial !== undefined &&
+        item.km_final !== null &&
+        item.km_final !== undefined
+      );
+    }).length;
+
   const fechaInicioTexto = convertirFechaLocal(fechaInicio).toLocaleDateString(
     "es-NI",
     {
@@ -960,7 +985,7 @@ export default function Asistencia({ userRole }) {
                 </div>
 
                 <p className="font-bold text-gray-900">
-                  {resumenSeleccionado?.instructor_nombre || "No asignado"}
+                  {instructorNombreSeleccionado}
                 </p>
 
                 <p className="text-xs text-gray-500 mt-1">
@@ -975,7 +1000,7 @@ export default function Asistencia({ userRole }) {
                 </div>
 
                 <p className="text-3xl font-bold text-blue-700">
-                  {resumenSeleccionado?.total_km || 0} km
+                  {totalKmSeleccionado} km
                 </p>
               </div>
 
@@ -986,7 +1011,7 @@ export default function Asistencia({ userRole }) {
                 </div>
 
                 <p className="text-3xl font-bold text-gray-900">
-                  {resumenSeleccionado?.total_clases || 0}
+                  {totalClasesKmSeleccionado}
                 </p>
               </div>
             </div>

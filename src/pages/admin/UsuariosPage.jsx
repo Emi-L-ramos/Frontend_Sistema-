@@ -4,6 +4,12 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import Swal from "sweetalert2";
 import api from "../../api/axios";
+import {
+    FaUsers,
+    FaUserShield,
+    FaChalkboardTeacher,
+    FaUserGraduate,
+} from "react-icons/fa";
 
 function UsuariosPage() {
     const { token, user: usuarioActual } = useAuth();
@@ -184,7 +190,7 @@ function UsuariosPage() {
 
         try {
             if (editData) {
-                await api.patch(`/usuarios/${editData.id}/`, userData);
+                await api.put(`/usuarios/${editData.id}/`, userData);
             } else {
                 await api.post("/usuarios/", userData);
             }
@@ -247,160 +253,406 @@ function UsuariosPage() {
         fetchInstructores();
     }, [token]);
 
+    const getRolVisual = (rolValue) => {
+        const rol = normalizarRol(rolValue);
+
+        const estilos = {
+        admin: {
+            Icon: FaUserShield,
+            titulo: "Admin",
+            descripcion: "Cuentas con permisos de administración",
+            subtituloFila: "Cuenta de administrador",
+            card: "border-red-100 bg-red-50/60",
+            cardIcon: "bg-white text-red-500 ring-red-100",
+            cardNumber: "text-red-600",
+            cardGhost: "text-red-500",
+            sectionIcon: "bg-red-50 text-red-500 ring-red-100",
+            sectionHeader: "bg-red-50/50 border-red-100",
+            badge: "bg-red-50 text-red-700 ring-red-100",
+            avatar: "bg-red-50 text-red-600",
+            hover: "hover:bg-red-50/40",
+        },
+
+        instructor: {
+            Icon: FaChalkboardTeacher,
+            titulo: "Instructores",
+            descripcion: "Encargados de la formación y enseñanza",
+            subtituloFila: "Cuenta de instructor",
+            card: "border-emerald-100 bg-emerald-50/60",
+            cardIcon: "bg-white text-emerald-600 ring-emerald-100",
+            cardNumber: "text-emerald-600",
+            cardGhost: "text-emerald-500",
+            sectionIcon: "bg-emerald-50 text-emerald-600 ring-emerald-100",
+            sectionHeader: "bg-emerald-50/50 border-emerald-100",
+            badge: "bg-emerald-50 text-emerald-700 ring-emerald-100",
+            avatar: "bg-emerald-50 text-emerald-600",
+            hover: "hover:bg-emerald-50/40",
+        },
+
+        estudiante: {
+            Icon: FaUserGraduate,
+            titulo: "Estudiantes",
+            descripcion: "Cuentas registradas como estudiantes",
+            subtituloFila: "Cuenta de estudiante",
+            card: "border-violet-100 bg-violet-50/60",
+            cardIcon: "bg-white text-violet-600 ring-violet-100",
+            cardNumber: "text-violet-600",
+            cardGhost: "text-violet-500",
+            sectionIcon: "bg-violet-50 text-violet-600 ring-violet-100",
+            sectionHeader: "bg-violet-50/50 border-violet-100",
+            badge: "bg-violet-50 text-violet-700 ring-violet-100",
+            avatar: "bg-violet-50 text-violet-600",
+            hover: "hover:bg-violet-50/40",
+        },
+    };
+
+        return estilos[rol] || {
+            Icon: FaUsers,
+            titulo: rol ? rol.charAt(0).toUpperCase() + rol.slice(1) : "Sin rol",
+            descripcion: "Usuarios registrados en el sistema",
+            subtituloFila: "Cuenta de usuario",
+            card: "border-slate-100 bg-slate-50/60",
+            cardIcon: "bg-white text-slate-600 ring-slate-100",
+            cardNumber: "text-slate-700",
+            cardGhost: "text-slate-400",
+            sectionIcon: "bg-slate-50 text-slate-600 ring-slate-100",
+            sectionHeader: "bg-slate-50 border-slate-100",
+            badge: "bg-slate-50 text-slate-700 ring-slate-100",
+            avatar: "bg-slate-50 text-slate-600",
+            hover: "hover:bg-slate-50",
+        };
+    };
+
+    const getNombreCompletoUsuario = (u) => {
+        const rolUsuario = normalizarRol(u.rol);
+
+        if (rolUsuario === "estudiante") {
+            return u.estudiante_nombre || "-";
+        }
+
+        if (rolUsuario === "instructor") {
+            return u.instructor_nombre || "-";
+        }
+
+        if (u.first_name || u.last_name) {
+            return `${u.first_name || ""} ${u.last_name || ""}`.trim();
+        }
+
+        return "-";
+    };
+
+    const getInicialUsuario = (username) => {
+        return (username || "U").charAt(0).toUpperCase();
+    };
+
+    const totalAdmin = usuariosPorRol.admin?.length || 0;
+    const totalInstructores = usuariosPorRol.instructor?.length || 0;
+    const totalEstudiantes = usuariosPorRol.estudiante?.length || 0;
+
     return (
-        <div className="p-6 bg-gray-50 min-h-screen">
-            <div className="mb-8 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                <div>
-                    <h1 className="text-4xl font-bold text-gray-800">
-                        Gestión de Usuarios
-                    </h1>
-                    <p className="text-gray-500 mt-1">
-                        Administración de cuentas clasificadas por rol
-                    </p>
-                </div>
+        <div className="min-h-screen bg-[#f6f8fc] px-4 py-5 md:px-8 lg:px-10">
+            <div className="mx-auto max-w-[1500px]">
+                <div className="mb-7 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                    <div className="flex items-start gap-4">
+                        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-3xl bg-blue-50 text-blue-600 shadow-sm ring-1 ring-blue-100">
+                            <FaUsers className="text-3xl" />
+                        </div>
 
-               <button
-                    onClick={() => {
-                        resetForm();
-                        setShowModal(true);
-                    }}
-                    className="relative group overflow-hidden px-20 h-11 rounded-3xl bg-green-500 text-white flex items-center gap-2 transition-all duration-300 hover:bg-green-600 justify-end hover:cursor-pointer"
-                >
-                    <span className="absolute top-0 left-[-75%] w-[50%] h-full bg-gradient-to-r from-transparent via-white/60 to-transparent skew-x-12 group-hover:left-[125%] transition-all duration-700"></span>
+                        <div>
+                            <h1 className="text-4xl font-black tracking-tight text-slate-900">
+                                Gestión de Usuarios
+                            </h1>
 
-                    <span className="relative z-10 flex items-center gap-2">
+                            <p className="mt-2 text-base text-slate-500">
+                                Administración de cuentas clasificadas por rol
+                            </p>
+                        </div>
+                    </div>
+
+                    <button
+                        type="button"
+                        onClick={() => {
+                            resetForm();
+                            setShowModal(true);
+                        }}
+                        className="group inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-8 text-sm font-black text-white shadow-lg shadow-emerald-600/25 transition-all duration-300 hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-emerald-600/35 md:w-auto"
+                    >
+                        <span className="text-lg">＋</span>
                         Nuevo Usuario
-                    </span>
-                </button>
-            </div>
-
-            {loading ? (
-                <div className="bg-white rounded-2xl shadow p-8 text-center text-gray-500">
-                    Cargando usuarios...
+                    </button>
                 </div>
-            ) : (
-                <div className="space-y-8">
-                    {roles.map(rol => {
-                        const lista = usuariosPorRol[rol.value] || [];
 
-                        return (
-                            <div
-                                key={rol.value}
-                                className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden"
-                            >
-                                <div className="px-6 py-4 border-b flex items-center justify-between border-gray-200">
-                                    <div>
-                                        <h2 className="text-xl font-bold text-gray-800">
-                                            {rol.label}
-                                        </h2>
-                                        <p className="text-sm text-gray-500">
-                                            {lista.length} usuario(s) registrados
-                                        </p>
-                                    </div>
-
-                                    <span className={`px-4 py-1 rounded-full text-sm font-semibold ${rol.color}`}>
-                                        {rol.label}
-                                    </span>
+                <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                    <div className="relative min-h-[150px] overflow-hidden rounded-[28px] border border-red-100 bg-red-50/60 px-6 py-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+                        <div className="relative z-10 flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-4">
+                                <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-3xl bg-white text-red-500 shadow-sm ring-1 ring-red-100">
+                                    <FaUserShield className="text-4xl" />
                                 </div>
 
-                                {lista.length > 0 ? (
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full">
-                                            <thead>
-                                                <tr className="bg-white text-gray-500 text-sm border-gray-300">
-                                                    <th className="p-4 text-left">Usuario</th>
-                                                    <th className="p-4 text-left">Nombre completo</th>
-                                                    <th className="p-4 text-left">Rol</th>
-                                                    <th className="p-4 text-center">Acciones</th>
-                                                </tr>
-                                            </thead>
+                                <div>
+                                    <p className="text-base font-bold text-slate-600">
+                                        Admin
+                                    </p>
 
-                                            <tbody>
-                                                {lista.map(u => {
-                                                    const roleInfo = getRoleInfo(u.rol);
+                                    <p className="mt-2 text-4xl font-black text-red-600">
+                                        {totalAdmin}
+                                    </p>
 
-                                                    return (
-                                                        <tr
-                                                            key={u.id}
-                                                            className="border-gray-300 last:border-b-0 hover:bg-blue-50 transition"
-                                                        >
-                                                            <td className="p-4">
-                                                                <div className="font-semibold text-gray-800">
-                                                                    {u.username}
-                                                                </div>
-
-                                                                {u.id === usuarioActual?.id && (
-                                                                    <span className="text-xs text-blue-600">
-                                                                        Usuario actual
-                                                                    </span>
-                                                                )}
-                                                            </td>
-
-                                                            <td className="p-4 text-gray-700">
-                                                                {normalizarRol(u.rol) === "estudiante"
-                                                                    ? (u.estudiante_nombre || "-")
-                                                                    : normalizarRol(u.rol) === "instructor"
-                                                                    ? (u.instructor_nombre || "-")
-                                                                    : (u.first_name || u.last_name
-                                                                        ? `${u.first_name || ""} ${u.last_name || ""}`.trim()
-                                                                        : "-")}
-                                                            </td>
-
-                                                            <td className="p-4">
-                                                                <span className={`px-3 py-1 rounded-full text-xs font-bold ${roleInfo.color}`}>
-                                                                    {roleInfo.label}
-                                                                </span>
-                                                            </td>
-
-                                                            <td className="p-4">
-                                                                <div className="flex justify-center gap-2">
-                                                                    <button
-                                                                        onClick={() => {
-                                                                            const rolUsuario = normalizarRol(u.rol);
-
-                                                                            setEditData(u);
-                                                                            setForm({
-                                                                                username: u.username || "",
-                                                                                password: "",
-                                                                                confirm_password: "",
-                                                                                first_name: u.first_name || "",
-                                                                                last_name: u.last_name || "",
-                                                                                rol: rolUsuario,
-                                                                                matricula_id: "",
-                                                                                instructor_id: "",
-                                                                            });
-
-                                                                            setShowModal(true);
-                                                                        }}
-                                                                        className="px-3 py-1.5 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 transition"
-                                                                    >
-                                                                        Editar
-                                                                    </button>
-
-                                                                    <button
-                                                                        onClick={() => eliminarUsuario(u.id, u.username)}
-                                                                        className="px-3 py-1.5 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 transition"
-                                                                    >
-                                                                        Eliminar
-                                                                    </button>
-                                                                </div>
-                                                            </td>
-                                                        </tr>
-                                                    );
-                                                })}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                ) : (
-                                    <div className="p-6 text-center text-gray-400">
-                                        No hay usuarios con este rol.
-                                    </div>
-                                )}
+                                    <p className="mt-2 text-sm font-medium text-slate-500">
+                                        Cuentas con permisos de administración
+                                    </p>
+                                </div>
                             </div>
-                        );
-                    })}
+                        </div>
+
+                        <div className="pointer-events-none absolute -bottom-8 -right-6 text-red-500 opacity-10">
+                            <FaUserShield className="text-[125px]" />
+                        </div>
+                    </div>
+
+                    <div className="relative min-h-[150px] overflow-hidden rounded-[28px] border border-emerald-100 bg-emerald-50/60 px-6 py-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+                        <div className="relative z-10 flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-4">
+                                <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-3xl bg-white text-emerald-600 shadow-sm ring-1 ring-emerald-100">
+                                    <FaChalkboardTeacher className="text-4xl" />
+                                </div>
+
+                                <div>
+                                    <p className="text-base font-bold text-slate-600">
+                                        Instructores
+                                    </p>
+
+                                    <p className="mt-2 text-4xl font-black text-emerald-600">
+                                        {totalInstructores}
+                                    </p>
+
+                                    <p className="mt-2 text-sm font-medium text-slate-500">
+                                        Encargados de la formación y enseñanza
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="pointer-events-none absolute -bottom-8 -right-6 text-emerald-500 opacity-10">
+                            <FaChalkboardTeacher className="text-[125px]" />
+                        </div>
+                    </div>
+
+                    <div className="relative min-h-[150px] overflow-hidden rounded-[28px] border border-violet-100 bg-violet-50/60 px-6 py-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md md:col-span-2 xl:col-span-1">
+                        <div className="relative z-10 flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-4">
+                                <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-3xl bg-white text-violet-500 shadow-sm ring-1 ring-violet-100">
+                                    <FaUserGraduate className="text-4xl" />
+                                </div>
+
+                                <div>
+                                    <p className="text-base font-bold text-slate-600">
+                                        Estudiantes
+                                    </p>
+
+                                    <p className="mt-2 text-4xl font-black text-violet-600">
+                                        {totalEstudiantes}
+                                    </p>
+
+                                    <p className="mt-2 text-sm font-medium text-slate-500">
+                                        Cuentas registradas como estudiantes
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="pointer-events-none absolute -bottom-8 -right-6 text-violet-500 opacity-10">
+                            <FaUserGraduate className="text-[125px]" />
+                        </div>
+                    </div>
                 </div>
-            )}
+
+                {loading ? (
+                    <div className="rounded-[28px] bg-white p-10 text-center shadow-sm ring-1 ring-slate-200">
+                        <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-blue-600"></div>
+
+                        <p className="font-semibold text-slate-500">
+                            Cargando usuarios...
+                        </p>
+                    </div>
+                ) : (
+                    <div className="space-y-6">
+                        {roles.map((rol) => {
+                            const lista = usuariosPorRol[rol.value] || [];
+                            const visual = getRolVisual(rol.value);
+
+                            return (
+                                <div
+                                    key={rol.value}
+                                    className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm"
+                                >
+                                    <div className="flex flex-col gap-3 border-b border-slate-100 px-5 py-5 md:flex-row md:items-center md:justify-between md:px-7">
+                                        <div className="flex items-center gap-4">
+                                            <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl shadow-sm ring-1 ${visual.sectionIcon}`}>
+                                                <visual.Icon className="text-2xl" />
+                                            </div>
+                                            <div>
+                                                <div className="flex flex-wrap items-center gap-3">
+                                                    <h2 className="text-2xl font-black text-slate-900">
+                                                        {visual.titulo}
+                                                    </h2>
+
+                                                    <span className={`inline-flex rounded-full px-3 py-1 text-xs font-black ring-1 ${visual.badge}`}>
+                                                        {lista.length} usuario(s)
+                                                    </span>
+                                                </div>
+
+                                                <p className="mt-1 text-sm font-medium text-slate-500">
+                                                    {visual.descripcion}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <span className={`inline-flex w-fit rounded-full px-4 py-2 text-xs font-black ring-1 ${visual.badge}`}>
+                                            {rol.label}
+                                        </span>
+                                    </div>
+
+                                    {lista.length > 0 ? (
+                                        <div className="overflow-x-auto p-4">
+                                            <div className="overflow-hidden rounded-2xl border border-slate-100">
+                                                <table className="w-full min-w-[950px]">
+                                                    <thead>
+                                                        <tr className={`border-b text-xs uppercase tracking-wide text-slate-500 ${visual.sectionHeader}`}>
+                                                            <th className="px-5 py-4 text-left">
+                                                                Usuario
+                                                            </th>
+
+                                                            <th className="px-5 py-4 text-left">
+                                                                Nombre completo
+                                                            </th>
+
+                                                            <th className="px-5 py-4 text-center">
+                                                                Rol
+                                                            </th>
+
+                                                            <th className="px-5 py-4 text-center">
+                                                                Estado
+                                                            </th>
+
+                                                            <th className="px-5 py-4 text-center">
+                                                                Acciones
+                                                            </th>
+                                                        </tr>
+                                                    </thead>
+
+                                                    <tbody className="divide-y divide-slate-100">
+                                                        {lista.map((u) => {
+                                                            const roleInfo = getRoleInfo(u.rol);
+                                                            const visualFila = getRolVisual(u.rol);
+                                                            const rolUsuario = normalizarRol(u.rol);
+
+                                                            return (
+                                                                <tr
+                                                                    key={u.id}
+                                                                    className={`transition ${visualFila.hover}`}
+                                                                >
+                                                                    <td className="px-5 py-4">
+                                                                        <div className="flex items-center gap-3">
+                                                                            <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-sm font-black ${visualFila.avatar}`}>
+                                                                                {getInicialUsuario(u.username)}
+                                                                            </div>
+
+                                                                            <div>
+                                                                                <p className="font-black text-slate-900">
+                                                                                    {u.username}
+                                                                                </p>
+
+                                                                                <p className="mt-0.5 text-xs font-medium text-slate-400">
+                                                                                    {visualFila.subtituloFila}
+                                                                                </p>
+
+                                                                                {u.id === usuarioActual?.id && (
+                                                                                    <span className="mt-1 inline-flex rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-black text-blue-600 ring-1 ring-blue-100">
+                                                                                        Usuario actual
+                                                                                    </span>
+                                                                                )}
+                                                                            </div>
+                                                                        </div>
+                                                                    </td>
+
+                                                                    <td className="px-5 py-4">
+                                                                        <p className="font-semibold text-slate-700">
+                                                                            {getNombreCompletoUsuario(u)}
+                                                                        </p>
+                                                                    </td>
+
+                                                                    <td className="px-5 py-4 text-center">
+                                                                        <span className={`inline-flex rounded-full px-3 py-1.5 text-xs font-black ring-1 ${visualFila.badge}`}>
+                                                                            {roleInfo.label}
+                                                                        </span>
+                                                                    </td>
+
+                                                                    <td className="px-5 py-4 text-center">
+                                                                        <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-black text-emerald-700 ring-1 ring-emerald-100">
+                                                                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                                                                            Activo
+                                                                        </span>
+                                                                    </td>
+
+                                                                    <td className="px-5 py-4">
+                                                                        <div className="flex justify-center gap-2">
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => {
+                                                                                    setEditData(u);
+                                                                                    setForm({
+                                                                                        username: u.username || "",
+                                                                                        password: "",
+                                                                                        confirm_password: "",
+                                                                                        first_name: u.first_name || "",
+                                                                                        last_name: u.last_name || "",
+                                                                                        rol: rolUsuario,
+                                                                                        matricula_id: "",
+                                                                                        instructor_id: "",
+                                                                                    });
+
+                                                                                    setShowModal(true);
+                                                                                }}
+                                                                                className="inline-flex h-10 items-center justify-center gap-2 rounded-2xl bg-blue-50 px-4 text-sm font-black text-blue-600 ring-1 ring-blue-100 transition hover:-translate-y-0.5 hover:bg-blue-100 hover:cursor-pointer"
+                                                                            >
+                                                                                ✎ Editar
+                                                                            </button>
+
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => eliminarUsuario(u.id, u.username)}
+                                                                                className="inline-flex h-10 items-center justify-center gap-2 rounded-2xl bg-red-50 px-4 text-sm font-black text-red-600 ring-1 ring-red-100 transition hover:-translate-y-0.5 hover:bg-red-100 hover:cursor-pointer"
+                                                                            >
+                                                                                🗑 Eliminar
+                                                                            </button>
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                            );
+                                                        })}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="p-8 text-center">
+                                           <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-50 text-slate-500 ring-1 ring-slate-100">
+                                                <visual.Icon className="text-2xl" />
+                                            </div>
+
+                                            <p className="font-semibold text-slate-400">
+                                                No hay usuarios con este rol.
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
+            </div>
 
            {showModal && (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 px-4">

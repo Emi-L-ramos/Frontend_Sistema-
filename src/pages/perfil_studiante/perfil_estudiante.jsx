@@ -1,4 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
+import {
+    Search,
+    LayoutGrid,
+    List,
+    Eye,
+    UserRound,
+} from "lucide-react";
 import api from "../../api/axios";
 
 function PerfilEstudiante() {
@@ -10,6 +17,7 @@ function PerfilEstudiante() {
     const [estudiantes, setEstudiantes] = useState([]);
     const [busqueda, setBusqueda] = useState("");
     const [perfilSeleccionado, setPerfilSeleccionado] = useState(null);
+    const [modoVista, setModoVista] = useState("lista");
 
     const cargarPerfiles = async () => {
         try {
@@ -61,53 +69,82 @@ function PerfilEstudiante() {
 
     const PerfilCard = ({ perfil, tipo }) => {
         const esInstructor = tipo === "instructor";
+        const nombreCompleto = `${perfil?.nombre || ""} ${perfil?.apellido || ""}`.trim();
 
         return (
             <div
                 onClick={() => setPerfilSeleccionado({ ...perfil, tipo })}
-                className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition overflow-hidden cursor-pointer hover:-translate-y-1 duration-200"
+                className="group grid cursor-pointer grid-cols-[auto_1fr_auto] items-center gap-4 rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm transition hover:border-blue-200 hover:bg-blue-50/30 hover:shadow-md md:grid-cols-[auto_minmax(220px,1.2fr)_110px_auto] lg:grid-cols-[auto_minmax(240px,1.2fr)_110px_140px_auto] xl:grid-cols-[auto_minmax(260px,1.2fr)_120px_150px_minmax(220px,1fr)_44px]"
             >
-                <div className="p-5">
-                    <div className="flex items-start gap-4">
-                        <div
-                            className={`w-16 h-16 rounded-2xl overflow-hidden flex items-center justify-center shrink-0 ${
-                                esInstructor ? "bg-green-50" : "bg-blue-50"
+                <div
+                    className={`flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl ${
+                        esInstructor ? "bg-green-50" : "bg-blue-50"
+                    }`}
+                >
+                    {perfil?.foto ? (
+                        <img
+                            src={perfil.foto}
+                            alt={nombreCompleto || "Perfil"}
+                            className="h-full w-full object-cover"
+                        />
+                    ) : (
+                        <span
+                            className={`text-2xl font-black ${
+                                esInstructor ? "text-green-600" : "text-blue-600"
                             }`}
                         >
-                            {perfil?.foto ? (
-                                <img
-                                    src={perfil.foto}
-                                    alt={`${perfil.nombre || ""} ${perfil.apellido || ""}`}
-                                    className="w-full h-full object-cover"
-                                />
-                            ) : (
-                                <span
-                                    className={`text-2xl font-bold ${
-                                        esInstructor ? "text-green-600" : "text-blue-600"
-                                    }`}
-                                >
-                                    {(perfil?.nombre || "P").charAt(0).toUpperCase()}
-                                </span>
-                            )}
-                        </div>
+                            {(perfil?.nombre || "P").charAt(0).toUpperCase()}
+                        </span>
+                    )}
+                </div>
 
-                        <div className="min-w-0 flex-1">
-                            <h2 className="text-lg font-bold text-gray-800 leading-tight">
-                                {perfil?.nombre} {perfil?.apellido}
-                            </h2>
+                <div className="min-w-0">
+                    <h2 className="truncate text-[15px] font-black text-slate-900">
+                        {nombreCompleto || "Sin nombre"}
+                    </h2>
 
-                            <span
-                                className={`inline-flex mt-1 px-2.5 py-1 rounded-full text-[11px] font-bold ${
-                                    esInstructor
-                                        ? "bg-green-100 text-green-700"
-                                        : "bg-blue-100 text-blue-700"
-                                }`}
-                            >
-                                {esInstructor ? "Instructor" : "Estudiante"}
-                            </span>
-                        </div>
+                    <div className="mt-1 md:hidden">
+                        <span
+                            className={`inline-flex rounded-full px-3 py-1 text-[11px] font-black ${
+                                esInstructor
+                                    ? "bg-green-100 text-green-700"
+                                    : "bg-blue-100 text-blue-700"
+                            }`}
+                        >
+                            {esInstructor ? "Instructor" : "Estudiante"}
+                        </span>
                     </div>
                 </div>
+
+                <span
+                    className={`hidden justify-center rounded-full px-3 py-1 text-xs font-black md:inline-flex ${
+                        esInstructor
+                            ? "bg-green-100 text-green-700"
+                            : "bg-blue-100 text-blue-700"
+                    }`}
+                >
+                    {esInstructor ? "Instructor" : "Estudiante"}
+                </span>
+
+                <div className="hidden truncate text-sm font-semibold text-slate-500 lg:block">
+                    {perfil?.telefono || "Sin teléfono"}
+                </div>
+
+                <div className="hidden truncate text-sm font-semibold text-slate-500 xl:block">
+                    {perfil?.correo || perfil?.categoria || "Sin correo"}
+                </div>
+
+                <button
+                    type="button"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        setPerfilSeleccionado({ ...perfil, tipo });
+                    }}
+                    className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600"
+                    title="Ver perfil"
+                >
+                    <Eye size={18} />
+                </button>
             </div>
         );
     };
@@ -250,31 +287,41 @@ function PerfilEstudiante() {
     }
 
     return (
-        <div className="p-6 bg-gray-50 min-h-screen">
-            <div className="mb-8">
-                <h1 className="text-4xl font-bold text-gray-800">
-                    Perfiles
-                </h1>
+        <div className="min-h-screen bg-[#f7f9fd] px-4 py-5 md:px-6 lg:px-8">
+            <div className="mb-8 flex items-center gap-5">
+                <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-[24px] border border-blue-100 bg-blue-50 text-blue-600 shadow-sm">
+                    <UserRound size={34} />
+                </div>
 
-                <p className="text-gray-500 mt-1">
-                    Consulta la información registrada.
-                </p>
+                <div>
+                    <h1 className="text-4xl font-black tracking-tight text-slate-950">
+                        Perfiles
+                    </h1>
+
+                    <p className="mt-2 text-base font-medium text-slate-500">
+                        Consulta la información registrada.
+                    </p>
+                </div>
             </div>
 
             {(rol === "admin" || rol === "secretaria" || rol === "instructor") && (
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 mb-6">
-                    <input
-                        type="text"
-                        placeholder="Buscar por nombre, cédula, teléfono, correo o categoría..."
-                        value={busqueda}
-                        onChange={(e) => setBusqueda(e.target.value)}
-                        className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
+                <div className="mb-6 rounded-[22px] border border-slate-200 bg-white p-4 shadow-sm">
+                    <div className="flex h-14 items-center rounded-2xl border border-slate-200 bg-white px-4 transition focus-within:border-blue-400 focus-within:ring-4 focus-within:ring-blue-100">
+                        <Search className="shrink-0 text-slate-400" size={21} />
+
+                        <input
+                            type="text"
+                            placeholder="Buscar por nombre, cédula, teléfono, correo o categoría..."
+                            value={busqueda}
+                            onChange={(e) => setBusqueda(e.target.value)}
+                            className="h-full w-full bg-transparent pl-3 text-sm font-semibold text-slate-700 outline-none placeholder:text-slate-400"
+                        />
+                    </div>
                 </div>
             )}
 
             {rol === "estudiante" && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-3">
                     {miPerfil && (
                         <PerfilCard
                             perfil={miPerfil}
@@ -305,7 +352,7 @@ function PerfilEstudiante() {
                                 Mi perfil
                             </h2>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                            <div className="space-y-3">
                                 <PerfilCard perfil={miPerfil} tipo="instructor" />
                             </div>
                         </div>
@@ -316,7 +363,7 @@ function PerfilEstudiante() {
                             Mis estudiantes asignados
                         </h2>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                        <div className="space-y-3">
                             {perfilesFiltrados
                                 .filter((p) => p.tipo === "estudiante")
                                 .map((perfil) => (
@@ -338,7 +385,7 @@ function PerfilEstudiante() {
             )}
 
             {(rol === "admin" || rol === "secretaria") && (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                <div className="space-y-3">
                     {perfilesFiltrados.map((perfil) => (
                         <PerfilCard
                             key={`${perfil.tipo}-${perfil.id}`}

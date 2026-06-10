@@ -1,4 +1,13 @@
-import { useEffect, useState } from "react";
+import { cloneElement, useEffect, useState } from "react";
+import {
+    GraduationCap,
+    CalendarCheck,
+    BookOpen,
+    CalendarDays,
+    Clock3,
+    UserRound,
+    PieChart,
+} from "lucide-react";
 import api from "../../api/axios";
 import { useNavigate } from "react-router-dom";
 
@@ -189,169 +198,307 @@ function EstudianteHome({ setActiveTab }) {
         return "bg-yellow-100 text-yellow-700";
     };
 
+    const TarjetaResumen = ({ variante, icono, titulo, valor, descripcion, extra, valorGrande = false }) => {
+        const estilos = {
+            blue: {
+                card: "border-blue-100 bg-blue-50/70",
+                iconBox: "text-blue-600",
+                value: "text-blue-600",
+                shape: "text-blue-200",
+            },
+            green: {
+                card: "border-emerald-100 bg-emerald-50/70",
+                iconBox: "text-emerald-600",
+                value: "text-emerald-600",
+                shape: "text-emerald-200",
+            },
+            orange: {
+                card: "border-orange-100 bg-orange-50/70",
+                iconBox: "text-orange-600",
+                value: "text-slate-950",
+                shape: "text-orange-200",
+            },
+        };
+
+        const estilo = estilos[variante] || estilos.blue;
+
+        return (
+            <div
+                className={`relative min-h-[126px] overflow-hidden rounded-[24px] border px-6 py-5 shadow-sm ${estilo.card}`}
+            >
+                <div className={`pointer-events-none absolute -bottom-8 -right-7 opacity-50 ${estilo.shape}`}>
+                    {cloneElement(icono, {
+                        size: 118,
+                        strokeWidth: 1.6,
+                    })}
+                </div>
+
+                <div className="relative z-10 flex h-full items-center justify-between gap-5">
+                    <div className="min-w-0">
+                        <p className="text-sm font-black text-slate-700">
+                            {titulo}
+                        </p>
+
+                        <h2
+                            className={`mt-2 font-black leading-tight ${estilo.value} ${
+                                valorGrande ? "text-3xl" : "text-4xl"
+                            }`}
+                        >
+                            {valor}
+                        </h2>
+
+                        <p className="mt-2 text-sm font-semibold text-slate-500">
+                            {descripcion}
+                        </p>
+
+                        {extra && (
+                            <p className="mt-1 text-sm font-bold text-slate-600">
+                                {extra}
+                            </p>
+                        )}
+                    </div>
+
+                    <div className={`flex h-[70px] w-[70px] shrink-0 items-center justify-center rounded-[22px] border border-white/80 bg-white shadow-sm ${estilo.iconBox}`}>
+                        {cloneElement(icono, {
+                            size: 32,
+                            strokeWidth: 2.3,
+                        })}
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+    const ClaseItem = ({ clase }) => {
+        const dia = new Date(`${clase.fecha}T00:00:00`).toLocaleDateString("es-NI", {
+            day: "2-digit",
+        });
+
+        const mes = new Date(`${clase.fecha}T00:00:00`).toLocaleDateString("es-NI", {
+            month: "short",
+        });
+
+        return (
+            <div className="flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm">
+                <div className="flex items-center gap-4">
+                    <div className="flex h-[76px] w-[76px] shrink-0 flex-col items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+                        <span className="text-3xl font-black leading-none">
+                            {dia}
+                        </span>
+                        <span className="mt-1 text-xs font-black uppercase">
+                            {mes}
+                        </span>
+                    </div>
+
+                    <div>
+                        <p className="text-base font-black text-slate-900">
+                            {clase.es_examen
+                                ? "Examen Policial"
+                                : `Encuentro ${clase.numero_clase}`}
+                        </p>
+
+                        <div className="mt-2 space-y-1">
+                            <p className="flex items-center gap-2 text-sm font-semibold text-slate-500">
+                                <CalendarDays size={15} />
+                                {formatoFecha(clase.fecha)}
+                            </p>
+
+                            <p className="flex items-center gap-2 text-sm font-semibold text-slate-500">
+                                <Clock3 size={15} />
+                                {clase.hora_inicio} - {clase.hora_fin}
+                            </p>
+
+                            <p className="flex items-center gap-2 text-sm font-semibold text-slate-500">
+                                <UserRound size={15} />
+                                Instructor: {clase.instructor_nombre || "Sin asignar"}
+                            </p>
+
+                            <p className="text-sm font-semibold text-slate-500">
+                                Curso: {clase.tipo_curso} - {clase.modalidad}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <span
+                    className={`shrink-0 rounded-full px-4 py-1.5 text-xs font-black ${obtenerColorEstado(
+                        clase.estado
+                    )}`}
+                >
+                    {clase.estado}
+                </span>
+            </div>
+        );
+    };
+
     return (
-        <div className="p-6 space-y-6 h-full overflow-y-auto bg-gray-50">
-            <div>
-                <h1 className="text-3xl font-bold text-gray-800">Mi Dashboard</h1>
-                <p className="text-gray-400 text-sm">Bienvenido/a, {fecha}</p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-white rounded-2xl shadow-sm p-6 flex justify-between items-center border border-gray-100">
-                    <div>
-                        <p className="text-gray-500 text-sm">Asistencia</p>
-
-                        <h2 className="text-4xl font-bold mt-1">
-                            {loadingAsistencia ? "..." : `${asistencia.porcentaje}%`}
-                        </h2>
-
-                        <p className="text-gray-400 text-sm mt-1">
-                            {asistencia.asistidas} de {asistencia.total} asistencias registradas
-                        </p>
+        <div className="h-full overflow-y-auto bg-[#f7f9fd] px-4 py-5 md:px-6 lg:px-8">
+            <div className="mx-auto max-w-[1550px] space-y-6">
+                <div className="flex items-center gap-5">
+                    <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-[24px] border border-blue-100 bg-blue-50 text-blue-600 shadow-sm">
+                        <GraduationCap size={38} />
                     </div>
 
-                    <div className="bg-blue-500 p-4 rounded-2xl text-white text-2xl">
-                        ✓
+                    <div>
+                        <h1 className="text-4xl font-black tracking-tight text-slate-950">
+                            Mi Dashboard
+                        </h1>
+                        <p className="mt-2 text-base font-medium text-slate-500">
+                            Bienvenido/a, {fecha}
+                        </p>
                     </div>
                 </div>
 
-                <div className="bg-white rounded-2xl shadow-sm p-6 flex justify-between items-center border border-gray-100">
-                    <div>
-                        <p className="text-gray-500 text-sm">Progreso del Curso</p>
+                <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+                    <TarjetaResumen
+                        variante="blue"
+                        icono={<CalendarCheck />}
+                        titulo="Asistencia"
+                        valor={loadingAsistencia ? "..." : `${asistencia.porcentaje}%`}
+                        descripcion={`${asistencia.asistidas} de ${asistencia.total} asistencias registradas`}
+                    />
 
-                        <h2 className="text-4xl font-bold mt-1">
-                            {progresoEncuentros}%
-                        </h2>
+                    <TarjetaResumen
+                        variante="green"
+                        icono={<BookOpen />}
+                        titulo="Plan de Estudio"
+                        valor={
+                            loadingProgresoPlan
+                                ? "..."
+                                : `${progresoPlan.porcentaje}%`
+                        }
+                        descripcion={
+                            loadingProgresoPlan
+                                ? "Cargando avance del plan"
+                                : `${progresoPlan.temas_completados} de ${progresoPlan.total_temas} temas completados`
+                        }
+                    />
 
-                        <p className="text-gray-400 text-sm mt-1">
-                            {totalCompletadas} de {totalClases} encuentros completados
-                        </p>
-                    </div>
-
-                    <div className="bg-purple-500 p-4 rounded-2xl text-white text-2xl">
-                        📖
-                    </div>
+                    <TarjetaResumen
+                        variante="orange"
+                        icono={<CalendarDays />}
+                        titulo="Próxima Clase"
+                        valor={
+                            proximasClases[0]
+                                ? formatoFecha(proximasClases[0].fecha).replace(",", "")
+                                : "Sin clases"
+                        }
+                        descripcion={
+                            proximasClases[0]
+                                ? `${proximasClases[0].hora_inicio} - ${proximasClases[0].hora_fin}`
+                                : "No hay clases programadas"
+                        }
+                        extra={
+                            proximasClases[0] &&
+                            (proximasClases[0].es_examen
+                                ? "Examen Policial"
+                                : `Encuentro ${proximasClases[0].numero_clase}`)
+                        }
+                        valorGrande
+                    />
                 </div>
-            </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
-                    <div className="flex justify-between items-center mb-4">
-                        <h3 className="font-bold text-gray-800 text-lg">
-                            Próximas Clases
-                        </h3>
+                <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.05fr_1fr]">
+                    <div className="rounded-[24px] border border-slate-200 bg-white p-6 shadow-sm">
+                        <div className="mb-5 flex items-center gap-3">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                                <CalendarDays size={22} />
+                            </div>
+
+                            <h3 className="text-xl font-black text-slate-950">
+                                Próximas Clases
+                            </h3>
+                        </div>
+
+                        {loading ? (
+                            <p className="py-10 text-center text-sm font-semibold text-slate-400">
+                                Cargando clases...
+                            </p>
+                        ) : proximasClases.length === 0 ? (
+                            <p className="py-10 text-center text-sm font-semibold text-slate-400">
+                                No hay clases programadas
+                            </p>
+                        ) : (
+                            <div className="space-y-4">
+                                {proximasClases.map((clase) => (
+                                    <ClaseItem key={clase.id} clase={clase} />
+                                ))}
+                            </div>
+                        )}
                     </div>
 
-                    {loading ? (
-                        <p className="text-gray-400 text-sm text-center py-8">
-                            Cargando clases...
-                        </p>
-                    ) : proximasClases.length === 0 ? (
-                        <p className="text-gray-400 text-sm text-center py-8">
-                            No hay clases programadas
-                        </p>
-                    ) : (
-                        <div className="space-y-3">
-                            {proximasClases.map((clase) => (
-                                <div
-                                    key={clase.id}
-                                    className="border border-gray-100 rounded-xl p-4 flex justify-between items-center"
-                                >
-                                    <div>
-                                        <p className="font-semibold text-gray-800">
-                                            {clase.es_examen
-                                                ? "Examen Policial"
-                                                : `Encuentro ${clase.numero_clase}`}
-                                        </p>
-
-                                        <p className="text-sm text-gray-500">
-                                            {formatoFecha(clase.fecha)}
-                                        </p>
-
-                                        <p className="text-sm text-gray-400">
-                                            {clase.hora_inicio} - {clase.hora_fin}
-                                        </p>
-
-                                        <p className="text-sm text-gray-400">
-                                            Instructor:{" "}
-                                            {clase.instructor_nombre || "Sin asignar"}
-                                        </p>
-
-                                        <p className="text-sm text-gray-400">
-                                            Curso: {clase.tipo_curso} - {clase.modalidad}
-                                        </p>
-                                    </div>
-
-                                    <span
-                                        className={`px-3 py-1 rounded-full text-xs font-semibold ${obtenerColorEstado(
-                                            clase.estado
-                                        )}`}
-                                    >
-                                        {clase.estado}
-                                    </span>
+                    <div className="space-y-6">
+                        <div className="rounded-[24px] border border-slate-200 bg-white p-6 shadow-sm">
+                            <div className="mb-5 flex items-center gap-3">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50 text-violet-600">
+                                    <BookOpen size={22} />
                                 </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
 
-                <div className="space-y-6">
-                    <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
-                        <h3 className="font-bold text-gray-800 text-lg mb-4">
-                            Plan de Estudio
-                        </h3>
+                                <h3 className="text-xl font-black text-slate-950">
+                                    Plan de Estudio
+                                </h3>
+                            </div>
 
-                        <div className="flex justify-between text-sm text-gray-500 mb-1">
-                            <span>Avance del plan</span>
-                            <span>
-                                {loadingProgresoPlan
-                                    ? "..."
-                                    : `${progresoPlan.porcentaje}%`}
-                            </span>
-                        </div>
-
-                        <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
-                            <div
-                                className="bg-gray-800 h-2 rounded-full transition-all"
-                                style={{ width: `${progresoPlan.porcentaje}%` }}
-                            ></div>
-                        </div>
-
-                        <p className="text-gray-400 text-sm">
-                            {progresoPlan.temas_completados} de{" "}
-                            {progresoPlan.total_temas} temas completados
-                        </p>
-                    </div>
-
-                    <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
-                        <h3 className="font-bold text-gray-800 text-lg mb-4">
-                            Resumen del Curso
-                        </h3>
-
-                        <div className="space-y-3">
-                            <div className="flex justify-between text-sm">
-                                <span className="text-gray-500">
-                                    Total de encuentros
-                                </span>
-                                <span className="font-semibold text-gray-800">
-                                    {totalClases}
+                            <div className="mb-2 flex justify-between text-sm font-semibold text-slate-500">
+                                <span>Avance del plan</span>
+                                <span>
+                                    {loadingProgresoPlan
+                                        ? "..."
+                                        : `${progresoPlan.porcentaje}%`}
                                 </span>
                             </div>
 
-                            <div className="flex justify-between text-sm">
-                                <span className="text-gray-500">
-                                    Encuentros completados
-                                </span>
-                                <span className="font-semibold text-green-600">
-                                    {totalCompletadas}
-                                </span>
+                            <div className="mb-3 h-3 w-full overflow-hidden rounded-full bg-slate-200">
+                                <div
+                                    className="h-full rounded-full bg-blue-600 transition-all"
+                                    style={{ width: `${progresoPlan.porcentaje}%` }}
+                                />
                             </div>
 
-                            <div className="flex justify-between text-sm">
-                                <span className="text-gray-500">Pendientes</span>
-                                <span className="font-semibold text-yellow-600">
-                                    {clasesPendientes.length}
-                                </span>
+                            <p className="text-sm font-semibold text-slate-500">
+                                {progresoPlan.temas_completados} de{" "}
+                                {progresoPlan.total_temas} temas completados
+                            </p>
+                        </div>
+
+                        <div className="rounded-[24px] border border-slate-200 bg-white p-6 shadow-sm">
+                            <div className="mb-5 flex items-center gap-3">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                                    <PieChart size={22} />
+                                </div>
+
+                                <h3 className="text-xl font-black text-slate-950">
+                                    Resumen del Curso
+                                </h3>
+                            </div>
+
+                            <div className="grid grid-cols-3 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                                <div className="border-r border-slate-200 p-4 text-center">
+                                    <p className="text-sm font-semibold text-slate-500">
+                                        Total
+                                    </p>
+                                    <p className="mt-2 text-3xl font-black text-blue-600">
+                                        {totalClases}
+                                    </p>
+                                </div>
+
+                                <div className="border-r border-slate-200 p-4 text-center">
+                                    <p className="text-sm font-semibold text-slate-500">
+                                        Completados
+                                    </p>
+                                    <p className="mt-2 text-3xl font-black text-green-600">
+                                        {totalCompletadas}
+                                    </p>
+                                </div>
+
+                                <div className="p-4 text-center">
+                                    <p className="text-sm font-semibold text-slate-500">
+                                        Pendientes
+                                    </p>
+                                    <p className="mt-2 text-3xl font-black text-orange-500">
+                                        {clasesPendientes.length}
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     </div>

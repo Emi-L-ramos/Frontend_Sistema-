@@ -3,15 +3,17 @@ import Chart from "react-apexcharts";
 import Swal from "sweetalert2";
 import api from "../../api/axios";
 import { useAuth } from "../../context/AuthContext";
-import { FcGraduationCap } from "react-icons/fc";
-import { FcConferenceCall } from "react-icons/fc";
-import { FcApproval } from "react-icons/fc";
-
+import {
+  FaChartLine,
+  FaUsers,
+  FaUserCheck,
+  FaUserGraduate,
+} from "react-icons/fa";
 import {
   FiBell,
   FiChevronDown,
   FiCalendar,
-  FiMoreVertical,
+  FiRefreshCw,
   FiDollarSign,
   FiUsers,
 } from "react-icons/fi";
@@ -319,15 +321,21 @@ const cargarNotificaciones = async () => {
 
   return (
     <div className="space-y-6">
+      <br />
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-        <div>
-          <h1 className="text-slate-900 font-extrabold text-3xl md:text-4xl">
-            Dashboard
-          </h1>
+        <div className="flex items-start gap-4">
+          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-3xl bg-blue-50 text-blue-600 shadow-sm ring-1 ring-blue-100">
+            <FaChartLine className="text-3xl" />
+          </div>
+          <div>
+            <h1 className="text-slate-900 font-extrabold text-3xl md:text-4xl">
+              Dashboard
+            </h1>
 
-          <p className="text-slate-500 text-sm mt-2">
-            Resumen general de la escuela de manejo
-          </p>
+            <p className="text-slate-500 text-sm mt-2">
+              Resumen general de la escuela de manejo
+            </p>
+          </div>
         </div>
 
         <div className="hidden md:flex items-center gap-5">
@@ -364,77 +372,83 @@ const cargarNotificaciones = async () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-
-        <div className="relative overflow-hidden bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
-          <div className="absolute right-6 top-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-2xl">
-            <FcConferenceCall />
-          </div>
-
-          <div className="relative flex items-center gap-5">
-          
-
+        <div className="relative min-h-[150px] overflow-hidden rounded-[28px] border border-blue-100 bg-blue-50/60 px-6 py-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+          <div className="relative z-10 flex items-center justify-between gap-4">
             <div>
-              <p className="text-sm font-semibold text-slate-600">
+              <p className="text-base font-bold text-slate-600">
                 Estudiantes Matriculados
               </p>
 
-              <h2 className="text-3xl font-extrabold text-blue-600 mt-1">
+              <h2 className="mt-4 text-4xl font-black text-blue-600">
                 {cargando ? "..." : resumen?.total_matriculados ?? 0}
               </h2>
 
-              <p className="text-sm text-slate-400 mt-1">
+              <p className="mt-3 text-sm font-medium text-slate-500">
                 {cargando
                   ? ""
                   : `Total histórico: ${resumen?.total_matriculados ?? 0}`}
               </p>
             </div>
+
+            <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-3xl bg-white text-blue-600 shadow-sm ring-1 ring-blue-100">
+              <FaUsers className="text-4xl" />
+            </div>
+          </div>
+
+          <div className="pointer-events-none absolute -bottom-7 -right-6 text-blue-500 opacity-10">
+            <FaUsers className="text-[120px]" />
           </div>
         </div>
 
-        <div className="relative overflow-hidden bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
-          <div className="absolute right-6 top-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 text-2xl">
-            <FcApproval />
-          </div>
-
-          <div className="relative flex items-center gap-5">
-            
-
+        <div className="relative min-h-[150px] overflow-hidden rounded-[28px] border border-emerald-100 bg-emerald-50/60 px-6 py-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+          <div className="relative z-10 flex items-center justify-between gap-4">
             <div>
-              <p className="text-sm font-semibold text-slate-600">
+              <p className="text-base font-bold text-slate-600">
                 Estudiantes Activos
               </p>
 
-              <h2 className="text-3xl font-extrabold text-emerald-600 mt-1">
+              <h2 className="mt-4 text-4xl font-black text-emerald-600">
                 {cargando ? "..." : resumen?.estudiantes_activos ?? 0}
               </h2>
 
-              <p className="text-sm text-slate-400 mt-1">
+              <p className="mt-3 text-sm font-medium text-slate-500">
                 {cargando ? "" : "Inscritos en el ciclo actual"}
               </p>
             </div>
+
+            <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-3xl bg-white text-emerald-600 shadow-sm ring-1 ring-emerald-100">
+              <FaUserCheck className="text-4xl" />
+            </div>
+          </div>
+
+          <div className="pointer-events-none absolute -bottom-7 -right-6 text-emerald-500 opacity-10">
+            <FaUserCheck className="text-[120px]" />
           </div>
         </div>
 
-        <div className="relative overflow-hidden bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
-          <div className="absolute right-6 top-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 text-2xl">
-            <FcGraduationCap />
-          </div>
-
-          <div className="relative flex items-center gap-5">
-            
+        <div className="relative min-h-[150px] overflow-hidden rounded-[28px] border border-purple-100 bg-purple-50/60 px-6 py-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+          <div className="relative z-10 flex items-center justify-between gap-4">
             <div>
-              <p className="text-sm font-semibold text-slate-600">
+              <p className="text-base font-bold text-slate-600">
                 Egresados del Mes
               </p>
 
-              <h2 className="text-3xl font-extrabold text-purple-600 mt-1">
+              <h2 className="mt-4 text-4xl font-black text-purple-600">
                 {cargando ? "..." : `${resumen?.egresados_mes ?? 0}`}
               </h2>
 
-              <p className="text-sm text-slate-400 mt-1">
+              <p className="mt-3 text-sm font-medium text-slate-500">
                 Finalizados este mes
               </p>
             </div>
+
+            <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-3xl bg-white text-purple-600 shadow-sm ring-1 ring-purple-100">
+              <FaUserGraduate className="text-4xl" />
+            </div>
+          </div>
+
+          <div className="pointer-events-none absolute -bottom-7 -right-6 text-purple-500 opacity-10">
+            <FaUserGraduate className="text-[120px]" />
           </div>
         </div>
       </div>
@@ -499,7 +513,7 @@ const cargarNotificaciones = async () => {
               className="w-11 h-11 rounded-2xl border border-slate-200 bg-white text-slate-500 flex items-center justify-center shadow-sm hover:bg-slate-50 transition"
               title="Actualizar datos"
             >
-              <FiMoreVertical size={18} />
+              <FiRefreshCw size={18} /> 
             </button>
           </div>
         </div>

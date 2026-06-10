@@ -196,7 +196,7 @@ export default function CalendarioEditarForm({
             <div>
               <h3 className="text-2xl font-bold flex items-center gap-2">
                 <Calendar className="w-6 h-6" />
-                ReprogramarInsructor
+                Reprogramar Instructor
               </h3>
 
               <p className="text-sm text-blue-100 mt-1">
@@ -239,7 +239,7 @@ export default function CalendarioEditarForm({
               <div className="bg-white border border-gray-100 rounded-xl p-3">
                 <p className="text-xs text-gray-400 mb-1">Clase</p>
                 <p className="font-semibold text-gray-800">
-                  {cita.numero_clase || "N/A"}/8
+                  {cita.numero_clase ? `Clase ${cita.numero_clase}` : "N/A"}
                 </p>
               </div>
 

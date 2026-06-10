@@ -12,6 +12,12 @@ import {
     XCircle,
 } from "lucide-react";
 import api from "../../api/axios";
+import {
+    FaUserGraduate,
+    FaUsers,
+    FaUserCheck,
+    FaSearch,
+} from "react-icons/fa";
 
 function EstudiantesPage() {
     const { token } = useAuth();
@@ -208,80 +214,99 @@ function EstudiantesPage() {
     return (
     <div className="min-h-screen bg-[#f5f7fb] px-4 py-5 md:px-8 lg:px-10">
         <div className="mx-auto max-w-[1500px]">
-            <div className="mt-4 flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-100 text-2xl shadow-sm">
-                    🎓
+            <div className="mt-4 flex items-start gap-4">
+                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-3xl bg-blue-50 text-blue-600 shadow-sm ring-1 ring-blue-100">
+                    <FaUserGraduate className="text-3xl" />
                 </div>
-
                 <div>
-                    <h1 className="text-3xl font-black tracking-tight text-slate-900 md:text-4xl">
+                    <h1 className="text-4xl font-black tracking-tight text-slate-900">
                         Estudiantes
                     </h1>
 
-                    <p className="mt-1 max-w-2xl text-sm text-slate-500 md:text-base">
-                        Registro de Etudiantes a Matricular.
+                    <p className="mt-2 max-w-2xl text-sm text-slate-500 md:text-base">
+                        Registro de Estudiantes a Matricular.
                     </p>
                 </div>
             </div>
+
             <br />
+
             <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-                <div className="flex min-h-[150px] items-center justify-between rounded-[28px] bg-white px-7 py-6 shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:shadow-md">
-                    <div>
-                        <p className="text-base font-bold text-slate-600">
-                            Total registrados
-                        </p>
+                <div className="relative min-h-[150px] overflow-hidden rounded-[28px] border border-blue-100 bg-blue-50/60 px-7 py-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+                    <div className="relative z-10 flex items-center justify-between gap-4">
+                        <div>
+                            <p className="text-base font-bold text-slate-600">
+                                Total registrados
+                            </p>
 
-                        <p className="mt-4 text-4xl font-black text-slate-900">
-                            {estudiantes.length}
-                        </p>
+                            <p className="mt-4 text-4xl font-black text-blue-600">
+                                {estudiantes.length}
+                            </p>
 
-                        <p className="mt-3 text-base font-medium text-slate-400">
-                            Estudiantes agregados al sistema
-                        </p>
+                            <p className="mt-3 text-base font-medium text-slate-500">
+                                Estudiantes agregados al sistema
+                            </p>
+                        </div>
+
+                        <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-3xl bg-white text-blue-600 shadow-sm ring-1 ring-blue-100">
+                            <FaUsers className="text-4xl" />
+                        </div>
                     </div>
 
-                    <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-blue-100 text-3xl">
-                        👥
-                    </div>
-                </div>
-
-                <div className="flex min-h-[150px] items-center justify-between rounded-[28px] bg-white px-7 py-6 shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:shadow-md">
-                    <div>
-                        <p className="text-base font-bold text-slate-600">
-                            Estudiantes Activos
-                        </p>
-
-                        <p className="mt-4 text-4xl font-black text-emerald-600">
-                            {estudiantes.filter((estudiante) => estudiante.activo).length}
-                        </p>
-
-                        <p className="mt-3 text-base font-medium text-slate-400">
-                            Inscritos en el ciclo actual
-                        </p>
-                    </div>
-
-                    <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-3xl">
-                        ✅
+                    <div className="pointer-events-none absolute -bottom-7 -right-6 text-blue-500 opacity-10">
+                        <FaUsers className="text-[115px]" />
                     </div>
                 </div>
 
-                <div className="flex min-h-[150px] items-center justify-between rounded-[28px] bg-white px-7 py-6 shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:shadow-md md:col-span-2 xl:col-span-1">
-                    <div>
-                        <p className="text-base font-bold text-slate-600">
-                            Coincidencias.
-                        </p>
+                <div className="relative min-h-[150px] overflow-hidden rounded-[28px] border border-emerald-100 bg-emerald-50/60 px-7 py-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+                    <div className="relative z-10 flex items-center justify-between gap-4">
+                        <div>
+                            <p className="text-base font-bold text-slate-600">
+                                Estudiantes Activos
+                            </p>
 
-                        <p className="mt-4 text-4xl font-black text-blue-600">
-                            {estudiantesFiltrados.length}
-                        </p>
+                            <p className="mt-4 text-4xl font-black text-emerald-600">
+                                {estudiantes.filter((estudiante) => estudiante.activo).length}
+                            </p>
 
-                        <p className="mt-3 text-base font-medium text-slate-400">
-                            Estudiantes visibles en la tabla.
-                        </p>
+                            <p className="mt-3 text-base font-medium text-slate-500">
+                                Inscritos en el ciclo actual
+                            </p>
+                        </div>
+
+                        <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-3xl bg-white text-emerald-600 shadow-sm ring-1 ring-emerald-100">
+                            <FaUserCheck className="text-4xl" />
+                        </div>
                     </div>
 
-                    <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-blue-100 text-3xl">
-                        🔎
+                    <div className="pointer-events-none absolute -bottom-7 -right-6 text-emerald-500 opacity-10">
+                        <FaUserCheck className="text-[115px]" />
+                    </div>
+                </div>
+
+                <div className="relative min-h-[150px] overflow-hidden rounded-[28px] border border-violet-100 bg-violet-50/60 px-7 py-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md md:col-span-2 xl:col-span-1">
+                    <div className="relative z-10 flex items-center justify-between gap-4">
+                        <div>
+                            <p className="text-base font-bold text-slate-600">
+                                Coincidencias
+                            </p>
+
+                            <p className="mt-4 text-4xl font-black text-violet-600">
+                                {estudiantesFiltrados.length}
+                            </p>
+
+                            <p className="mt-3 text-base font-medium text-slate-500">
+                                Estudiantes visibles en la tabla
+                            </p>
+                        </div>
+
+                       <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-3xl bg-white text-violet-600 shadow-sm ring-1 ring-violet-100">
+                            <FaSearch className="text-4xl" />
+                        </div>
+                    </div>
+
+                    <div className="pointer-events-none absolute -bottom-7 -right-6 text-violet-500 opacity-10">
+                        <FaSearch className="text-[115px]" />
                     </div>
                 </div>
             </div>
@@ -607,7 +632,7 @@ function EstudiantesPage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-sm font-semibold text-gray-700 mb-1">
-                                    Correo electrónico *
+                                    Correo electrónico 
                                 </label>
                                 <input
                                     type="email"
@@ -616,7 +641,6 @@ function EstudiantesPage() {
                                     value={form.correo_electronico}
                                     onChange={handleChange}
                                     className="w-full p-3 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                    required
                                 />
                             </div>
 

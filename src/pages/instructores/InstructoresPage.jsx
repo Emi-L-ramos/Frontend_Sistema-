@@ -3,6 +3,20 @@ import Swal from "sweetalert2";
 import api from "../../api/axios";
 import { Image, Upload, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 import { VscChromeClose } from "react-icons/vsc";
+import {
+    FaChalkboardTeacher,
+    FaUserCheck,
+    FaLayerGroup,
+    FaPlus,
+    FaPhoneAlt,
+    FaMapMarkerAlt,
+    FaEdit,
+    FaTrashAlt,
+    FaUserSlash,
+    FaEye,
+    FaUserTie,
+} from "react-icons/fa";
+
 function InstructoresPage() {
 
     const [instructores, setInstructores] = useState([]);
@@ -355,142 +369,349 @@ const seleccionarFechaCalendario = (fecha) => {
         }
     };
 
+    const getNombreInstructor = (inst) => {
+        return (
+            inst.nombre_completo ||
+            `${inst.nombre || ""} ${inst.apellido || ""}`.trim() ||
+            "Instructor"
+        );
+    };
+
+    const getFotoInstructor = (inst) => {
+        return inst.foto_base64 || inst.foto_url || inst.foto || "";
+    };
+
+    const getCategoriaInstructor = (inst) => {
+        return inst.categoria_nombre || inst.categoria_instructor || "-";
+    };
+
+    const esInstructorActivo = (inst) => {
+        return inst.activo !== false && !inst.fecha_salida;
+    };
+
+    const totalInstructores = instructores.length;
+
+    const totalActivos = instructores.filter((inst) =>
+        esInstructorActivo(inst)
+    ).length;
+
+    const totalCategorias = new Set(
+        instructores
+            .map((inst) => getCategoriaInstructor(inst))
+            .filter((categoria) => categoria && categoria !== "-")
+    ).size;
+
     return (
-        <div className="p-6 bg-gray-50 min-h-screen">
-            <div className="mb-8 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                <div>
-                    <h1 className="text-4xl font-bold text-gray-800">
-                        Instructores
-                    </h1>
-                    <p className="text-gray-500 mt-1">
-                        Gestión de datos profesionales de instructores.
-                    </p>
-                </div>
+        <div className="min-h-screen bg-[#f6f8fc] px-4 py-5 md:px-8 lg:px-10">
+            <div className="mx-auto max-w-[1500px]">
+                <div className="mb-7 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                    <div className="flex items-start gap-4">
+                        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-3xl bg-blue-600 text-white shadow-lg shadow-blue-600/25 ring-1 ring-blue-500">
+                            <FaChalkboardTeacher className="text-3xl" />
+                        </div>
 
-                <button
-                    onClick={abrirCrear}
-                    className="relative group overflow-hidden px-20 h-11 rounded-3xl bg-green-500 text-white flex items-center gap-2 transition-all duration-300 hover:bg-green-600 justify-center hover:cursor-pointer"
-                >
-                    <span className="absolute top-0 left-[-75%] w-[50%] h-full bg-gradient-to-r from-transparent via-white/60 to-transparent skew-x-12 group-hover:left-[125%] transition-all duration-700"></span>
+                        <div>
+                            <h1 className="text-4xl font-black tracking-tight text-slate-900">
+                                Instructores
+                            </h1>
 
-                    <span className="relative z-10">
+                            <p className="mt-2 text-base text-slate-500">
+                                Gestión de datos profesionales de instructores.
+                            </p>
+                        </div>
+                    </div>
+
+                    <button
+                        type="button"
+                        onClick={abrirCrear}
+                        className="group inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-8 text-sm font-black text-white shadow-lg shadow-emerald-600/25 transition-all duration-300 hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-emerald-600/35 md:w-auto"
+                    >
+                        <FaPlus className="text-sm transition-transform duration-300 group-hover:rotate-90" />
                         Nuevo Instructor
-                    </span>
-                </button>
-            </div>
-
-            {loading ? (
-                <div className="bg-white rounded-2xl shadow p-8 text-center text-gray-500">
-                    Cargando instructores...
+                    </button>
                 </div>
-            ) : (
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                    <div className="px-6 py-4 border-b border-gray-200">
-                        <h2 className="text-xl font-bold text-gray-800">
-                            Lista de instructores
-                        </h2>
-                        <p className="text-sm text-gray-500">
-                            {instructores.length} instructor(es) registrados
+
+                <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                    <div className="relative min-h-[150px] overflow-hidden rounded-[28px] border border-blue-100 bg-blue-50/60 px-6 py-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+                        <div className="relative z-10 flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-4">
+                                <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-3xl bg-white text-blue-600 shadow-sm ring-1 ring-blue-100">
+                                    <FaChalkboardTeacher className="text-4xl" />
+                                </div>
+
+                                <div>
+                                    <p className="text-base font-bold text-slate-600">
+                                        Instructores registrados
+                                    </p>
+
+                                    <p className="mt-2 text-4xl font-black text-blue-600">
+                                        {totalInstructores}
+                                    </p>
+
+                                    <p className="mt-2 text-sm font-medium text-slate-500">
+                                        Personal registrado en el sistema
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="pointer-events-none absolute -bottom-8 -right-6 text-blue-500 opacity-10">
+                            <FaChalkboardTeacher className="text-[125px]" />
+                        </div>
+                    </div>
+
+                    <div className="relative min-h-[150px] overflow-hidden rounded-[28px] border border-emerald-100 bg-emerald-50/60 px-6 py-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+                        <div className="relative z-10 flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-4">
+                                <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-3xl bg-white text-emerald-600 shadow-sm ring-1 ring-emerald-100">
+                                    <FaUserCheck className="text-4xl" />
+                                </div>
+
+                                <div>
+                                    <p className="text-base font-bold text-slate-600">
+                                        Activos
+                                    </p>
+
+                                    <p className="mt-2 text-4xl font-black text-emerald-600">
+                                        {totalActivos}
+                                    </p>
+
+                                    <p className="mt-2 text-sm font-medium text-slate-500">
+                                        Disponibles para asignación
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="pointer-events-none absolute -bottom-8 -right-6 text-emerald-500 opacity-10">
+                            <FaUserCheck className="text-[125px]" />
+                        </div>
+                    </div>
+
+                    <div className="relative min-h-[150px] overflow-hidden rounded-[28px] border border-violet-100 bg-violet-50/60 px-6 py-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md md:col-span-2 xl:col-span-1">
+                        <div className="relative z-10 flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-4">
+                                <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-3xl bg-white text-violet-600 shadow-sm ring-1 ring-violet-100">
+                                    <FaLayerGroup className="text-4xl" />
+                                </div>
+
+                                <div>
+                                    <p className="text-base font-bold text-slate-600">
+                                        Categorías
+                                    </p>
+
+                                    <p className="mt-2 text-4xl font-black text-violet-600">
+                                        {totalCategorias}
+                                    </p>
+
+                                    <p className="mt-2 text-sm font-medium text-slate-500">
+                                        Categorías profesionales registradas
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="pointer-events-none absolute -bottom-8 -right-6 text-violet-500 opacity-10">
+                            <FaLayerGroup className="text-[125px]" />
+                        </div>
+                    </div>
+                </div>
+
+                {loading ? (
+                    <div className="rounded-[28px] bg-white p-10 text-center shadow-sm ring-1 ring-slate-200">
+                        <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-blue-600"></div>
+
+                        <p className="font-semibold text-slate-500">
+                            Cargando instructores...
                         </p>
                     </div>
+                ) : (
+                    <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm">
+                        <div className="flex flex-col gap-3 border-b border-slate-100 px-5 py-5 md:flex-row md:items-center md:justify-between md:px-7">
+                            <div>
+                                <h2 className="text-xl font-black text-slate-900">
+                                    Lista de instructores
+                                </h2>
 
-                    <div className="overflow-x-auto">
-                        <table className="w-full">
-                            <thead>
-                                <tr className="bg-gray-50 text-gray-500 text-sm">
-                                    <th className="p-4 text-left">Instructor</th>
-                                    <th className="p-4 text-left">Teléfono</th>
-                                    <th className="p-4 text-left">Categoría</th>
-                                    <th className="p-4 text-left">Edad</th>
-                                    <th className="p-4 text-left">Dirección</th>
-                                    <th className="p-4 text-center">Acciones</th>
-                                </tr>
-                            </thead>
+                                <p className="mt-1 text-sm font-medium text-slate-500">
+                                    {instructores.length} instructor(es) registrados
+                                </p>
+                            </div>
 
-                            <tbody>
-                                {instructores.map((inst) => (
-                                    <tr
-                                        key={inst.id}
-                                        className="border-t border-gray-100 hover:bg-green-50 transition"
-                                    >
-                                        <td className="p-4">
+                            <div className="inline-flex w-fit items-center gap-2 rounded-full bg-blue-50 px-4 py-2 text-xs font-black text-blue-600 ring-1 ring-blue-100">
+                                <FaEye className="text-xs" />
+                                Vista general
+                            </div>
+                        </div>
 
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-12 h-12 rounded-full bg-gray-100 overflow-hidden flex items-center justify-center">
-                                                    {inst.foto_base64 ? (
-                                                        <img
-                                                            src={inst.foto_base64}
-                                                            alt={inst.nombre_completo}
-                                                            className="w-full h-full object-cover"
-                                                        />
-                                                    ) : (
-                                                        <span className="font-bold text-gray-400">
-                                                            {(inst.nombre || "I").charAt(0).toUpperCase()}
+                        <div className="overflow-x-auto p-4">
+                            <div className="overflow-hidden rounded-2xl border border-slate-100">
+                                <table className="w-full min-w-[1180px]">
+                                    <thead>
+                                        <tr className="border-b border-slate-100 bg-slate-50/90 text-xs uppercase tracking-wide text-slate-500">
+                                            <th className="px-5 py-4 text-left">
+                                                Instructor
+                                            </th>
+
+                                            <th className="px-5 py-4 text-left">
+                                                Teléfono
+                                            </th>
+
+                                            <th className="px-5 py-4 text-left">
+                                                Categoría
+                                            </th>
+
+                                            <th className="px-5 py-4 text-center">
+                                                Edad
+                                            </th>
+
+                                            <th className="px-5 py-4 text-left">
+                                                Dirección
+                                            </th>
+
+                                            <th className="px-5 py-4 text-center">
+                                                Estado
+                                            </th>
+
+                                            <th className="px-5 py-4 text-center">
+                                                Acciones
+                                            </th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody className="divide-y divide-slate-100">
+                                        {instructores.map((inst) => (
+                                            <tr
+                                                key={inst.id}
+                                                className="transition hover:bg-blue-50/40"
+                                            >
+                                                <td className="px-5 py-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="h-14 w-14 shrink-0 overflow-hidden rounded-2xl bg-slate-100 shadow-sm ring-1 ring-slate-200">
+                                                            {getFotoInstructor(inst) ? (
+                                                                <img
+                                                                    src={getFotoInstructor(inst)}
+                                                                    alt={getNombreInstructor(inst)}
+                                                                    className="h-full w-full object-cover"
+                                                                />
+                                                            ) : (
+                                                                <div className="flex h-full w-full items-center justify-center bg-blue-50 text-blue-600">
+                                                                    <FaUserTie className="text-2xl" />
+                                                                </div>
+                                                            )}
+                                                        </div>
+
+                                                        <div className="min-w-0">
+                                                            <p className="truncate font-black text-slate-900">
+                                                                {getNombreInstructor(inst)}
+                                                            </p>
+
+                                                            <p className="mt-0.5 text-xs font-medium text-slate-400">
+                                                                Instructor profesional
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </td>
+
+                                                <td className="px-5 py-4">
+                                                    <span className="inline-flex items-center gap-2 whitespace-nowrap text-sm font-semibold text-slate-600">
+                                                        <FaPhoneAlt className="text-blue-500" />
+                                                        {inst.numero_telefono || "-"}
+                                                    </span>
+                                                </td>
+
+                                                <td className="px-5 py-4">
+                                                    <span className="inline-flex rounded-xl bg-blue-50 px-3 py-2 text-xs font-black text-blue-600 ring-1 ring-blue-100">
+                                                        {getCategoriaInstructor(inst)}
+                                                    </span>
+                                                </td>
+
+                                                <td className="px-5 py-4 text-center font-semibold text-slate-600">
+                                                    {inst.edad || "-"}
+                                                </td>
+
+                                                <td className="px-5 py-4">
+                                                    <div className="flex max-w-[360px] items-start gap-2 text-sm font-medium text-slate-600">
+                                                        <FaMapMarkerAlt className="mt-1 shrink-0 text-slate-400" />
+                                                        <span className="line-clamp-2">
+                                                            {inst.direccion || "-"}
                                                         </span>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </td>
+                                                    </div>
+                                                </td>
 
-                                        <td className="p-4 text-gray-700">
-                                            {inst.numero_telefono || "-"}
-                                        </td>
+                                                <td className="px-5 py-4 text-center">
+                                                    <span
+                                                        className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-black ring-1 ${
+                                                            esInstructorActivo(inst)
+                                                                ? "bg-emerald-50 text-emerald-700 ring-emerald-100"
+                                                                : "bg-red-50 text-red-700 ring-red-100"
+                                                        }`}
+                                                    >
+                                                        <span
+                                                            className={`h-1.5 w-1.5 rounded-full ${
+                                                                esInstructorActivo(inst)
+                                                                    ? "bg-emerald-500"
+                                                                    : "bg-red-500"
+                                                            }`}
+                                                        ></span>
 
-                                        <td className="p-4 text-gray-700">
-                                            {inst.categoria_instructor || "-"}
-                                        </td>
+                                                        {esInstructorActivo(inst) ? "Activo" : "Inactivo"}
+                                                    </span>
+                                                </td>
 
-                                        <td className="p-4 text-gray-700">
-                                            {inst.edad || "-"}
-                                        </td>
+                                                <td className="px-5 py-4">
+                                                    <div className="flex items-center justify-center gap-2">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => abrirEditar(inst)}
+                                                            title="Editar instructor"
+                                                            className="inline-flex h-10 items-center justify-center gap-2 rounded-2xl bg-blue-50 px-4 text-sm font-black text-blue-600 ring-1 ring-blue-100 transition hover:-translate-y-0.5 hover:bg-blue-100 hover:cursor-pointer"
+                                                        >
+                                                            <FaEdit className="text-sm" />
+                                                            Editar
+                                                        </button>
 
-                                        <td className="p-4 text-gray-700">
-                                            {inst.direccion || "-"}
-                                        </td>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => despedirInstructor(inst)}
+                                                            title="Despedir instructor"
+                                                            className="inline-flex h-10 items-center justify-center gap-2 rounded-2xl bg-orange-50 px-4 text-sm font-black text-orange-600 ring-1 ring-orange-100 transition hover:-translate-y-0.5 hover:bg-orange-100 hover:cursor-pointer"
+                                                        >
+                                                            <FaUserSlash className="text-sm" />
+                                                            Despedir
+                                                        </button>
 
-                                        <td className="p-4">
-                                            <div className="flex justify-center gap-2">
-                                                <button
-                                                    onClick={() => abrirEditar(inst)}
-                                                    className="px-3 py-1.5 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 transition"
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => eliminarInstructor(inst)}
+                                                            title="Eliminar instructor"
+                                                            className="inline-flex h-10 items-center justify-center gap-2 rounded-2xl bg-red-50 px-4 text-sm font-black text-red-600 ring-1 ring-red-100 transition hover:-translate-y-0.5 hover:bg-red-100 hover:cursor-pointer"
+                                                        >
+                                                            <FaTrashAlt className="text-sm" />
+                                                            Eliminar
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+
+                                        {instructores.length === 0 && (
+                                            <tr>
+                                                <td
+                                                    colSpan="7"
+                                                    className="px-7 py-12 text-center text-sm font-semibold text-slate-400"
                                                 >
-                                                    Editar
-                                                </button>
-
-                                                <button
-                                                    onClick={() => despedirInstructor(inst)}
-                                                    className="px-3 py-1.5 rounded-lg bg-orange-100 text-orange-700 hover:bg-orange-200 transition"
-                                                >
-                                                    Despedir
-                                                </button>
-                                                
-                                                {/*borrar despues de las pruebas*/}
-                                                <button
-                                                    onClick={() => eliminarInstructor(inst)}
-                                                    className="px-3 py-1.5 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 transition"
-                                                >
-                                                    Eliminar
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-
-                                {instructores.length === 0 && (
-                                    <tr>
-                                        <td
-                                            colSpan="6"
-                                            className="p-6 text-center text-gray-400"
-                                        >
-                                            No hay instructores registrados.
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
+                                                    No hay instructores registrados.
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            )}
+                )}
+            </div>
 
             {modal && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
