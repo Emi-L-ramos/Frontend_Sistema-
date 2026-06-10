@@ -350,8 +350,8 @@ function UsuariosPage() {
     const totalEstudiantes = usuariosPorRol.estudiante?.length || 0;
 
     return (
-        <div className="min-h-screen bg-[#f6f8fc] px-4 py-5 md:px-8 lg:px-10">
-            <div className="mx-auto max-w-[1500px]">
+        <div className="min-h-screen w-full min-w-0 overflow-x-hidden bg-[#f6f8fc] px-4 py-5 md:px-8 lg:px-10">
+            <div className="mx-auto w-full min-w-0 max-w-[1500px]">
                 <div className="mb-7 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div className="flex items-start gap-4">
                         <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-3xl bg-blue-50 text-blue-600 shadow-sm ring-1 ring-blue-100">
@@ -515,8 +515,8 @@ function UsuariosPage() {
                                     </div>
 
                                     {lista.length > 0 ? (
-                                        <div className="overflow-x-auto p-4">
-                                            <div className="overflow-hidden rounded-2xl border border-slate-100">
+                                        <div className="w-full max-w-full overflow-x-auto overflow-y-hidden overscroll-x-contain p-4 [-webkit-overflow-scrolling:touch]">
+                                            <div className="inline-block min-w-full rounded-2xl border border-slate-100 align-middle">
                                                 <table className="w-full min-w-[950px]">
                                                     <thead>
                                                         <tr className={`border-b text-xs uppercase tracking-wide text-slate-500 ${visual.sectionHeader}`}>
@@ -597,7 +597,7 @@ function UsuariosPage() {
                                                                     </td>
 
                                                                     <td className="px-5 py-4">
-                                                                        <div className="flex justify-center gap-2">
+                                                                        <div className="flex min-w-max justify-center gap-2">
                                                                             <button
                                                                                 type="button"
                                                                                 onClick={() => {
