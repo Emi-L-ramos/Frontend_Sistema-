@@ -1,12 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useDeferredValue } from "react";
 import {
     Search,
-    LayoutGrid,
-    List,
     Eye,
     UserRound,
 } from "lucide-react";
 import api from "../../api/axios";
+
+const LIMITE_POR_PAGINA = 30;
 
 function PerfilEstudiante() {
     const [loading, setLoading] = useState(true);
@@ -17,7 +17,9 @@ function PerfilEstudiante() {
     const [estudiantes, setEstudiantes] = useState([]);
     const [busqueda, setBusqueda] = useState("");
     const [perfilSeleccionado, setPerfilSeleccionado] = useState(null);
-    const [modoVista, setModoVista] = useState("lista");
+    const [pagina, setPagina] = useState(1);
+
+    const busquedaDiferida = useDeferredValue(busqueda);
 
     const cargarPerfiles = async () => {
         try {
@@ -47,25 +49,61 @@ function PerfilEstudiante() {
         cargarPerfiles();
     }, []);
 
+    useEffect(() => {
+        setPagina(1);
+    }, [busquedaDiferida, rol]);
+
     const perfilesFiltrados = useMemo(() => {
-        const texto = busqueda.toLowerCase();
+        const texto = busquedaDiferida.trim().toLowerCase();
 
         const listaInstructores = instructores
             .filter((i) => {
-                const contenido = `${i.nombre || ""} ${i.apellido || ""} ${i.telefono || ""} ${i.categoria || ""}`.toLowerCase();
+                if (!texto) return true;
+
+                const contenido = `
+                    ${i.nombre || ""}
+                    ${i.apellido || ""}
+                    ${i.telefono || ""}
+                    ${i.categoria || ""}
+                `.toLowerCase();
+
                 return contenido.includes(texto);
             })
             .map((i) => ({ ...i, tipo: "instructor" }));
 
         const listaEstudiantes = estudiantes
             .filter((e) => {
-                const contenido = `${e.nombre || ""} ${e.apellido || ""} ${e.cedula || ""} ${e.telefono || ""} ${e.correo || ""}`.toLowerCase();
+                if (!texto) return true;
+
+                const contenido = `
+                    ${e.nombre || ""}
+                    ${e.apellido || ""}
+                    ${e.cedula || ""}
+                    ${e.telefono || ""}
+                    ${e.correo || ""}
+                `.toLowerCase();
+
                 return contenido.includes(texto);
             })
             .map((e) => ({ ...e, tipo: "estudiante" }));
 
         return [...listaInstructores, ...listaEstudiantes];
-    }, [busqueda, instructores, estudiantes]);
+    }, [busquedaDiferida, instructores, estudiantes]);
+
+    const estudiantesFiltrados = useMemo(() => {
+        return perfilesFiltrados.filter((p) => p.tipo === "estudiante");
+    }, [perfilesFiltrados]);
+
+    const perfilesVisibles = useMemo(() => {
+        return perfilesFiltrados.slice(0, pagina * LIMITE_POR_PAGINA);
+    }, [perfilesFiltrados, pagina]);
+
+    const estudiantesVisibles = useMemo(() => {
+        return estudiantesFiltrados.slice(0, pagina * LIMITE_POR_PAGINA);
+    }, [estudiantesFiltrados, pagina]);
+
+    const hayMasPerfiles = perfilesVisibles.length < perfilesFiltrados.length;
+    const hayMasEstudiantes = estudiantesVisibles.length < estudiantesFiltrados.length;
 
     const PerfilCard = ({ perfil, tipo }) => {
         const esInstructor = tipo === "instructor";
@@ -85,6 +123,8 @@ function PerfilEstudiante() {
                         <img
                             src={perfil.foto}
                             alt={nombreCompleto || "Perfil"}
+                            loading="lazy"
+                            decoding="async"
                             className="h-full w-full object-cover"
                         />
                     ) : (
@@ -173,6 +213,8 @@ function PerfilEstudiante() {
                                         <img
                                             src={perfilSeleccionado.foto}
                                             alt={`${perfilSeleccionado.nombre || ""} ${perfilSeleccionado.apellido || ""}`}
+                                            loading="lazy"
+                                            decoding="async"
                                             className="w-full h-full object-cover"
                                         />
                                     ) : (
@@ -214,36 +256,9 @@ function PerfilEstudiante() {
                                 <InfoItem titulo="Teléfono" valor={perfilSeleccionado.telefono || "No registrado"} />
                                 <InfoItem titulo="Edad" valor={perfilSeleccionado.edad ? `${perfilSeleccionado.edad} años` : "No registrada"} />
                                 <InfoItem titulo="Nacionalidad" valor={perfilSeleccionado.nacionalidad || "No registrada"} />
-                                <InfoItem titulo="Nivel escolar" valor={perfilSeleccionado.nivel_escolar || "No registrado"} />
                                 <InfoItem titulo="Categoría vehicular" valor={perfilSeleccionado.categoria || "No asignada"} />
                                 <InfoItem titulo="Dirección" valor={perfilSeleccionado.direccion || "No registrada"} />
-                                <InfoItem titulo="Antecedentes penales" valor={perfilSeleccionado.antecedentes_penales || "No registrado"} />
                                 <InfoItem titulo="Centro de trabajo" valor={perfilSeleccionado.centro_trabajo || "No registrado"} />
-                                <InfoItem titulo="Cargo" valor={perfilSeleccionado.cargo || "No registrado"} />
-                                <InfoItem titulo="Curso aprobado como instructor" valor={perfilSeleccionado.curso_aprobado_instructor || "No registrado"} />
-                                <InfoItem titulo="Fecha de ingreso" valor={perfilSeleccionado.fecha_ingreso || "No registrada"} />
-                                <InfoItem titulo="Fecha de salida" valor={perfilSeleccionado.fecha_salida || "No registrada"} />
-
-                                <div className="bg-gray-50 rounded-xl p-4 sm:col-span-2">
-                                    <p className="text-xs text-gray-400">Experiencia</p>
-                                    <p className="font-semibold text-gray-700 whitespace-pre-line">
-                                        {perfilSeleccionado.experiencia || "Sin experiencia registrada."}
-                                    </p>
-                                </div>
-
-                                <div className="bg-gray-50 rounded-xl p-4 sm:col-span-2">
-                                    <p className="text-xs text-gray-400">Motivo de salida</p>
-                                    <p className="font-semibold text-gray-700 whitespace-pre-line">
-                                        {perfilSeleccionado.motivo_salida || "No registrado."}
-                                    </p>
-                                </div>
-
-                                <div className="bg-gray-50 rounded-xl p-4 sm:col-span-2">
-                                    <p className="text-xs text-gray-400">Infracciones / resoluciones</p>
-                                    <p className="font-semibold text-gray-700 whitespace-pre-line">
-                                        {perfilSeleccionado.infracciones_resoluciones || "No registradas."}
-                                    </p>
-                                </div>
                             </div>
                         ) : (
                             <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -364,20 +379,28 @@ function PerfilEstudiante() {
                         </h2>
 
                         <div className="space-y-3">
-                            {perfilesFiltrados
-                                .filter((p) => p.tipo === "estudiante")
-                                .map((perfil) => (
-                                    <PerfilCard
-                                        key={`estudiante-${perfil.id}`}
-                                        perfil={perfil}
-                                        tipo="estudiante"
-                                    />
-                                ))}
+                            {estudiantesVisibles.map((perfil) => (
+                                <PerfilCard
+                                    key={`estudiante-${perfil.id}`}
+                                    perfil={perfil}
+                                    tipo="estudiante"
+                                />
+                            ))}
 
-                            {perfilesFiltrados.filter((p) => p.tipo === "estudiante").length === 0 && (
+                            {estudiantesFiltrados.length === 0 && (
                                 <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 text-gray-400">
                                     No hay estudiantes para mostrar.
                                 </div>
+                            )}
+
+                            {hayMasEstudiantes && (
+                                <button
+                                    type="button"
+                                    onClick={() => setPagina((prev) => prev + 1)}
+                                    className="w-full rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-600 shadow-sm transition hover:bg-blue-50 hover:text-blue-600"
+                                >
+                                    Ver más estudiantes
+                                </button>
                             )}
                         </div>
                     </div>
@@ -386,7 +409,7 @@ function PerfilEstudiante() {
 
             {(rol === "admin" || rol === "secretaria") && (
                 <div className="space-y-3">
-                    {perfilesFiltrados.map((perfil) => (
+                    {perfilesVisibles.map((perfil) => (
                         <PerfilCard
                             key={`${perfil.tipo}-${perfil.id}`}
                             perfil={perfil}
@@ -398,6 +421,16 @@ function PerfilEstudiante() {
                         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 text-gray-400">
                             No hay perfiles que coincidan con la búsqueda.
                         </div>
+                    )}
+
+                    {hayMasPerfiles && (
+                        <button
+                            type="button"
+                            onClick={() => setPagina((prev) => prev + 1)}
+                            className="w-full rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-600 shadow-sm transition hover:bg-blue-50 hover:text-blue-600"
+                        >
+                            Ver más perfiles
+                        </button>
                     )}
                 </div>
             )}
