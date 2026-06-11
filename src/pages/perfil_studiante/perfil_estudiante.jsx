@@ -264,11 +264,8 @@ function PerfilEstudiante() {
                             <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <InfoItem titulo="Cédula" valor={perfilSeleccionado.cedula || "No registrada"} />
                                 <InfoItem titulo="Teléfono" valor={perfilSeleccionado.telefono || "No registrado"} />
-                                <InfoItem titulo="Correo" valor={perfilSeleccionado.correo || "No registrado"} />
                                 <InfoItem titulo="Edad" valor={perfilSeleccionado.edad ? `${perfilSeleccionado.edad} años` : "No registrada"} />
-                                <InfoItem titulo="Sexo" valor={perfilSeleccionado.sexo || "No registrado"} />
                                 <InfoItem titulo="Nacionalidad" valor={perfilSeleccionado.nacionalidad || "No registrada"} />
-                                <InfoItem titulo="Fecha de nacimiento" valor={perfilSeleccionado.fecha_nacimiento || "No registrada"} />
                                 <InfoItem titulo="Nivel educativo" valor={perfilSeleccionado.nivel_educativo || "No registrado"} />
                                 <InfoItem titulo="Dirección" valor={perfilSeleccionado.direccion || "No registrada"} />
                                 <InfoItem titulo="Contacto de emergencia" valor={perfilSeleccionado.nombre_emergencia || "No registrado"} />
