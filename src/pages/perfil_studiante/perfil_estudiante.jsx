@@ -80,7 +80,6 @@ function PerfilEstudiante() {
                     ${e.apellido || ""}
                     ${e.cedula || ""}
                     ${e.telefono || ""}
-                    ${e.correo || ""}
                 `.toLowerCase();
 
                 return contenido.includes(texto);
@@ -171,7 +170,9 @@ function PerfilEstudiante() {
                 </div>
 
                 <div className="hidden truncate text-sm font-semibold text-slate-500 xl:block">
-                    {perfil?.correo || perfil?.categoria || "Sin correo"}
+                    {esInstructor
+                        ? perfil?.categoria || "Sin categoría"
+                        : perfil?.cedula || "Sin cédula"}
                 </div>
 
                 <button
@@ -323,7 +324,7 @@ function PerfilEstudiante() {
 
                         <input
                             type="text"
-                            placeholder="Buscar por nombre, cédula, teléfono, correo o categoría..."
+                            placeholder="Buscar por nombre, cédula, teléfono o categoría..."
                             value={busqueda}
                             onChange={(e) => setBusqueda(e.target.value)}
                             className="h-full w-full bg-transparent pl-3 text-sm font-semibold text-slate-700 outline-none placeholder:text-slate-400"
