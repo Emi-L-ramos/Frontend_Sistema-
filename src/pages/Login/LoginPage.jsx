@@ -58,17 +58,25 @@ function LoginPage() {
             <div className="w-28 h-28 mx-auto mb-4 rounded-3xl bg-slate-50 border border-slate-200 flex items-center justify-center shadow-sm">
               <img
                 src="/Logo.png"
-                alt="Logo"
+                alt="EMCA | Escuela de Manejo CACIQUE ADIACT"
                 className="w-24 h-24 object-contain"
               />
             </div>
 
-            <h1 className="text-3xl font-bold text-slate-800">
-              Iniciar Sesión
+            <h1 className="text-2xl font-bold text-slate-800">
+              EMCA
             </h1>
 
+            <p className="text-sm font-semibold text-slate-600 mt-1">
+              Escuela de Manejo CACIQUE ADIACT
+            </p>
+
+            <h2 className="text-xl font-bold text-slate-800 mt-5">
+              Iniciar Sesión
+            </h2>
+
             <p className="text-sm text-slate-500 mt-2">
-              Accede al sistema con tu usuario y contraseña.
+              Accede al sistema académico y administrativo con tu usuario y contraseña.
             </p>
           </div>
 
@@ -150,7 +158,7 @@ function LoginPage() {
         </div>
 
         <p className="text-center text-xs text-slate-400 mt-5">
-          Sistema CACIQUE ADIACT
+          EMCA | Sistema de la Escuela de Manejo CACIQUE ADIACT
         </p>
       </div>
     </div>
