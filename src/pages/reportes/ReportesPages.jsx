@@ -9,6 +9,7 @@ import {
     FiShield,
     FiBookOpen,
     FiMapPin,
+    FiAward,
 } from "react-icons/fi";
 import Swal from "sweetalert2";
 import * as XLSX from "xlsx";
@@ -33,6 +34,11 @@ function ReportesPages() {
     const [fechaKmDesde, setFechaKmDesde] = useState("");
     const [fechaKmHasta, setFechaKmHasta] = useState("");
     const [instructorKmSeleccionado, setInstructorKmSeleccionado] = useState("");
+
+    const [fechaCertificadoDesde, setFechaCertificadoDesde] = useState("");
+    const [fechaCertificadoHasta, setFechaCertificadoHasta] = useState("");
+    const [certificados, setCertificados] = useState([]);
+    const [loadingCertificados, setLoadingCertificados] = useState(false);
 
     const getNombre = (item) => item.estudiante_nombre || "";
     const getCedula = (item) => item.estudiante_cedula || "";
@@ -948,6 +954,124 @@ function ReportesPages() {
         }
     };
 
+    const buscarEstudiantesParaCertificado = async () => {
+        try {
+            if (!fechaCertificadoDesde || !fechaCertificadoHasta) {
+                Swal.fire(
+                    "Fechas requeridas",
+                    "Debe seleccionar la fecha desde y la fecha hasta para buscar egresados.",
+                    "info"
+                );
+                return;
+            }
+
+            setLoadingCertificados(true);
+
+            const params = new URLSearchParams();
+            params.append("desde", fechaCertificadoDesde);
+            params.append("hasta", fechaCertificadoHasta);
+
+            const response = await api.get(
+                `/certificados-egresados/?${params.toString()}`
+            );
+
+            const result = response.data;
+
+            const lista = Array.isArray(result)
+                ? result
+                : Array.isArray(result.results)
+                ? result.results
+                : [];
+
+            setCertificados(lista);
+
+            if (lista.length === 0) {
+                Swal.fire(
+                    "Sin registros",
+                    "No hay estudiantes egresados del curso principiante con las dos notas mayor o igual a 80 en ese rango.",
+                    "info"
+                );
+            }
+        } catch (error) {
+            console.error("ERROR CERTIFICADOS:", error);
+
+            const mensaje =
+                error.response?.data?.detail ||
+                error.message ||
+                "No se pudieron cargar los estudiantes para certificado.";
+
+            Swal.fire("Error", mensaje, "error");
+            setCertificados([]);
+        } finally {
+            setLoadingCertificados(false);
+        }
+    };
+
+    const descargarCertificadosWord = async () => {
+        try {
+            if (!fechaCertificadoDesde || !fechaCertificadoHasta) {
+                Swal.fire(
+                    "Fechas requeridas",
+                    "Debe seleccionar la fecha desde y la fecha hasta para generar el Word.",
+                    "info"
+                );
+                return;
+            }
+
+            const params = new URLSearchParams();
+            params.append("desde", fechaCertificadoDesde);
+            params.append("hasta", fechaCertificadoHasta);
+
+            const response = await api.get(
+                `/certificados-egresados-word/?${params.toString()}`,
+                {
+                    responseType: "blob",
+                    validateStatus: () => true,
+                }
+            );
+
+            if (response.status < 200 || response.status >= 300) {
+                const errorText = await response.data.text();
+
+                console.error("ERROR WORD CERTIFICADOS:", errorText);
+
+                Swal.fire(
+                    "Error",
+                    errorText || "No se pudo generar el Word de certificados.",
+                    "error"
+                );
+                return;
+            }
+
+            const blob = response.data;
+            const url = window.URL.createObjectURL(blob);
+
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `certificados_${fechaCertificadoDesde}_${fechaCertificadoHasta}.docx`;
+
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+
+            window.URL.revokeObjectURL(url);
+
+            Swal.fire(
+                "Word generado",
+                "Los certificados fueron descargados correctamente.",
+                "success"
+            );
+        } catch (error) {
+            console.error("ERROR DESCARGANDO CERTIFICADOS:", error);
+
+            Swal.fire(
+                "Error",
+                "Error de conexión con el servidor al generar los certificados.",
+                "error"
+            );
+        }
+    };
+
     const cardBase =
         "relative overflow-hidden bg-white border border-slate-200 rounded-[1.7rem] p-6 pt-8 shadow-sm hover:shadow-md transition";
 
@@ -983,21 +1107,6 @@ function ReportesPages() {
                             </div>
                         </div>
 
-                        {/* <div className="flex items-center gap-3 bg-white border border-slate-100 rounded-3xl px-4 py-3 shadow-sm">
-                            <div className="w-11 h-11 rounded-full bg-blue-600 text-white flex items-center justify-center font-extrabold">
-                                {(user?.username || "A").charAt(0).toUpperCase()}
-                            </div>
-
-                            <div className="leading-tight">
-                                <p className="text-sm font-extrabold text-slate-900">
-                                    {user?.username || "admin"}
-                                </p>
-                                <p className="text-xs text-slate-500">
-                                    Admin
-                                </p>
-                            </div>
-                        </div> */}
-
                     </div>
                 </div>
 
@@ -1007,6 +1116,131 @@ function ReportesPages() {
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                        <div className={`${cardBase} xl:col-span-2`}>
+                            <div className="absolute top-0 left-0 right-0 h-3 bg-amber-600"></div>
+                            <div className="absolute -right-10 -top-10 w-32 h-32 bg-amber-50 rounded-full"></div>
+
+                            <div className="absolute right-5 top-3 w-10 h-10 bg-amber-600 text-white rounded-bl-3xl rounded-tr-[1.7rem] flex items-center justify-center">
+                                <FiAward size={19} />
+                            </div>
+
+                            <div className="relative flex items-start gap-5 mb-6">
+                                <div className="w-16 h-16 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+                                    <FiAward size={30} />
+                                </div>
+
+                                <div className="flex-1">
+                                    <h2 className="text-2xl font-extrabold text-slate-900">
+                                        Emisión de certificados
+                                    </h2>
+
+                                    <p className="text-sm text-slate-500 mt-1">
+                                        Genera certificados Word para estudiantes egresados del curso principiante con nota teórica y práctica mayor o igual a 80.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="relative space-y-5">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className={labelBase}>Fecha Desde</label>
+
+                                        <input
+                                            type="date"
+                                            value={fechaCertificadoDesde}
+                                            onChange={(e) => setFechaCertificadoDesde(e.target.value)}
+                                            className={inputBase}
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className={labelBase}>Fecha Hasta</label>
+
+                                        <input
+                                            type="date"
+                                            value={fechaCertificadoHasta}
+                                            onChange={(e) => setFechaCertificadoHasta(e.target.value)}
+                                            className={inputBase}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <button
+                                        onClick={buscarEstudiantesParaCertificado}
+                                        disabled={loadingCertificados}
+                                        className="w-full h-12 rounded-2xl bg-slate-900 text-white font-bold flex items-center justify-center gap-2 hover:bg-slate-800 transition cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                                    >
+                                        <FiUsers />
+                                        {loadingCertificados ? "Buscando..." : "Buscar egresados"}
+                                    </button>
+
+                                    <button
+                                        onClick={descargarCertificadosWord}
+                                        className="w-full h-12 rounded-2xl bg-amber-600 text-white font-bold flex items-center justify-center gap-2 hover:bg-amber-700 transition cursor-pointer"
+                                    >
+                                        <FiFileText />
+                                        Descargar Word
+                                    </button>
+                                </div>
+
+                                <div className="border-t border-dashed border-slate-200 pt-4">
+                                    <div className={`${counterBase} bg-amber-50 text-amber-700`}>
+                                        <FiAward />
+                                        Certificados encontrados:
+                                        <strong>{certificados.length}</strong>
+                                    </div>
+                                </div>
+
+                                {certificados.length > 0 && (
+                                    <div className="max-h-64 overflow-y-auto border border-slate-200 rounded-2xl">
+                                        <table className="w-full text-sm">
+                                            <thead className="bg-slate-50 text-slate-600 sticky top-0">
+                                                <tr>
+                                                    <th className="text-left px-4 py-3">Estudiante</th>
+                                                    <th className="text-left px-4 py-3">Cédula</th>
+                                                    <th className="text-left px-4 py-3">Categoría</th>
+                                                    <th className="text-left px-4 py-3">Egreso</th>
+                                                    <th className="text-left px-4 py-3">Teórica</th>
+                                                    <th className="text-left px-4 py-3">Práctica</th>
+                                                </tr>
+                                            </thead>
+
+                                            <tbody>
+                                                {certificados.map((item) => (
+                                                    <tr key={item.id} className="border-t border-slate-100">
+                                                        <td className="px-4 py-3 font-semibold text-slate-800">
+                                                            {item.estudiante || "N/A"}
+                                                        </td>
+
+                                                        <td className="px-4 py-3 text-slate-600">
+                                                            {item.cedula || "N/A"}
+                                                        </td>
+
+                                                        <td className="px-4 py-3 text-slate-600">
+                                                            {item.categoria || "N/A"}
+                                                        </td>
+
+                                                        <td className="px-4 py-3 text-slate-600">
+                                                            {item.fecha_egreso || "N/A"}
+                                                        </td>
+
+                                                        <td className="px-4 py-3 text-slate-600">
+                                                            {item.nota_teorica ?? "N/A"}
+                                                        </td>
+
+                                                        <td className="px-4 py-3 text-slate-600">
+                                                            {item.nota_practica ?? "N/A"}
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
                         <div className={cardBase}>
                             <div className="absolute top-0 left-0 right-0 h-3 bg-green-500"></div>
                             <div className="absolute -right-10 -top-10 w-32 h-32 bg-green-50 rounded-full"></div>
