@@ -378,7 +378,8 @@ function MatriculaPage() {
 
     const enviarWhatsApp = async (matricula) => {
         const telefono = getTelefono(matricula);
-        const driveLink = "https://drive.google.com/drive/folders/1Xo9n8s0l7mLh2j3k4n5o6p7q8r9s0t?usp=sharing";
+        const sistema = "https://esesaemca.cloud/login"
+        const driveLink = "https://drive.google.com/drive/folders/1rf04iBVCMZi98bG95r-d3I22gokUNU4o?usp=drive_link";
 
         if (!telefono) {
             Swal.fire("Sin teléfono", "El estudiante no tiene número de teléfono registrado", "warning");
@@ -429,8 +430,10 @@ function MatriculaPage() {
     Inicio del curso: ${fechaInicio}
     Hora: ${horaInicio}
 
-    Esperamos que aproveches al máximo tus clases teóricas y prácticas.
+    Entra al siguiente enlace para poder acceder a tu cuenta, revisar tu calendario de clases, revisar el material de estudio y más: ${sistema}
+    Accede con tu usuario y contraseña que creaste al momento de matricularte. Si tienes alguna duda o necesitas ayuda, no dudes en contactarnos por este mismo medio.
 
+    Esperamos que aproveches al máximo tus clases teóricas y prácticas!
     Material de estudio: ${driveLink}`;
 
         const url = `https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`;
