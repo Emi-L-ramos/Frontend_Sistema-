@@ -29,6 +29,40 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
   const [mesActual, setMesActual] = useState(new Date());
   const [horasPorDia, setHorasPorDia] = useState(2);
 
+  const crearFechaLocal = (valor) => {
+    if (!valor) return null;
+
+    if (valor instanceof Date) {
+      return new Date(valor.getFullYear(), valor.getMonth(), valor.getDate());
+    }
+
+    const fechaTexto = String(valor).split("T")[0];
+    const [year, month, day] = fechaTexto.split("-").map(Number);
+
+    if (!year || !month || !day) return null;
+
+    return new Date(year, month - 1, day);
+  };
+
+  const obtenerHoyLocal = () => {
+    const hoy = new Date();
+    return new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+  };
+
+  const formatearFechaInput = (fecha) => {
+    if (!fecha) return "";
+
+    const fechaLocal = crearFechaLocal(fecha);
+
+    if (!fechaLocal) return "";
+
+    const year = fechaLocal.getFullYear();
+    const month = String(fechaLocal.getMonth() + 1).padStart(2, "0");
+    const day = String(fechaLocal.getDate()).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
+  };
+
   useEffect(() => {
     if (!abierto) return;
     const cargarDatos = async () => {
@@ -113,14 +147,17 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
     };
 
   const actualizarFechaMinima = (estudiante) => {
+    const hoy = obtenerHoyLocal();
+
     if (estudiante && estudiante.f_matricula) {
-      const fechaMatricula = new Date(estudiante.f_matricula);
-      const hoy = new Date();
-      const minFecha = fechaMatricula > hoy ? fechaMatricula : hoy;
+      const fechaMatricula = crearFechaLocal(estudiante.f_matricula);
+      const minFecha = fechaMatricula && fechaMatricula > hoy ? fechaMatricula : hoy;
+
       setFechaMinima(minFecha);
-    } else {
-      setFechaMinima(new Date());
+      return;
     }
+
+    setFechaMinima(hoy);
   };
 
   const seleccionarEstudiante = (matricula) => {
@@ -167,11 +204,16 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
     return;
   }
 
-  const fechaStr = fecha.toISOString().split('T')[0];
-  const fechaObj = new Date(fechaStr);
+  const fechaObj = crearFechaLocal(fecha);
+  const fechaStr = formatearFechaInput(fechaObj);
+
+  if (!fechaObj || !fechaStr) {
+    setError("La fecha seleccionada no es válida.");
+    return;
+  }
 
   if (fechaMinima && fechaObj < fechaMinima) {
-    setError(`La fecha no puede ser anterior a ${formatearFecha(fechaMinima.toISOString().split('T')[0])}`);
+    setError(`La fecha no puede ser anterior a ${formatearFecha(fechaMinima)}`);
     return;
   }
 
@@ -265,8 +307,17 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
 
   const formatearFecha = (fecha) => {
     if (!fecha) return "";
-    const f = new Date(fecha);
-    return f.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+    const f = crearFechaLocal(fecha);
+
+    if (!f) return "";
+
+    return f.toLocaleDateString("es-ES", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
   };
 
   const submit = async (e) => {
@@ -360,9 +411,9 @@ if (!form.fecha_inicio) {
   if (!abierto) return null;
 
   const horarioClase = estudianteSeleccionado?.horario || "";
-  const fechaMinimaStr = fechaMinima 
-    ? fechaMinima.toISOString().split('T')[0] 
-    : new Date().toISOString().split('T')[0];
+  const fechaMinimaStr = fechaMinima
+    ? formatearFechaInput(fechaMinima)
+    : formatearFechaInput(obtenerHoyLocal());
 
 
   return (
@@ -597,8 +648,8 @@ if (!form.fecha_inicio) {
 
                       <div className="grid grid-cols-7 gap-1">
                         {diasMes.map((dia, idx) => {
-                          const fechaStr = dia.fecha.toISOString().split("T")[0];
-                          const hoy = new Date().toISOString().split("T")[0];
+                          const fechaStr = formatearFechaInput(dia.fecha);
+                          const hoy = formatearFechaInput(obtenerHoyLocal());
                           const esHoy = fechaStr === hoy;
                           const esSeleccionada = fechaStr === form.fecha_inicio;
                           const modalidad = String(estudianteSeleccionado?.modalidad || "").toLowerCase();
