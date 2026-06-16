@@ -71,12 +71,18 @@ function UsuariosPage() {
 
     const fetchUsuarios = async () => {
         try {
+            setLoading(true);
+
             let url = "/usuarios/";
             let todosLosUsuarios = [];
 
             while (url) {
+                console.log("Cargando usuarios desde:", url);
+
                 const response = await api.get(url);
                 const data = response.data;
+
+                console.log("RESPUESTA USUARIOS:", data);
 
                 if (Array.isArray(data)) {
                     todosLosUsuarios = data;
@@ -87,9 +93,19 @@ function UsuariosPage() {
                         ...(data.results || [])
                     ];
 
-                    url = data.next;
+                    if (data.next) {
+                        const nextUrl = new URL(data.next);
+                        url = `${nextUrl.pathname.replace("/api", "")}${nextUrl.search}`;
+                    } else {
+                        url = null;
+                    }
                 }
             }
+
+            console.log("TODOS LOS USUARIOS CARGADOS:", todosLosUsuarios);
+            console.log("TOTAL ESTUDIANTES:", todosLosUsuarios.filter(u =>
+                String(u.rol || u.rol_nombre || "").toLowerCase() === "estudiante"
+            ));
 
             setUsuarios(todosLosUsuarios);
         } catch (error) {
