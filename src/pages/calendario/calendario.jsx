@@ -20,12 +20,12 @@ import { useAuth } from "../../context/AuthContext";
 const MONTHS = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
 const DAYS = ["Dom","Lun","Mar","Mier","Jue","Vie","Sab"];
 const INSTRUCTOR_COLORS = {
-  1: "bg-slate-700 text-white",
-  2: "bg-blue-700 text-white",
-  3: "bg-indigo-700 text-white",
-  4: "bg-zinc-700 text-white",
-  5: "bg-stone-700 text-white",
-  6: "bg-neutral-700 text-white",
+  1: "bg-slate-400 text-white",
+  2: "bg-green-400 text-white",
+  3: "bg-indigo-400 text-white",
+  4: "bg-zinc-400 text-white",
+  5: "bg-stone-400 text-white",
+  6: "bg-gray-400 text-white",
 };
 
 function buildMonthCells(year, month) {
