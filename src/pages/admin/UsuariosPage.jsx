@@ -71,9 +71,27 @@ function UsuariosPage() {
 
     const fetchUsuarios = async () => {
         try {
-            const response = await api.get("/usuarios/");
-            const data = response.data;
-            setUsuarios(Array.isArray(data) ? data : []);
+            let url = "/usuarios/";
+            let todosLosUsuarios = [];
+
+            while (url) {
+                const response = await api.get(url);
+                const data = response.data;
+
+                if (Array.isArray(data)) {
+                    todosLosUsuarios = data;
+                    url = null;
+                } else {
+                    todosLosUsuarios = [
+                        ...todosLosUsuarios,
+                        ...(data.results || [])
+                    ];
+
+                    url = data.next;
+                }
+            }
+
+            setUsuarios(todosLosUsuarios);
         } catch (error) {
             console.error("Error cargando usuarios:", error);
         } finally {
@@ -128,7 +146,7 @@ function UsuariosPage() {
         try {
             const response = await api.get("/matricula/");
             const data = response.data;
-            setMatriculas(Array.isArray(data) ? data : []);
+            setMatriculas(Array.isArray(data) ? data : data.results || []);
         } catch (error) {
             console.error("Error cargando matrículas:", error);
         }
