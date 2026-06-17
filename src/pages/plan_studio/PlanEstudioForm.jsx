@@ -34,6 +34,47 @@ function PlanEstudioForm() {
     ],
   });
 
+  const esCursoRefuerzo = (tipoCurso) => {
+    return ["Intermedio", "Avanzado"].includes(
+      String(tipoCurso || "").trim()
+    );
+  };
+
+  const crearTemaVacio = () => ({
+    titulo: "",
+    activo: true,
+    subtemas: [
+      {
+        titulo: "",
+        activo: true,
+      },
+    ],
+  });
+
+  const limitarTemasParaRefuerzo = (temas = []) => {
+    const primerTema =
+      Array.isArray(temas) && temas.length > 0
+        ? temas[0]
+        : crearTemaVacio();
+
+    return [
+      {
+        ...primerTema,
+        subtemas:
+          Array.isArray(primerTema.subtemas) && primerTema.subtemas.length > 0
+            ? primerTema.subtemas
+            : [
+                {
+                  titulo: "",
+                  activo: true,
+                },
+              ],
+      },
+    ];
+  };
+
+const cursoActualEsRefuerzo = esCursoRefuerzo(formData.tipo_curso);
+
   useEffect(() => {
     obtenerTiposCurso();
   }, []);
@@ -112,9 +153,19 @@ function PlanEstudioForm() {
   const handlePlanChange = (e) => {
     const { name, value, type, checked } = e.target;
 
-    setFormData({
-      ...formData,
-      [name]: type === "checkbox" ? checked : value,
+    setFormData((prev) => {
+      const nuevoValor = type === "checkbox" ? checked : value;
+
+      const actualizado = {
+        ...prev,
+        [name]: nuevoValor,
+      };
+
+      if (name === "tipo_curso" && esCursoRefuerzo(nuevoValor)) {
+        actualizado.temas = limitarTemasParaRefuerzo(prev.temas);
+      }
+
+      return actualizado;
     });
   };
 
@@ -142,20 +193,18 @@ function PlanEstudioForm() {
   };
 
   const agregarTema = () => {
+    if (esCursoRefuerzo(formData.tipo_curso)) {
+      setError(
+        "Los cursos Intermedio y Avanzado solo pueden tener un tema principal. Agregue los contenidos como subtemas."
+      );
+      return;
+    }
+
     setFormData({
       ...formData,
       temas: [
         ...formData.temas,
-        {
-          titulo: "",
-          activo: true,
-          subtemas: [
-            {
-              titulo: "",
-              activo: true,
-            },
-          ],
-        },
+        crearTemaVacio(),
       ],
     });
   };
@@ -236,6 +285,13 @@ function PlanEstudioForm() {
 
     if (formData.temas.length === 0) {
       setError("Debe agregar al menos un tema.");
+      return;
+    }
+
+    if (esCursoRefuerzo(formData.tipo_curso) && formData.temas.length > 1) {
+      setError(
+        "Los cursos Intermedio y Avanzado solo pueden tener un tema principal. Agregue los contenidos como subtemas."
+      );
       return;
     }
 
@@ -390,14 +446,20 @@ function PlanEstudioForm() {
                 Temas del plan
               </h2>
 
-              <button
-                type="button"
-                onClick={agregarTema}
-                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-semibold"
-              >
-                <Plus size={18} />
-                Agregar tema
-              </button>
+              {cursoActualEsRefuerzo ? (
+                <p className="text-sm font-semibold text-slate-500">
+                  Intermedio y Avanzado usan un solo tema principal. Agregue el contenido como subtemas.
+                </p>
+              ) : (
+                <button
+                  type="button"
+                  onClick={agregarTema}
+                  className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-semibold"
+                >
+                  <Plus size={18} />
+                  Agregar tema
+                </button>
+              )}
             </div>
 
             <div className="space-y-5">
@@ -411,7 +473,7 @@ function PlanEstudioForm() {
                       Tema {indexTema + 1}
                     </h3>
 
-                    {formData.temas.length > 1 && (
+                    {formData.temas.length > 1 && !cursoActualEsRefuerzo && (
                       <button
                         type="button"
                         onClick={() => eliminarTema(indexTema)}

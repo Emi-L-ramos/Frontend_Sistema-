@@ -25,6 +25,37 @@
     const isMounted = useRef(true);
 
     const rol = userRole?.toLowerCase();
+
+    const normalizarItemProgreso = useCallback((item) => {
+      const modoDiario = Boolean(item.modo_diario);
+      const tieneClaseActual = Boolean(item.clase_actual_id);
+      const usarCheckDiario = modoDiario && tieneClaseActual;
+
+      const estudianteCompletado = usarCheckDiario
+        ? Boolean(item.estudiante_completado_hoy)
+        : Boolean(item.estudiante_completado);
+
+      const instructorCompletado = usarCheckDiario
+        ? Boolean(item.instructor_completado_hoy)
+        : Boolean(item.instructor_completado);
+
+      const completado = usarCheckDiario
+        ? Boolean(item.completado_hoy)
+        : Boolean(item.completado || (estudianteCompletado && instructorCompletado));
+
+      const desbloqueado = modoDiario
+        ? Boolean(item.habilitado_hoy)
+        : Boolean(item.desbloqueado);
+
+      return {
+        ...item,
+        estudiante_completado: estudianteCompletado,
+        instructor_completado: instructorCompletado,
+        completado,
+        desbloqueado,
+      };
+    }, []);
+
     const obtenerMatriculaId = (item) => {
       if (!item) return null;
 
@@ -86,12 +117,14 @@
         : response.data.results || [];
 
       // Ordenar correctamente por tema_orden (NO por orden_general)
-      const sortedData = [...data].sort((a, b) => {
-      const ordenA = Number(a.orden_general || a.tema_orden || 0);
-      const ordenB = Number(b.orden_general || b.tema_orden || 0);
+      const dataNormalizada = data.map(normalizarItemProgreso);
 
-      return ordenA - ordenB;
-    });
+      const sortedData = [...dataNormalizada].sort((a, b) => {
+        const ordenA = Number(a.orden_general || a.tema_orden || 0);
+        const ordenB = Number(b.orden_general || b.tema_orden || 0);
+
+        return ordenA - ordenB;
+      });
 
       setProgresos(sortedData);
     } catch (error) {
@@ -102,7 +135,7 @@
     } finally {
       if (mostrarCargaInicial) setCargando(false);
     }
-  }, []);
+  }, [normalizarItemProgreso]);
 
   useEffect(() => {
     isMounted.current = true;
@@ -155,24 +188,38 @@
             if (item.id !== progresoId) return item;
             
             if (tipo === "admin_estudiante" || tipo === "estudiante") {
+              const esDiario = Boolean(item.modo_diario && item.clase_actual_id);
               const nuevoEstudiante = valor;
-              const nuevoInstructor = item.instructor_completado;
+              const nuevoInstructor = Boolean(item.instructor_completado);
 
               return {
                 ...item,
                 estudiante_completado: nuevoEstudiante,
+                estudiante_completado_hoy: esDiario
+                  ? nuevoEstudiante
+                  : item.estudiante_completado_hoy,
                 completado: nuevoEstudiante && nuevoInstructor,
+                completado_hoy: esDiario
+                  ? nuevoEstudiante && nuevoInstructor
+                  : item.completado_hoy,
               };
             }
 
             if (tipo === "admin_instructor" || tipo === "instructor") {
-              const nuevoEstudiante = item.estudiante_completado;
+              const esDiario = Boolean(item.modo_diario && item.clase_actual_id);
+              const nuevoEstudiante = Boolean(item.estudiante_completado);
               const nuevoInstructor = valor;
 
               return {
                 ...item,
                 instructor_completado: nuevoInstructor,
+                instructor_completado_hoy: esDiario
+                  ? nuevoInstructor
+                  : item.instructor_completado_hoy,
                 completado: nuevoEstudiante && nuevoInstructor,
+                completado_hoy: esDiario
+                  ? nuevoEstudiante && nuevoInstructor
+                  : item.completado_hoy,
               };
             }
 
