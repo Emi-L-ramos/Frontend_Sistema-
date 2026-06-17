@@ -521,15 +521,43 @@
       estudiantesFiltrados.find((e) => e.key === matriculaSeleccionada) ||
       estudiantesFiltrados[0];
 
-    const calcularProgreso = (items) => {
+    const calcularProgreso = (progresos = []) => {
+      const items = Array.isArray(progresos) ? progresos : [];
+
+      if (items.length === 0) {
+        return {
+          total: 0,
+          completados: 0,
+          porcentaje: 0,
+        };
+      }
+
+      const progresoDiario = items.find((item) => item.modo_diario);
+
+      if (progresoDiario) {
+        const total = Number(progresoDiario.total_clases_diarias || 0);
+        const completados = Number(progresoDiario.checks_diarios_completados || 0);
+
+        return {
+          total,
+          completados,
+          porcentaje: total > 0 ? Math.round((completados / total) * 100) : 0,
+        };
+      }
+
       const total = items.length;
-      const completados = items.filter((item) => item.completado).length;
-      const porcentaje = total > 0 ? Math.round((completados / total) * 100) : 0;
+
+      const completados = items.filter((item) => {
+        return item.completado || (
+          item.estudiante_completado &&
+          item.instructor_completado
+        );
+      }).length;
 
       return {
         total,
         completados,
-        porcentaje,
+        porcentaje: total > 0 ? Math.round((completados / total) * 100) : 0,
       };
     };
 
