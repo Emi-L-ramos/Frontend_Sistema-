@@ -186,6 +186,13 @@ function EstudianteHome({ setActiveTab }) {
     const progresoEncuentros =
         totalClases > 0 ? Math.round((totalCompletadas / totalClases) * 100) : 0;
 
+    const totalResumenCurso = Number(progresoPlan.total_temas || 0);
+    const completadosResumenCurso = Number(progresoPlan.temas_completados || 0);
+    const pendientesResumenCurso = Math.max(
+        totalResumenCurso - completadosResumenCurso,
+        0
+    );
+
     const formatoFecha = (fecha) => {
         return new Date(`${fecha}T00:00:00`).toLocaleDateString("es-NI", {
             weekday: "long",
@@ -486,7 +493,7 @@ function EstudianteHome({ setActiveTab }) {
                                         Total
                                     </p>
                                     <p className="mt-2 text-3xl font-black text-blue-600">
-                                        {totalClases}
+                                        {loadingProgresoPlan ? "..." : totalResumenCurso}
                                     </p>
                                 </div>
 
@@ -495,7 +502,7 @@ function EstudianteHome({ setActiveTab }) {
                                         Completados
                                     </p>
                                     <p className="mt-2 text-3xl font-black text-green-600">
-                                        {totalCompletadas}
+                                        {loadingProgresoPlan ? "..." : completadosResumenCurso}
                                     </p>
                                 </div>
 
@@ -504,7 +511,7 @@ function EstudianteHome({ setActiveTab }) {
                                         Pendientes
                                     </p>
                                     <p className="mt-2 text-3xl font-black text-orange-500">
-                                        {clasesPendientes.length}
+                                        {loadingProgresoPlan ? "..." : pendientesResumenCurso}
                                     </p>
                                 </div>
                             </div>
