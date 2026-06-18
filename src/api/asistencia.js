@@ -40,3 +40,8 @@ export const resumenKilometros = async () => {
   const response = await api.get("/asistencia/resumen-km/");
   return response.data;
 };
+
+export const editarKilometraje = async (data) => {
+  const response = await api.post("/asistencia/editar-km/", data);
+  return response.data;
+};

@@ -714,13 +714,14 @@ function MatriculaPage() {
 
                                                 <td className="px-4 py-4">
                                                     <div className="flex items-center justify-center gap-2">
-                                                        <button
+                                                       {/*<button
                                                             onClick={() => eliminarMatricula(item.id)}
                                                             className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-red-50 text-red-600 ring-1 ring-red-100 transition hover:-translate-y-0.5 hover:bg-red-100 hover:cursor-pointer"
                                                             title="Eliminar"
                                                         >
                                                             <RiDeleteBinLine className="text-xl" />
                                                         </button>
+                                                        */}
 
                                                         <button
                                                             onClick={() => {

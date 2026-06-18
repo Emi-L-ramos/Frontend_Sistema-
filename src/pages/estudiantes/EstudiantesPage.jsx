@@ -440,7 +440,7 @@ function EstudiantesPage() {
                                                         <Pencil className="h-4 w-4" />
                                                     </button>
 
-                                                    <button
+                                                    {/*<button
                                                         type="button"
                                                         onClick={() => eliminarEstudiante(estudiante)}
                                                         title="Eliminar estudiante"
@@ -448,6 +448,7 @@ function EstudiantesPage() {
                                                     >
                                                         <Trash2 className="h-4 w-4" />
                                                     </button>
+                                                    */}
                                                 </div>
                                             </td>
                                         </tr>

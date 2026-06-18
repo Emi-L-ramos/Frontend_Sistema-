@@ -420,13 +420,15 @@ function RecibosPage() {
                                                         <CiEdit size={20} />
                                                     </button>
 
-                                                    <button
+                                                    {/*<button
                                                         onClick={() => eliminarRecibo(r.id)}
                                                         className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-red-50 text-red-500 ring-1 ring-red-100 transition hover:-translate-y-0.5 hover:bg-red-100 hover:text-red-700"
                                                         title="Eliminar recibo"
                                                     >
                                                         <RiDeleteBinLine size={19} />
                                                     </button>
+                                                    */}
+                                                    
                                                 </div>
                                             </td>
                                         </tr>

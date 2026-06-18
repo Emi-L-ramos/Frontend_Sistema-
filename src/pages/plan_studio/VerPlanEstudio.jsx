@@ -175,7 +175,7 @@ function VerPlanEstudio() {
                     <Pencil size={20} />
                   </button>
 
-                  <button
+                 <button
                     type="button"
                     onClick={() => eliminarPlan(plan.id)}
                     className="p-2 rounded-xl hover:bg-red-100 text-red-600 transition"
@@ -183,6 +183,7 @@ function VerPlanEstudio() {
                   >
                     <Trash2 size={20} />
                   </button>
+                 
 
                   <button
                     type="button"

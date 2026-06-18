@@ -654,13 +654,14 @@ function UsuariosPage() {
                                                                                 ✎ Editar
                                                                             </button>
 
-                                                                            <button
+                                                                            {/*<button
                                                                                 type="button"
                                                                                 onClick={() => eliminarUsuario(u.id, u.username)}
                                                                                 className="inline-flex h-10 items-center justify-center gap-2 rounded-2xl bg-red-50 px-4 text-sm font-black text-red-600 ring-1 ring-red-100 transition hover:-translate-y-0.5 hover:bg-red-100 hover:cursor-pointer"
                                                                             >
                                                                                 🗑 Eliminar
                                                                             </button>
+                                                                            */}
                                                                         </div>
                                                                     </td>
                                                                 </tr>
