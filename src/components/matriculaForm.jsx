@@ -23,6 +23,7 @@ function MatriculaForm({ initialData, onSave, onError }) {
     const MODALIDAD_OPTIONS = [
         { value: "Regular", label: "Regular" },
         { value: "Extraordinario", label: "Extraordinario" },
+        { value: "Mixto", label: "Mixto" },
     ];
 
     const HORARIO_OPTIONS = [
