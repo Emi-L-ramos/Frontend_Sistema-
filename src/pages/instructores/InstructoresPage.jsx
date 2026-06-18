@@ -681,7 +681,7 @@ const seleccionarFechaCalendario = (fecha) => {
                                                             Despedir
                                                         </button>
 
-                                                        <button
+                                                        {/*<button
                                                             type="button"
                                                             onClick={() => eliminarInstructor(inst)}
                                                             title="Eliminar instructor"
@@ -689,7 +689,7 @@ const seleccionarFechaCalendario = (fecha) => {
                                                         >
                                                             <FaTrashAlt className="text-sm" />
                                                             Eliminar
-                                                        </button>
+                                                        </button>*/}
                                                     </div>
                                                 </td>
                                             </tr>
