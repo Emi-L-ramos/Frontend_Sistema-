@@ -1,7 +1,13 @@
 // src/components/calendarioForm.jsx
 import { useEffect, useState, useMemo } from "react";
-import { X, Calendar, User, BookOpen, ChevronRight, AlertCircle, Clock, Search, ChevronLeft, ChevronDown, Plus, Trash2 } from "lucide-react";
-import { crearBloqueCitas, listarInstructores, listarMatriculas, crearExamenManual } from "../api/calendario";
+import { X, Calendar, User, BookOpen, ChevronRight, Clock, Search, ChevronLeft } from "lucide-react";
+import {
+  crearBloqueCitas,
+  crearCalendarioManual,
+  listarInstructores,
+  listarMatriculas,
+  crearExamenManual,
+} from "../api/calendario";
 import Swal from "sweetalert2";
 
 export default function CalendarioForm({ abierto, onClose, onCreada }) {
@@ -13,6 +19,7 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
   const [fechasGeneradas, setFechasGeneradas] = useState([]);
   const [mostrarCalendario, setMostrarCalendario] = useState(false);
   const [mostrarCalendarioSelector, setMostrarCalendarioSelector] = useState(false);
+  const [fechasMixtas, setFechasMixtas] = useState([]);
   const [fechaMinima, setFechaMinima] = useState(null);
   // const navigate = useNavigate();
   
@@ -63,6 +70,37 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
     return `${year}-${month}-${day}`;
   };
 
+  const obtenerModalidadActual = () => {
+    return String(estudianteSeleccionado?.modalidad || "").trim().toLowerCase();
+  };
+
+  const esModalidadMixta = () => {
+    return obtenerModalidadActual() === "mixto";
+  };
+
+  const obtenerHorasTotales = () => {
+    const tipoCurso = String(estudianteSeleccionado?.tipo_curso || "").toLowerCase();
+
+    if (tipoCurso === "intermedio" || tipoCurso === "avanzado") {
+      return Number(estudianteSeleccionado?.horas_reforzamiento || 0);
+    }
+
+    return 16;
+  };
+
+  const obtenerNumeroClasesNecesarias = () => {
+    const horasTotales = obtenerHorasTotales();
+    const horasDia = Number(horasPorDia || 2);
+
+    if (!horasTotales || !horasDia) return 0;
+
+    return Math.ceil(horasTotales / horasDia);
+  };
+
+  const fechaEstaSeleccionadaMixta = (fechaISO) => {
+    return fechasMixtas.includes(fechaISO);
+  };
+
   useEffect(() => {
     if (!abierto) return;
     const cargarDatos = async () => {
@@ -82,6 +120,7 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
     cargarDatos();
     setForm({ instructor_id: "", matricula_id: "", fecha_inicio: "" });
     setFechasGeneradas([]);
+    setFechasMixtas([]);
     setError("");
     setBusquedaEstudiante("");
     setEstudianteSeleccionado(null);
@@ -167,7 +206,10 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
       }
 
       setEstudianteSeleccionado(matricula);
-      setForm({ ...form, matricula_id: matricula.id });
+      setForm({ ...form, matricula_id: matricula.id, fecha_inicio: "" });
+      setFechasGeneradas([]);
+      setFechasMixtas([]);
+      setMostrarCalendario(false);
 
       setBusquedaEstudiante(
           `${matricula.estudiante_nombre || "Sin nombre"} - ${matricula.estudiante_cedula || "Sin cédula"}`
@@ -179,31 +221,16 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
 
   const limpiarEstudiante = () => {
     setEstudianteSeleccionado(null);
-    setForm({ ...form, matricula_id: "" });
+    setForm({ ...form, matricula_id: "", fecha_inicio: "" });
     setBusquedaEstudiante("");
+    setFechasGeneradas([]);
+    setFechasMixtas([]);
+    setMostrarCalendario(false);
     setFechaMinima(null);
     setMostrarExamenManual(false);
   };
 
-  const seleccionarFecha = (fecha) => {
-  const modalidad = String(estudianteSeleccionado?.modalidad || "").toLowerCase();
-  const dia = fecha.getDay();
-  const esFinSemana = dia === 0 || dia === 6;
-
-  const permitido =
-    modalidad === "extraordinario"
-      ? esFinSemana
-      : !esFinSemana;
-
-  if (!permitido) {
-    setError(
-      modalidad === "extraordinario"
-        ? "Modalidad extraordinaria: solo se permite sábado y domingo."
-        : "Modalidad ordinaria: solo se permite lunes a viernes."
-    );
-    return;
-  }
-
+const seleccionarFecha = (fecha) => {
   const fechaObj = crearFechaLocal(fecha);
   const fechaStr = formatearFechaInput(fechaObj);
 
@@ -217,8 +244,75 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
     return;
   }
 
+  const modalidad = obtenerModalidadActual();
+  const dia = fechaObj.getDay();
+  const esFinSemana = dia === 0 || dia === 6;
+
+  if (modalidad === "mixto") {
+    const maxClases = obtenerNumeroClasesNecesarias();
+
+    setFechasMixtas((prev) => {
+      if (prev.includes(fechaStr)) {
+        const nuevasFechas = prev.filter((item) => item !== fechaStr).sort();
+
+        setForm((formAnterior) => ({
+          ...formAnterior,
+          fecha_inicio: nuevasFechas[0] || "",
+        }));
+
+        setFechasGeneradas(
+          nuevasFechas.map((item) => crearFechaLocal(item)).filter(Boolean)
+        );
+
+        setMostrarCalendario(nuevasFechas.length > 0);
+        setError("");
+
+        return nuevasFechas;
+      }
+
+      if (maxClases > 0 && prev.length >= maxClases) {
+        setError(`Solo debe seleccionar ${maxClases} fecha(s) para esta matrícula.`);
+        return prev;
+      }
+
+      const nuevasFechas = [...prev, fechaStr].sort();
+
+      setError("");
+      setForm((formAnterior) => ({
+        ...formAnterior,
+        fecha_inicio: nuevasFechas[0] || "",
+      }));
+
+      setFechasGeneradas(
+        nuevasFechas.map((item) => crearFechaLocal(item)).filter(Boolean)
+      );
+
+      setMostrarCalendario(true);
+
+      return nuevasFechas;
+    });
+
+    return;
+  }
+
+  const permitido =
+    modalidad === "extraordinario"
+      ? esFinSemana
+      : !esFinSemana;
+
+  if (!permitido) {
+    setError(
+      modalidad === "extraordinario"
+        ? "Modalidad extraordinaria: solo se permite sábado y domingo."
+        : "Modalidad regular: solo se permite lunes a viernes."
+    );
+    return;
+  }
+
   setForm({ ...form, fecha_inicio: fechaStr });
+
   const generadas = generarFechas(fechaStr);
+
   setFechasGeneradas(generadas);
   setMostrarCalendario(true);
   setMostrarCalendarioSelector(false);
@@ -343,7 +437,31 @@ if (!form.matricula_id) {
   return;
 }
 
-if (!form.fecha_inicio) {
+const modalidad = obtenerModalidadActual();
+const modoMixto = modalidad === "mixto";
+const clasesNecesarias = obtenerNumeroClasesNecesarias();
+
+if (modoMixto) {
+  if (fechasMixtas.length === 0) {
+    Swal.fire({
+      icon: "warning",
+      title: "Fechas requeridas",
+      text: "Debe seleccionar las fechas de clase en el calendario.",
+      confirmButtonColor: "#2563eb",
+    });
+    return;
+  }
+
+  if (fechasMixtas.length !== clasesNecesarias) {
+    Swal.fire({
+      icon: "warning",
+      title: "Cantidad de fechas incorrecta",
+      text: `Debe seleccionar exactamente ${clasesNecesarias} fecha(s). Actualmente seleccionó ${fechasMixtas.length}.`,
+      confirmButtonColor: "#2563eb",
+    });
+    return;
+  }
+} else if (!form.fecha_inicio) {
   Swal.fire({
     icon: "warning",
     title: "Fecha requerida",
@@ -352,9 +470,20 @@ if (!form.fecha_inicio) {
   });
   return;
 }
-    setCargando(true);
-    try {
-      await crearBloqueCitas({ ...form, horas_por_dia: horasPorDia });
+
+setCargando(true);
+
+try {
+  if (modoMixto) {
+    await crearCalendarioManual({
+      instructor_id: form.instructor_id,
+      matricula_id: form.matricula_id,
+      horas_por_dia: horasPorDia,
+      fechas: fechasMixtas,
+    });
+  } else {
+    await crearBloqueCitas({ ...form, horas_por_dia: horasPorDia });
+  }
       if (mostrarExamenManual && examenManual.fecha) {
         try {
           await crearExamenManual({
@@ -426,8 +555,14 @@ if (!form.fecha_inicio) {
                 <Calendar className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-white">Programar Bloque de Clases</h2>
-                <p className="text-sm text-blue-100">8 clases pràcticas + examen manual (opcional)</p>
+                <h2 className="text-xl font-bold text-white">
+                  {esModalidadMixta() ? "Programar Calendario Mixto" : "Programar Bloque de Clases"}
+                </h2>
+                <p className="text-sm text-blue-100">
+                  {esModalidadMixta()
+                    ? "Seleccione manualmente los días de clase."
+                    : "Bloque automático de clases + examen manual opcional."}
+                </p>
               </div>
             </div>
             <button onClick={onClose} className="text-white/80 hover:text-white hover:bg-white/10 rounded-xl p-2 transition-all duration-200  hover:cursor-pointer">
@@ -570,7 +705,16 @@ if (!form.fecha_inicio) {
             </label>
             <select
               value={horasPorDia}
-              onChange={(e) => setHorasPorDia(parseInt(e.target.value))}
+              onChange={(e) => {
+                setHorasPorDia(parseInt(e.target.value));
+                setFechasMixtas([]);
+                setFechasGeneradas([]);
+                setForm((prev) => ({
+                  ...prev,
+                  fecha_inicio: "",
+                }));
+                setMostrarCalendario(false);
+              }}
              className="w-full border border-gray-300 rounded-2xl px-4 py-3.5 text-sm text-gray-700 bg-white shadow-sm focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all duration-200 hover:border-purple-400 cursor-pointer"
             >
               <option value={2}>2 horas por día</option>
@@ -583,14 +727,18 @@ if (!form.fecha_inicio) {
           <div className="group">
             <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
               <Calendar className="w-4 h-4 text-purple-600" />
-              Seleccionar Fecha de Inicio
+              {esModalidadMixta() ? "Seleccionar Fechas de Clase" : "Seleccionar Fecha de Inicio"}
               <span className="text-red-500">*</span>
             </label>
             
             <div className="flex items-center gap-3">
                <div className="flex-1 border border-gray-300 rounded-2xl px-4 py-3 bg-white shadow-sm">
                   <span className={form.fecha_inicio ? "text-gray-700" : "text-gray-400"}>
-                    {form.fecha_inicio
+                    {esModalidadMixta()
+                      ? fechasMixtas.length > 0
+                        ? `${fechasMixtas.length}/${obtenerNumeroClasesNecesarias()} fechas seleccionadas`
+                        : "Seleccione las fechas"
+                      : form.fecha_inicio
                       ? formatearFecha(form.fecha_inicio)
                       : "Seleccione una fecha"}
                   </span>
@@ -621,7 +769,9 @@ if (!form.fecha_inicio) {
                           {meses[mesActual.getMonth()]} {mesActual.getFullYear()}
                         </p>
                         <p className="text-xs text-purple-100">
-                          Seleccione la fecha de inicio
+                          {esModalidadMixta()
+                            ? `Seleccione ${obtenerNumeroClasesNecesarias()} fecha(s)`
+                            : "Seleccione la fecha de inicio"}
                         </p>
                       </div>
 
@@ -651,35 +801,75 @@ if (!form.fecha_inicio) {
                           const fechaStr = formatearFechaInput(dia.fecha);
                           const hoy = formatearFechaInput(obtenerHoyLocal());
                           const esHoy = fechaStr === hoy;
-                          const esSeleccionada = fechaStr === form.fecha_inicio;
-                          const modalidad = String(estudianteSeleccionado?.modalidad || "").toLowerCase();
+
+                          const modalidad = obtenerModalidadActual();
+                          const modoMixto = modalidad === "mixto";
+
+                          const esSeleccionada = modoMixto
+                            ? fechaEstaSeleccionadaMixta(fechaStr)
+                            : fechaStr === form.fecha_inicio;
+
                           const diaNum = dia.fecha.getDay();
                           const esFinSemana = diaNum === 0 || diaNum === 6;
 
                           const fechaBloqueada =
-                            modalidad === "extraordinario"
+                            modalidad === "mixto"
+                              ? false
+                              : modalidad === "extraordinario"
                               ? !esFinSemana
                               : esFinSemana;
 
                           const esPasado = fechaMinima && dia.fecha < fechaMinima;
 
+                          const puedeSeleccionar =
+                            dia.isCurrentMonth &&
+                            !esPasado &&
+                            !fechaBloqueada;
+
                           return (
                             <button
                               key={idx}
                               type="button"
-                              onClick={() => !esPasado && !fechaBloqueada && seleccionarFecha(dia.fecha)}
-                              disabled={esPasado || fechaBloqueada}
+                              onClick={() => puedeSeleccionar && seleccionarFecha(dia.fecha)}
+                              disabled={!puedeSeleccionar}
                               className={`
                                 relative h-11 rounded-xl text-sm font-semibold transition-all duration-200
                                 ${!dia.isCurrentMonth ? "text-gray-300" : "text-gray-700"}
                                 ${esHoy && dia.isCurrentMonth ? "ring-2 ring-purple-300" : ""}
-                                ${esSeleccionada ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md scale-105" : ""}
-                                ${!esSeleccionada && !esPasado && !fechaBloqueada && dia.isCurrentMonth ? "hover:bg-purple-100 hover:scale-105 cursor-pointer" : ""}
-                                ${fechaBloqueada && dia.isCurrentMonth ? "bg-red-50 text-red-300 cursor-not-allowed" : ""}
-                                ${esPasado && dia.isCurrentMonth ? "bg-gray-100 text-gray-300 cursor-not-allowed line-through" : ""}
+                                ${
+                                  esSeleccionada && modoMixto
+                                    ? "bg-green-600 text-white shadow-md scale-105"
+                                    : ""
+                                }
+                                ${
+                                  esSeleccionada && !modoMixto
+                                    ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md scale-105"
+                                    : ""
+                                }
+                                ${
+                                  !esSeleccionada && puedeSeleccionar
+                                    ? "hover:bg-purple-100 hover:scale-105 cursor-pointer"
+                                    : ""
+                                }
+                                ${
+                                  fechaBloqueada && dia.isCurrentMonth
+                                    ? "bg-red-50 text-red-300 cursor-not-allowed"
+                                    : ""
+                                }
+                                ${
+                                  esPasado && dia.isCurrentMonth
+                                    ? "bg-gray-100 text-gray-300 cursor-not-allowed line-through"
+                                    : ""
+                                }
                               `}
                             >
                               {dia.day}
+
+                              {esSeleccionada && modoMixto && (
+                                <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-white text-[10px] font-black text-green-600 shadow">
+                                  ✓
+                                </span>
+                              )}
                             </button>
                           );
                         })}
@@ -729,7 +919,12 @@ if (!form.fecha_inicio) {
               <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-3 flex items-center justify-between">
                 <h3 className="text-white font-semibold flex items-center gap-2">
                   <Calendar className="w-4 h-4" />
-                  Calendario de Clases (8 clases Prácticas){estudianteSeleccionado ? `” ${estudianteSeleccionado.nombre} ${estudianteSeleccionado.apellido || ''}` : ''}
+                  {esModalidadMixta()
+                    ? `Calendario Mixto (${fechasMixtas.length}/${obtenerNumeroClasesNecesarias()} fechas seleccionadas)`
+                    : "Calendario de Clases"}
+                  {estudianteSeleccionado
+                    ? ` - ${estudianteSeleccionado.estudiante_nombre || estudianteSeleccionado.nombre || ""}`
+                    : ""}
                 </h3>
               </div>
               <div className="p-4">
@@ -764,7 +959,14 @@ if (!form.fecha_inicio) {
                   Resumen del Bloque
                 </h4>
                 <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
-                  <div className="flex items-center gap-1"><div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div><span>Clases Prácticas automáticas</span></div>
+                  <div className="flex items-center gap-1"><div className="w-1.5 h-1.5 bg-green-500 rounded-full">
+                    </div>
+                      <span>
+                        {esModalidadMixta()
+                          ? "Clases seleccionadas manualmente"
+                          : "Clases prácticas automáticas"}
+                      </span>
+                    </div>
                   <div className="flex items-center gap-1"><div className="w-1.5 h-1.5 bg-purple-500 rounded-full"></div><span>Duración: {horarioClase}</span></div>
                 </div>
               </div>
@@ -786,8 +988,10 @@ if (!form.fecha_inicio) {
               {cargando ? (
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Creando bloque...
+                  {esModalidadMixta() ? "Creando calendario..." : "Creando bloque..."}
                 </div>
+              ) : esModalidadMixta() ? (
+                "✅ Crear Bloque de clases Mixtas"
               ) : (
                 "✅ Crear Bloque de Clases"
               )}

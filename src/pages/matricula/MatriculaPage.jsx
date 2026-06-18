@@ -352,7 +352,7 @@ function MatriculaPage() {
                     <div class="footer-nota">
                         <strong>NOTA:</strong><br>
                         1- NO SE ACEPTA DEVOLUCIONES.<br>
-                        2- TIENE 60 DÍAS PARA GESTIÓN DE LICENCIA.<br>
+                        2- TIENE 15 DÍAS PARA GESTIÓN DE LICENCIA.<br>
                         3- AUSENCIA INJUSTIFICADA ES CLASE DADA.
                     </div>
 

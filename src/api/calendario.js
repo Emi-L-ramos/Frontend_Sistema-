@@ -142,6 +142,38 @@ export const crearBloqueCitas = async (data) => {
     throw error;
   }
 };
+
+export const crearCalendarioManual = async (data) => {
+  try {
+    const response = await fetch(`${API_URL}/calendario/crear-manual/`, {
+      method: "POST",
+      headers: getHeaders(),
+      body: JSON.stringify({
+        instructor_id: parseInt(data.instructor_id),
+        matricula_id: parseInt(data.matricula_id),
+        horas_por_dia: parseInt(data.horas_por_dia || 2),
+        fechas: data.fechas || [],
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      const msg =
+        error.error ||
+        error.non_field_errors?.[0] ||
+        error.detail ||
+        JSON.stringify(error);
+
+      throw new Error(msg);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error en crear Calendario Manual:", error);
+    throw error;
+  }
+};
+
 // Eliminar cita
 export const eliminarCita = async (id) => {
   try {
