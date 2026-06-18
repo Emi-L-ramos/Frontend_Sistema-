@@ -25,6 +25,7 @@ function EstudianteHome({ setActiveTab }) {
         porcentaje: 0,
         temas_completados: 0,
         total_temas: 0,
+        unidad: "temas",
     });
 
     const [loadingAsistencia, setLoadingAsistencia] = useState(true);
@@ -100,6 +101,7 @@ function EstudianteHome({ setActiveTab }) {
                 porcentaje: response.data.porcentaje || 0,
                 temas_completados: response.data.temas_completados || 0,
                 total_temas: response.data.total_temas || 0,
+                unidad: response.data.unidad || "temas",
             });
         } catch (error) {
             console.error("Error cargando progreso del plan:", error);
@@ -108,6 +110,7 @@ function EstudianteHome({ setActiveTab }) {
                 porcentaje: 0,
                 temas_completados: 0,
                 total_temas: 0,
+                unidad: "temas",
             });
         } finally {
             setLoadingProgresoPlan(false);
@@ -197,6 +200,11 @@ function EstudianteHome({ setActiveTab }) {
         if (estado === "reprogramada") return "bg-orange-100 text-orange-700";
         return "bg-yellow-100 text-yellow-700";
     };
+
+    const unidadProgreso = progresoPlan.unidad || "temas";
+
+    const textoUnidadCompletada =
+        unidadProgreso === "clases" ? "clases completadas" : "temas completados";
 
     const TarjetaResumen = ({ variante, icono, titulo, valor, descripcion, extra, valorGrande = false }) => {
         const estilos = {
@@ -370,7 +378,7 @@ function EstudianteHome({ setActiveTab }) {
                         descripcion={
                             loadingProgresoPlan
                                 ? "Cargando avance del plan"
-                                : `${progresoPlan.temas_completados} de ${progresoPlan.total_temas} temas completados`
+                                : `${progresoPlan.temas_completados} de ${progresoPlan.total_temas} ${textoUnidadCompletada}`
                         }
                     />
 
@@ -457,7 +465,7 @@ function EstudianteHome({ setActiveTab }) {
 
                             <p className="text-sm font-semibold text-slate-500">
                                 {progresoPlan.temas_completados} de{" "}
-                                {progresoPlan.total_temas} temas completados
+                                {progresoPlan.total_temas} {textoUnidadCompletada}
                             </p>
                         </div>
 
