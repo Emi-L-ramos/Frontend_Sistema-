@@ -196,7 +196,7 @@ export default function CalendarioEditarForm({
             <div>
               <h3 className="text-2xl font-bold flex items-center gap-2">
                 <Calendar className="w-6 h-6" />
-                Reprogramar Instructor
+                Reprogramar Horario
               </h3>
 
               <p className="text-sm text-blue-100 mt-1">
