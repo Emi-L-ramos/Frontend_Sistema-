@@ -74,6 +74,49 @@
       return null;
     };
 
+    const calcularProgresoReal = (progresos = []) => {
+      const items = Array.isArray(progresos) ? progresos : [];
+
+      if (items.length === 0) {
+        return {
+          total: 0,
+          completados: 0,
+          porcentaje: 0,
+          completo: false,
+        };
+      }
+
+      const progresoDiario = items.find((item) => item.modo_diario);
+
+      if (progresoDiario) {
+        const total = Number(progresoDiario.total_clases_diarias || 0);
+        const completados = Number(progresoDiario.checks_diarios_completados || 0);
+
+        return {
+          total,
+          completados,
+          porcentaje: total > 0 ? Math.round((completados / total) * 100) : 0,
+          completo: total > 0 && completados >= total,
+        };
+      }
+
+      const total = items.length;
+
+      const completados = items.filter((item) => {
+        return item.completado || (
+          item.estudiante_completado &&
+          item.instructor_completado
+        );
+      }).length;
+
+      return {
+        total,
+        completados,
+        porcentaje: total > 0 ? Math.round((completados / total) * 100) : 0,
+        completo: total > 0 && completados >= total,
+      };
+    };
+
     const actualizarDesbloqueos = useCallback(async (datosBase = null) => {
       try {
         let data = datosBase;
@@ -451,6 +494,55 @@
         />
       </div>
     );
+  }
+
+  function calcularAvancePlan(items = []) {
+    const progresos = Array.isArray(items) ? items : [];
+
+    if (progresos.length === 0) {
+      return {
+        total: 0,
+        completados: 0,
+        dadas: 0,
+        porcentaje: 0,
+        completo: false,
+        etiqueta: "temas",
+      };
+    }
+
+    const progresoDiario = progresos.find((item) => item.modo_diario);
+
+    if (progresoDiario) {
+      const total = Number(progresoDiario.total_clases_diarias || 0);
+      const completados = Number(progresoDiario.checks_diarios_completados || 0);
+
+      return {
+        total,
+        completados,
+        dadas: completados,
+        porcentaje: total > 0 ? Math.round((completados / total) * 100) : 0,
+        completo: total > 0 && completados >= total,
+        etiqueta: "clases",
+      };
+    }
+
+    const total = progresos.length;
+
+    const completados = progresos.filter((item) => {
+      return item.completado || (
+        item.estudiante_completado &&
+        item.instructor_completado
+      );
+    }).length;
+
+    return {
+      total,
+      completados,
+      dadas: completados,
+      porcentaje: total > 0 ? Math.round((completados / total) * 100) : 0,
+      completo: total > 0 && completados >= total,
+      etiqueta: "temas",
+    };
   }
 
   function PanelAdmin({
@@ -1051,20 +1143,7 @@
       estudiantesFiltrados[0];
 
     const calcularProgresoInstructor = (items) => {
-      const total = items.length;
-
-      const dadas = items.filter(
-        (item) => item.instructor_completado
-      ).length;
-
-      return {
-        total,
-        dadas,
-        porcentaje:
-          total > 0
-            ? Math.round((dadas / total) * 100)
-            : 0,
-      };
+      return calcularAvancePlan(items);
     };
 
     const obtenerEstadoInstructor = (item) => {
@@ -1183,7 +1262,7 @@
                           </p>
 
                           <p className="mt-1 text-xs font-medium text-slate-500">
-                            {avance.dadas}/{avance.total} temas dados
+                            {avance.dadas}/{avance.total} {avance.etiqueta}
                           </p>
                         </div>
 
@@ -1260,7 +1339,7 @@
                         </p>
 
                         <p className="mt-1 text-sm font-medium text-slate-500">
-                          {avanceActual.dadas} de {avanceActual.total} temas dados
+                          {avanceActual.dadas} de {avanceActual.total} {avanceActual.etiqueta}
                         </p>
                       </div>
                     </div>
@@ -1268,13 +1347,15 @@
                     <button
                       type="button"
                       onClick={() => habilitarExamenTeorico(matriculaActualId)}
-                      disabled={habilitandoExamen}
+                      disabled={habilitandoExamen || !avanceActual.completo}
                       className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 text-sm font-black text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       <BookOpen className="h-5 w-5" />
                       {habilitandoExamen
                         ? "Habilitando..."
-                        : "Habilitar examen teórico"}
+                        : avanceActual.completo
+                        ? "Habilitar examen teórico"
+                        : "Plan incompleto"}
                     </button>
                   </div>
                 </div>
@@ -1571,14 +1652,7 @@
     };
 
     const calcularProgresoMatricula = (items) => {
-      const total = items.length;
-      const completados = items.filter((item) => item.completado).length;
-
-      return {
-        total,
-        completados,
-        porcentaje: total > 0 ? Math.round((completados / total) * 100) : 0,
-      };
+      return calcularAvancePlan(items);
     };
 
     const formatearFecha = (fecha) => {
@@ -1726,7 +1800,7 @@
                             </span>
                           )}
 
-                          {avance.porcentaje === 100 && (
+                          {avance.completo && (
                             <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-black text-green-700">
                               Completado
                             </span>
@@ -1753,7 +1827,7 @@
                       <BarraProgreso porcentaje={avance.porcentaje} />
 
                       <p className="mt-2 text-right text-sm font-medium text-slate-500">
-                        {avance.completados} de {avance.total} temas completados
+                        {avance.completados} de {avance.total} {avance.etiqueta} completadas
                       </p>
                     </div>
                   </div>
@@ -1918,7 +1992,7 @@
                       })}
                     </div>
 
-                    {avance.porcentaje === 100 && (
+                    {avance.completo && (
                       <div className="border-t border-slate-100 bg-slate-50 px-5 py-5">
                         <div className="rounded-2xl border border-green-200 bg-green-50 p-5">
                           <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
