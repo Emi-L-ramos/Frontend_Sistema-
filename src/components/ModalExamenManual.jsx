@@ -74,8 +74,7 @@ export default function ModalExamenManual({ abierto, onClose, onCreada }) {
     setForm({
       matricula_id: "",
       fecha: "",
-      hora_inicio: "14:00",
-      hora_fin: "16:00",
+      horario_examen: "14_16",
     });
 
     setBusqueda("");
@@ -141,8 +140,23 @@ export default function ModalExamenManual({ abierto, onClose, onCreada }) {
     e.preventDefault();
     setError("");
 
-    if (!form.matricula_id) return setError("Debe seleccionar un Estudiante");
-    if (!form.fecha) return setError("Debe indicar la fecha del Examen");
+   if (!form.matricula_id) {
+  return setError(
+    "Debe seleccionar un estudiante"
+  );
+}
+
+if (!form.fecha) {
+  return setError(
+    "Debe indicar la fecha del examen"
+  );
+}
+
+if (!form.horario_examen) {
+  return setError(
+    "Debe seleccionar el horario del examen"
+  );
+}
 
     setCargando(true);
 
@@ -288,19 +302,37 @@ export default function ModalExamenManual({ abierto, onClose, onCreada }) {
             </div>
           </div>
 
-          <div className="bg-orange-50 border border-orange-200 rounded-2xl p-4 text-sm text-orange-800 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 shrink-0">
-              <Clock className="w-5 h-5" />
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Horario del examen
+            </label>
+
+            <div className="relative">
+              <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-orange-500 pointer-events-none" />
+
+              <select
+                value={form.horario_examen}
+                onChange={(e) =>
+                  setForm((formAnterior) => ({
+                    ...formAnterior,
+                    horario_examen: e.target.value,
+                  }))
+                }
+                className="w-full appearance-none border border-gray-300 rounded-2xl pl-12 pr-4 py-3 text-sm font-semibold text-gray-700 bg-white focus:outline-none focus:ring-4 focus:ring-orange-100 focus:border-orange-400"
+              >
+                <option value="08_10">
+                  8:00 AM - 10:00 AM
+                </option>
+
+                <option value="14_16">
+                  2:00 PM - 4:00 PM
+                </option>
+              </select>
             </div>
 
-            <div>
-              <p className="font-semibold">
-                Horario fijo del Examen Policial
-              </p>
-              <p className="text-orange-700">
-                2:00 PM - 4:00 PM
-              </p>
-            </div>
+            <p className="text-xs text-gray-500 mt-2">
+              Selecciona uno de los horarios disponibles para el examen policial.
+            </p>
           </div>
 
           {error && (

@@ -216,29 +216,41 @@ export const actualizarCita = async (id, data) => {
 };
 // src/api/calendario.js
 
+// ============ EXAMEN POLICIAL ============
 export const crearExamenManual = async (data) => {
   try {
-    // ✅ Usa 'crear-examen' con guión, no 'crear_examen'
-    const response = await fetch(`${API_URL}/calendario/crear-examen/`, {
-      method: "POST",
-      headers: getHeaders(),
-      body: JSON.stringify({
-        instructor_id: parseInt(data.instructor_id),
-        matricula_id: parseInt(data.matricula_id),
-        fecha: data.fecha,
-        hora_inicio: data.hora_inicio,
-        hora_fin: data.hora_fin
-      })
-    });
-    
+    const response = await fetch(
+      `${API_URL}/calendario/crear-examen/`,
+      {
+        method: "POST",
+        headers: getHeaders(),
+        body: JSON.stringify({
+          matricula_id: parseInt(data.matricula_id),
+          fecha: data.fecha,
+          horario_examen: data.horario_examen,
+        }),
+      }
+    );
+
+    const resultado = await response.json();
+
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || "Error al crear el examen manual");
+      const mensaje =
+        resultado.error ||
+        resultado.detail ||
+        resultado.non_field_errors?.[0] ||
+        "Error al crear el examen policial";
+
+      throw new Error(mensaje);
     }
-    
-    return await response.json();
+
+    return resultado;
   } catch (error) {
-    console.error("Error en crear Examen Manual:", error);
+    console.error(
+      "Error en crear Examen Manual:",
+      error
+    );
+
     throw error;
   }
 };
