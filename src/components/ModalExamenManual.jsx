@@ -51,12 +51,11 @@ export default function ModalExamenManual({ abierto, onClose, onCreada }) {
   const [instructores, setInstructores] = useState([]);
   const [matriculas, setMatriculas] = useState([]);
 
-  const [form, setForm] = useState({
-    matricula_id: "",
-    fecha: "",
-    hora_inicio: "14:00",
-    hora_fin: "16:00",
-  });
+ const [form, setForm] = useState({
+  matricula_id: "",
+  fecha: "",
+  horario_examen: "14_16",
+});
 
   const [busqueda, setBusqueda] = useState("");
   const [error, setError] = useState("");
@@ -71,11 +70,11 @@ export default function ModalExamenManual({ abierto, onClose, onCreada }) {
     listarInstructores().then(setInstructores).catch(() => {});
     listarMatriculasInstructor().then(setMatriculas).catch(() => {});
 
-    setForm({
-      matricula_id: "",
-      fecha: "",
-      horario_examen: "14_16",
-    });
+   setForm({
+    matricula_id: "",
+    fecha: "",
+    horario_examen: "14_16",
+  });
 
     setBusqueda("");
     setError("");
@@ -172,12 +171,30 @@ if (!form.horario_examen) {
   };
 
   const matriculasFiltradas = matriculas.filter((m) => {
-    const texto = `${m.estudiante_nombre || ""} ${
-      m.estudiante_cedula || ""
-    }`.toLowerCase();
+  const tipoCurso = String(
+    m.tipo_curso || ""
+  ).toLowerCase();
 
-    return texto.includes(busqueda.toLowerCase());
-  });
+  const esIntermedioOAvanzado =
+    tipoCurso === "intermedio" ||
+    tipoCurso === "avanzado";
+
+  if (
+    esIntermedioOAvanzado &&
+    m.incluye_examen_policial !== true
+  ) {
+    return false;
+  }
+
+  const texto = `
+    ${m.estudiante_nombre || ""}
+    ${m.estudiante_cedula || ""}
+  `.toLowerCase();
+
+  return texto.includes(
+    busqueda.toLowerCase()
+  );
+});
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -255,12 +272,21 @@ if (!form.horario_examen) {
                         </div>
 
                         <div>
-                          <p className="font-semibold">
-                            {m.estudiante_nombre}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {m.estudiante_cedula}
-                          </p>
+                        <p className="text-xs text-gray-500">
+                          {m.estudiante_cedula}
+                        </p>
+
+                        <p className="text-xs text-orange-600 mt-1">
+                          {m.tipo_curso || "Curso no definido"}
+
+                          {["Intermedio", "Avanzado"].includes(
+                            m.tipo_curso
+                          ) && m.incluye_examen_policial
+                            ? " · Examen incluido"
+                            : ""}
+                        </p>
+
+
                         </div>
                       </div>
                     </button>

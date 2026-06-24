@@ -78,16 +78,29 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
     return obtenerModalidadActual() === "mixto";
   };
 
-  const obtenerHorasTotales = () => {
-    const tipoCurso = String(estudianteSeleccionado?.tipo_curso || "").toLowerCase();
+ const obtenerHorasTotales = () => {
+  const tipoCurso = String(
+    estudianteSeleccionado?.tipo_curso || ""
+  ).toLowerCase();
 
-    if (tipoCurso === "intermedio" || tipoCurso === "avanzado") {
-      return Number(estudianteSeleccionado?.horas_reforzamiento || 0);
-    }
+  if (
+    tipoCurso === "intermedio" ||
+    tipoCurso === "avanzado"
+  ) {
+    const horasSeleccionadas = Number(
+      estudianteSeleccionado?.horas_reforzamiento || 0
+    );
 
-    return 16;
-  };
+    const incluyeExamen =
+      estudianteSeleccionado?.incluye_examen_policial === true;
 
+    return incluyeExamen
+      ? Math.max(horasSeleccionadas - 2, 0)
+      : horasSeleccionadas;
+  }
+
+  return 16;
+};
   const obtenerNumeroClasesNecesarias = () => {
     const horasTotales = obtenerHorasTotales();
     const horasDia = Number(horasPorDia || 2);
@@ -155,15 +168,17 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
     const generarFechas = (fechaInicio) => {
       if (!fechaInicio || !estudianteSeleccionado) return [];
 
-      const modalidad = String(estudianteSeleccionado.modalidad || "").toLowerCase();
-      const tipoCurso = String(estudianteSeleccionado.tipo_curso || "").toLowerCase();
+      // const tipoCurso = String(estudianteSeleccionado.tipo_curso || "").toLowerCase();
 
-      const horasTotales =
-        tipoCurso === "intermedio" || tipoCurso === "avanzado"
-          ? Number(estudianteSeleccionado.horas_reforzamiento || 0)
-          : 16;
+      // const modalidad = String(
+      //     estudianteSeleccionado.modalidad || ""
+      //   ).toLowerCase();
 
-      const numClases = Math.ceil(horasTotales / horasPorDia);
+        const horasTotales = obtenerHorasTotales();
+
+        const numClases = Math.ceil(
+          horasTotales / horasPorDia
+        );
 
       const fechas = [];
       let fecha = new Date(fechaInicio + "T00:00:00");

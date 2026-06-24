@@ -15,6 +15,7 @@ function MatriculaForm({ initialData, onSave, onError }) {
         horario: "",
         tipo_curso: "",
         horas_reforzamiento: "",
+        incluye_examen_policial: false,
         categoria: "",
         aparicion: "",
         observaciones: "",
@@ -62,6 +63,7 @@ function MatriculaForm({ initialData, onSave, onError }) {
                 horario: initialData.horario || "",
                 tipo_curso: initialData.tipo_curso || "",
                 horas_reforzamiento: initialData.horas_reforzamiento || "",
+                incluye_examen_policial: initialData.incluye_examen_policial ?? false,
                 categoria: initialData.categoria || "",
                 aparicion: initialData.aparicion || "",
                 observaciones: initialData.observaciones || "",
@@ -141,15 +143,25 @@ function MatriculaForm({ initialData, onSave, onError }) {
     };
 
     const handleChange = (e) => {
-        const { name, value } = e.target;
+        const { name, value, type, checked } = e.target;
 
-        setFormData((prev) => ({
-            ...prev,
-            [name]: value,
-            ...(name === "tipo_curso" && value === "Principiante"
-                ? { horas_reforzamiento: "" }
-                : {}),
-        }));
+        const nuevoValor = type === "checkbox" ? checked : value;
+
+        setFormData((prev) => {
+            if (name === "tipo_curso") {
+                return {
+                    ...prev,
+                    tipo_curso: value,
+                    horas_reforzamiento: "",
+                    incluye_examen_policial: false,
+                };
+            }
+
+            return {
+                ...prev,
+                [name]: nuevoValor,
+            };
+        });
 
         if (serverErrors[name]) {
             setServerErrors((prev) => ({
@@ -158,8 +170,35 @@ function MatriculaForm({ initialData, onSave, onError }) {
             }));
         }
     };
-
     const validarFormulario = () => {
+
+     if (
+        ["Intermedio", "Avanzado"].includes(formData.tipo_curso) &&
+        !formData.horas_reforzamiento
+    ) {
+        Swal.fire(
+            "Campo requerido",
+            "Debe seleccionar las horas de reforzamiento.",
+            "warning"
+        );
+        return false;
+    }
+
+    if (
+        ["Intermedio", "Avanzado"].includes(formData.tipo_curso) &&
+        formData.incluye_examen_policial &&
+        Number(formData.horas_reforzamiento) < 3
+    ) {
+        Swal.fire(
+            "Horas insuficientes",
+            "Para incluir el examen policial debe seleccionar al menos 3 horas.",
+            "warning"
+        );
+        return false;
+    }
+
+    return true;
+
         if (!formData.estudiante) {
             Swal.fire("Campo requerido", "Debe seleccionar un estudiante.", "warning");
             return false;
@@ -221,6 +260,11 @@ function MatriculaForm({ initialData, onSave, onError }) {
             horas_reforzamiento: formData.horas_reforzamiento
                 ? parseInt(formData.horas_reforzamiento)
                 : null,
+
+            incluye_examen_policial:
+                ["Intermedio", "Avanzado"].includes(formData.tipo_curso)
+                    ? formData.incluye_examen_policial
+                    : false,    
             categoria: formData.categoria,
             aparicion: formData.aparicion,
             observaciones: formData.observaciones,
@@ -423,38 +467,61 @@ function MatriculaForm({ initialData, onSave, onError }) {
                     </select>
                 </div>
 
-                {(formData.tipo_curso === "Intermedio" ||
-                    formData.tipo_curso === "Avanzado") && (
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Horas de reforzamiento <span className="text-red-500">*</span>
-                        </label>
-                        <select
-                            name="horas_reforzamiento"
-                            value={formData.horas_reforzamiento}
-                            onChange={handleChange}
-                            className="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                            <option value="">Seleccionar horas</option>
+                {["Intermedio", "Avanzado"].includes(formData.tipo_curso) && (
+                    <>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Horas de reforzamiento{" "}
+                                <span className="text-red-500">*</span>
+                            </label>
 
-                            {formData.tipo_curso === "Intermedio" ? (
-                                <>
-                                    <option value="6">6 horas</option>
-                                    <option value="7">7 horas</option>
-                                    <option value="8">8 horas</option>
-                                    <option value="9">9 horas</option>
-                                    <option value="10">10 horas</option>
-                                </>
-                            ) : (
-                                <>
-                                    <option value="2">2 horas</option>
-                                    <option value="3">3 horas</option>
-                                    <option value="4">4 horas</option>
-                                    <option value="5">5 horas</option>
-                                </>
-                            )}
-                        </select>
-                    </div>
+                            <select
+                                name="horas_reforzamiento"
+                                value={formData.horas_reforzamiento}
+                                onChange={handleChange}
+                                className="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                                <option value="">Seleccionar horas</option>
+
+                                {formData.tipo_curso === "Intermedio" ? (
+                                    <>
+                                        <option value="6">6 horas</option>
+                                        <option value="7">7 horas</option>
+                                        <option value="8">8 horas</option>
+                                        <option value="9">9 horas</option>
+                                        <option value="10">10 horas</option>
+                                    </>
+                                ) : (
+                                    <>
+                                        <option value="2">2 horas</option>
+                                        <option value="3">3 horas</option>
+                                        <option value="4">4 horas</option>
+                                        <option value="5">5 horas</option>
+                                    </>
+                                )}
+                            </select>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Examen policial
+                            </label>
+
+                            <label className="flex items-center gap-3 w-full min-h-[50px] px-4 border border-gray-300 rounded-xl cursor-pointer hover:bg-gray-50">
+                                <input
+                                    type="checkbox"
+                                    name="incluye_examen_policial"
+                                    checked={formData.incluye_examen_policial}
+                                    onChange={handleChange}
+                                    className="w-5 h-5 cursor-pointer"
+                                />
+
+                                <span className="text-sm text-gray-700">
+                                    Incluir examen policial
+                                </span>
+                            </label>
+                        </div>
+                    </>
                 )}
 
                 <div>

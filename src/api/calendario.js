@@ -50,18 +50,28 @@ export const listarMatriculas = async () => {
 // ============ MATRÍCULAS ASIGNADAS AL INSTRUCTOR ============
 export const listarMatriculasInstructor = async () => {
   try {
-    const response = await fetch(`${API_URL}/matricula/asignadas-instructor/`, {
-      headers: getHeaders()
-    });
+    const response = await fetch(
+      `${API_URL}/matricula/para-examen/`,
+      {
+        headers: getHeaders(),
+      }
+    );
 
     if (!response.ok) {
-      throw new Error("Error al cargar estudiantes asignados al instructor");
+      throw new Error(
+        "Error al cargar estudiantes disponibles para examen policial"
+      );
     }
 
     const data = await response.json();
+
     return data.results || data;
   } catch (error) {
-    console.error("Error en listar Matriculas Instructor:", error);
+    console.error(
+      "Error en listar estudiantes para examen policial:",
+      error
+    );
+
     return [];
   }
 };
