@@ -11,7 +11,6 @@ import {
 } from "lucide-react";
 import {
   crearExamenManual,
-  listarInstructores,
   listarMatriculasInstructor,
 } from "../api/calendario";
 
@@ -47,15 +46,41 @@ const formatearFechaVista = (fecha) => {
   return `${day}/${month}/${year}`;
 };
 
+const obtenerHorarioPorFecha = (fecha) => {
+  if (!fecha) {
+    return "Selecciona una fecha";
+  }
+
+  const [year, month, day] = fecha
+    .split("-")
+    .map(Number);
+
+  const fechaLocal = new Date(
+    year,
+    month - 1,
+    day
+  );
+
+  const diaSemana = fechaLocal.getDay();
+
+  if (diaSemana === 0) {
+    return "Los domingos no hay examen policial";
+  }
+
+  if (diaSemana === 6) {
+    return "8:00 AM - 10:00 AM";
+  }
+
+  return "2:00 PM - 4:00 PM";
+};
+
 export default function ModalExamenManual({ abierto, onClose, onCreada }) {
-  const [instructores, setInstructores] = useState([]);
   const [matriculas, setMatriculas] = useState([]);
 
- const [form, setForm] = useState({
-  matricula_id: "",
-  fecha: "",
-  horario_examen: "14_16",
-});
+  const [form, setForm] = useState({
+    matricula_id: "",
+    fecha: "",
+  });
 
   const [busqueda, setBusqueda] = useState("");
   const [error, setError] = useState("");
@@ -67,13 +92,13 @@ export default function ModalExamenManual({ abierto, onClose, onCreada }) {
   useEffect(() => {
     if (!abierto) return;
 
-    listarInstructores().then(setInstructores).catch(() => {});
-    listarMatriculasInstructor().then(setMatriculas).catch(() => {});
+    listarMatriculasInstructor()
+      .then(setMatriculas)
+      .catch(() => {});
 
    setForm({
     matricula_id: "",
     fecha: "",
-    horario_examen: "14_16",
   });
 
     setBusqueda("");
@@ -148,12 +173,6 @@ export default function ModalExamenManual({ abierto, onClose, onCreada }) {
 if (!form.fecha) {
   return setError(
     "Debe indicar la fecha del examen"
-  );
-}
-
-if (!form.horario_examen) {
-  return setError(
-    "Debe seleccionar el horario del examen"
   );
 }
 
@@ -333,32 +352,21 @@ if (!form.horario_examen) {
               Horario del examen
             </label>
 
-            <div className="relative">
-              <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-orange-500 pointer-events-none" />
+            <div className="flex items-center gap-3 border border-gray-300 rounded-2xl px-4 py-3 bg-gray-50">
+              <div className="w-10 h-10 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center">
+                <Clock className="w-5 h-5" />
+              </div>
 
-              <select
-                value={form.horario_examen}
-                onChange={(e) =>
-                  setForm((formAnterior) => ({
-                    ...formAnterior,
-                    horario_examen: e.target.value,
-                  }))
-                }
-                className="w-full appearance-none border border-gray-300 rounded-2xl pl-12 pr-4 py-3 text-sm font-semibold text-gray-700 bg-white focus:outline-none focus:ring-4 focus:ring-orange-100 focus:border-orange-400"
-              >
-                <option value="08_10">
-                  8:00 AM - 10:00 AM
-                </option>
+              <div>
+                <p className="text-sm font-semibold text-gray-800">
+                  {obtenerHorarioPorFecha(form.fecha)}
+                </p>
 
-                <option value="14_16">
-                  2:00 PM - 4:00 PM
-                </option>
-              </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  Lunes a viernes: 2:00 PM - 4:00 PM. Sábado: 8:00 AM - 10:00 AM.
+                </p>
+              </div>
             </div>
-
-            <p className="text-xs text-gray-500 mt-2">
-              Selecciona uno de los horarios disponibles para el examen policial.
-            </p>
           </div>
 
           {error && (
@@ -449,14 +457,22 @@ if (!form.horario_examen) {
                   const esSeleccionada = fechaISO === form.fecha;
                   const hoyISO = obtenerFechaISO(new Date());
                   const esHoy = fechaISO === hoyISO;
+                  const esDomingo = fecha.getDay() === 0;
 
                   return (
                     <button
                       key={fechaISO}
                       type="button"
-                      onClick={() => seleccionarFecha(fecha)}
+                      disabled={esDomingo}
+                      onClick={() => {
+                        if (!esDomingo) {
+                          seleccionarFecha(fecha);
+                        }
+                      }}
                       className={`h-11 w-11 mx-auto rounded-full text-sm font-bold transition-all ${
-                        esSeleccionada
+                        esDomingo
+                          ? "text-gray-300 bg-gray-100 cursor-not-allowed"
+                          : esSeleccionada
                           ? "bg-orange-600 text-white shadow-md scale-105"
                           : esHoy
                           ? "bg-orange-50 text-orange-700 border border-orange-200"

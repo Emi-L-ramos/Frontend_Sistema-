@@ -224,9 +224,7 @@ export const actualizarCita = async (id, data) => {
     throw error;
   }
 };
-// src/api/calendario.js
 
-// ============ EXAMEN POLICIAL ============
 export const crearExamenManual = async (data) => {
   try {
     const response = await fetch(
@@ -235,29 +233,83 @@ export const crearExamenManual = async (data) => {
         method: "POST",
         headers: getHeaders(),
         body: JSON.stringify({
-          matricula_id: parseInt(data.matricula_id),
+          matricula_id: parseInt(
+            data.matricula_id,
+            10
+          ),
           fecha: data.fecha,
-          horario_examen: data.horario_examen,
         }),
       }
     );
 
-    const resultado = await response.json();
+    const resultado = await response
+      .json()
+      .catch(() => ({}));
 
     if (!response.ok) {
-      const mensaje =
+      throw new Error(
         resultado.error ||
         resultado.detail ||
-        resultado.non_field_errors?.[0] ||
-        "Error al crear el examen policial";
-
-      throw new Error(mensaje);
+        "Error al programar el examen policial"
+      );
     }
 
     return resultado;
   } catch (error) {
     console.error(
-      "Error en crear Examen Manual:",
+      "Error en crearExamenManual:",
+      error
+    );
+
+    throw error;
+  }
+};
+
+export const registrarResultadoExamen = async (
+  calendarioId,
+  resultado
+) => {
+  const resultadosPermitidos = [
+    "asistieron",
+    "cancelado",
+  ];
+
+  if (
+    !resultadosPermitidos.includes(resultado)
+  ) {
+    throw new Error(
+      "El resultado del examen no es válido"
+    );
+  }
+
+  try {
+    const response = await fetch(
+      `${API_URL}/calendario/${calendarioId}/resultado-examen/`,
+      {
+        method: "POST",
+        headers: getHeaders(),
+        body: JSON.stringify({
+          resultado,
+        }),
+      }
+    );
+
+    const data = await response
+      .json()
+      .catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(
+        data.error ||
+        data.detail ||
+        "No se pudo registrar el resultado del examen"
+      );
+    }
+
+    return data;
+  } catch (error) {
+    console.error(
+      "Error en registrarResultadoExamen:",
       error
     );
 

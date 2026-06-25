@@ -15,6 +15,7 @@ import { listarCitas, citasDeHoy, listarInstructores } from "../../api/calendari
 import CalendarioForm from "../../components/calendarioForm.jsx";
 import CalendarioEditarForm from "../../components/calendarioEditarForm.jsx";
 import ModalExamenManual from "../../components/ModalExamenManual.jsx";
+import ModalResultadoExamen from "../../components/ModalResultadoExamen.jsx";
 import { useAuth } from "../../context/AuthContext";
 
 const MONTHS = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
@@ -58,11 +59,12 @@ export default function Calendario() {
   const [instructores, setInstructores] = useState([]);
   const [citas, setCitas] = useState([]);
   const [hoyCitas, setHoyCitas] = useState([]);
+  const [diaSeleccionado, setDiaSeleccionado] = useState(null);
   const [modalNueva, setModalNueva] = useState(false);
   const [modalExamen, setModalExamen] = useState(false);
+  const [modalResultadoExamen, setModalResultadoExamen] = useState(false);
   const [modalEditar, setModalEditar] = useState(false);
   const [citaSeleccionada, setCitaSeleccionada] = useState(null);
-  const [diaSeleccionado, setDiaSeleccionado] = useState(null);
 
   const cargar = async () => {
     const mes = `${vy}-${String(vm + 1).padStart(2, "0")}`;
@@ -124,7 +126,13 @@ export default function Calendario() {
   const en7DiasStr = en7Dias.toISOString().slice(0, 10);
 
   const examenesProximos = citas
-    .filter((c) => c.es_examen && c.fecha >= hoyStr && c.fecha <= en7DiasStr)
+    .filter(
+      (c) =>
+        c.es_examen &&
+        String(c.estado || "").toLowerCase() === "pendiente" &&
+        c.fecha >= hoyStr &&
+        c.fecha <= en7DiasStr
+    )
     .sort((a, b) => a.fecha.localeCompare(b.fecha));
 
   const citasDelDiaSeleccionado = diaSeleccionado
@@ -506,14 +514,26 @@ export default function Calendario() {
                 )}
 
                 {asignacionesPanelInstructor.map((a) => {
-                  const totalClasesMatricula = citas.filter(
-                    (x) => x.matricula === a.matricula && !x.es_examen
-                  ).length;
+                  const examenProcesable =
+                    a.es_examen &&
+                    String(a.estado || "").toLowerCase() === "pendiente";
 
                   return (
-                    <div
+                    <button
                       key={a.id}
-                      className={`w-full rounded-2xl border p-4 text-left ${
+                      type="button"
+                      disabled={!examenProcesable}
+                      onClick={() => {
+                        if (!examenProcesable) return;
+
+                        setCitaSeleccionada(a);
+                        setModalResultadoExamen(true);
+                      }}
+                      className={`w-full rounded-2xl border p-4 text-left transition ${
+                        examenProcesable
+                          ? "cursor-pointer hover:-translate-y-0.5 hover:shadow-md"
+                          : "cursor-default"
+                      } ${
                         a.es_examen
                           ? "border-amber-200 bg-amber-50"
                           : "border-blue-100 bg-blue-50/60"
@@ -541,7 +561,7 @@ export default function Calendario() {
                       <div className="text-xs font-black text-slate-500">
                         {a.es_examen
                           ? "EXAMEN POLICIAL"
-                          : `Clase ${a.numero_clase}/${totalClasesMatricula}`}
+                          : `Clase ${a.numero_clase}`}
                       </div>
 
                       {a.horario && (
@@ -549,7 +569,7 @@ export default function Calendario() {
                           Horario: {a.horario}
                         </div>
                       )}
-                    </div>
+                    </button>
                   );
                 })}
               </div>
@@ -560,6 +580,16 @@ export default function Calendario() {
             abierto={modalExamen}
             onClose={() => setModalExamen(false)}
             onCreada={cargar}
+          />
+
+          <ModalResultadoExamen
+            abierto={modalResultadoExamen}
+            cita={citaSeleccionada}
+            onClose={() => {
+              setModalResultadoExamen(false);
+              setCitaSeleccionada(null);
+            }}
+            onActualizado={cargar}
           />
         </div>
       </div>
@@ -897,10 +927,6 @@ export default function Calendario() {
                 )}
 
                 {asignacionesPanelEstudiante.map((a) => {
-                  const totalClasesMatricula = citas.filter(
-                    (x) => x.matricula === a.matricula && !x.es_examen
-                  ).length;
-
                   return (
                     <div
                       key={a.id}
@@ -927,8 +953,8 @@ export default function Calendario() {
                       <div className="mb-2 flex items-center gap-2 text-sm font-bold text-slate-800">
                         <FaUserAlt className="text-slate-400" />
                         {a.es_examen
-                          ? "Examen Policial"
-                          : `Clase ${a.numero_clase}/${totalClasesMatricula}`}
+                          ? "EXAMEN POLICIAL"
+                          : `Clase ${a.numero_clase}`}
                       </div>
 
                       <div className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-500">
@@ -1341,19 +1367,22 @@ export default function Calendario() {
               )}
 
               {asignacionesPanelAdmin.map((a) => {
-                const totalClasesMatricula = citas.filter(
-                  (x) => x.matricula === a.matricula && !x.es_examen
-                ).length;
-
                 return (
                   <button
                     key={a.id}
                     type="button"
+                    disabled={a.es_examen}
                     onClick={() => {
+                      if (a.es_examen) return;
+
                       setCitaSeleccionada(a);
                       setModalEditar(true);
                     }}
-                    className={`w-full rounded-2xl border p-4 text-left transition hover:-translate-y-0.5 hover:shadow-md ${
+                    className={`w-full rounded-2xl border p-4 text-left transition ${
+                      a.es_examen
+                        ? "cursor-default"
+                        : "cursor-pointer hover:-translate-y-0.5 hover:shadow-md"
+                    } ${
                       a.es_examen
                         ? "border-amber-200 bg-amber-50"
                         : "border-blue-100 bg-blue-50/60"
@@ -1385,8 +1414,8 @@ export default function Calendario() {
 
                     <div className="text-xs font-black text-slate-500">
                       {a.es_examen
-                        ? "EXAMEN POLICIAL"
-                        : `Clase ${a.numero_clase}/${totalClasesMatricula}`}
+                        ? "Examen Policial"
+                        : `Clase ${a.numero_clase}`}
                     </div>
                   </button>
                 );
@@ -1399,12 +1428,6 @@ export default function Calendario() {
       <CalendarioForm
         abierto={modalNueva}
         onClose={() => setModalNueva(false)}
-        onCreada={cargar}
-      />
-
-      <ModalExamenManual
-        abierto={modalExamen}
-        onClose={() => setModalExamen(false)}
         onCreada={cargar}
       />
 
