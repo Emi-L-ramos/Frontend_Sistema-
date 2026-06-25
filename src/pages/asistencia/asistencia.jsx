@@ -311,9 +311,11 @@ export default function Asistencia({ userRole }) {
   const [cargando, setCargando] = useState(true);
   const [busqueda, setBusqueda] = useState("");
   const [encuentroFiltro, setEncuentroFiltro] = useState(1);
+  
 
   const [fechaInicio, setFechaInicio] = useState(obtenerFechaHoy());
   const [fechaFin, setFechaFin] = useState(obtenerFechaHoy());
+  
 
   const [modalDetalleEstudiante, setModalDetalleEstudiante] = useState(null);
   const [modalJustificar, setModalJustificar] = useState(null);
