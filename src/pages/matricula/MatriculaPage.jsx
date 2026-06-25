@@ -695,7 +695,9 @@ function MatriculaPage() {
                                                         className={`inline-flex items-center justify-center rounded-full px-3 py-1.5 text-xs font-black ring-1 ${
                                                             estado === "matriculado"
                                                                 ? "bg-emerald-50 text-emerald-700 ring-emerald-100"
-                                                                : estado === "cancelado"
+                                                                : estado === "finalizado"
+                                                                ? "bg-slate-100 text-slate-700 ring-slate-200"
+                                                                : estado === "cancelado" || estado === "cancelada"
                                                                 ? "bg-red-50 text-red-700 ring-red-100"
                                                                 : estado === "aprobado"
                                                                 ? "bg-blue-50 text-blue-700 ring-blue-100"
@@ -704,7 +706,9 @@ function MatriculaPage() {
                                                     >
                                                         {estado === "matriculado"
                                                             ? "Matriculado"
-                                                            : estado === "cancelado"
+                                                            : estado === "finalizado"
+                                                            ? "Finalizado"
+                                                            : estado === "cancelado" || estado === "cancelada"
                                                             ? "Cancelado"
                                                             : estado === "aprobado"
                                                             ? "Aprobado"
