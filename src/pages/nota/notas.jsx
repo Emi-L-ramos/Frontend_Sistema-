@@ -206,7 +206,7 @@ function NotasPages({ userRole }) {
         {rol === "admin" && <ResumenAdmin resumen={resumen} />}
         {rol === "instructor" && <ResumenInstructor resumen={resumen} />}
         {rol === "estudiante" && <ResumenEstudiante resumen={resumen} />}
-
+        {(rol === "admin" || rol === "instructor") && (
         <div className="mb-6 rounded-[22px] border border-slate-200 bg-white p-4 shadow-sm">
           <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
@@ -257,7 +257,7 @@ function NotasPages({ userRole }) {
             )}
           </div>
         </div>
-
+        )}
         {rol === "admin" && <TablaAdmin notas={notasAgrupadas} />}
         {rol === "instructor" && <TablaInstructor notas={notasAgrupadas} />}
         {rol === "estudiante" && <TablaEstudiante notas={notasAgrupadas} />}
