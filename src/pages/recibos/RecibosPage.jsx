@@ -175,7 +175,6 @@ function RecibosPage() {
                 <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-3xl bg-emerald-50 text-3xl shadow-sm ring-1 ring-emerald-100">
                     💵
                 </div>
-
                 <div>
                     <h1 className="text-4xl font-black tracking-tight text-slate-900">
                         Solvencia
