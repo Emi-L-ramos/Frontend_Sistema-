@@ -290,22 +290,21 @@ if (!form.fecha) {
                           <User className="w-4 h-4" />
                         </div>
 
-                        <div>
+                        <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-gray-800">
+                          {m.estudiante_nombre || "Sin nombre"}
+                        </p>
                         <p className="text-xs text-gray-500">
                           {m.estudiante_cedula}
                         </p>
-
                         <p className="text-xs text-orange-600 mt-1">
                           {m.tipo_curso || "Curso no definido"}
-
                           {["Intermedio", "Avanzado"].includes(
                             m.tipo_curso
                           ) && m.incluye_examen_policial
                             ? " · Examen incluido"
                             : ""}
                         </p>
-
-
                         </div>
                       </div>
                     </button>
