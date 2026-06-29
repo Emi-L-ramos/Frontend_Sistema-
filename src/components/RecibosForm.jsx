@@ -152,6 +152,32 @@ function RecibosForm({ onSave, initialData }) {
         return () => clearTimeout(delay);
     }, [busquedaEstudiante, matriculaSeleccionada]);
 
+    const cargarInfoMatricula = async (
+        matriculaId,
+        horas = ""
+    ) => {
+        if (!matriculaId) return;
+
+        try {
+            const queryHoras = horas
+                ? `&horas=${horas}`
+                : "";
+
+            const response = await api.get(
+                `/saldo/?matricula=${matriculaId}${queryHoras}`
+            );
+
+            setSaldoInfo(response.data);
+        } catch (error) {
+            console.error(
+                "Error cargando saldo:",
+                error
+            );
+
+            setSaldoInfo(null);
+        }
+    };
+
     const obtenerTotalCurso = (
         tipo = tipoCurso,
         horas = form.horas_reforzamiento
