@@ -30,20 +30,51 @@ function RecibosPage() {
         try {
             setLoading(true);
 
-            const response = await api.get("/recibo/");
-            const data = response.data;
+            let url = "/recibo/";
+            let todosLosRecibos = [];
 
-            console.log("📊 RECIBOS CARGADOS:", data);
+            while (url) {
+                const response = await api.get(url);
+                const data = response.data;
 
-            setRecibos(Array.isArray(data) ? data : data.results || []);
+                if (Array.isArray(data)) {
+                    todosLosRecibos = data;
+                    url = null;
+                } else {
+                    const pagina = Array.isArray(data.results)
+                        ? data.results
+                        : [];
+
+                    todosLosRecibos = [
+                        ...todosLosRecibos,
+                        ...pagina,
+                    ];
+
+                    url = data.next || null;
+                }
+            }
+
+            console.log(
+                "RECIBOS CARGADOS:",
+                todosLosRecibos.length
+            );
+
+            setRecibos(todosLosRecibos);
         } catch (error) {
-            console.error("Error cargando recibos:", error);
+            console.error(
+                "Error cargando recibos:",
+                error
+            );
 
             const mensaje =
                 error.response?.data?.detail ||
                 "No se pudieron cargar los recibos.";
 
-            Swal.fire("Error", mensaje, "error");
+            Swal.fire(
+                "Error",
+                mensaje,
+                "error"
+            );
         } finally {
             setLoading(false);
         }
