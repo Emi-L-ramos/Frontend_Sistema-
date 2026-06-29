@@ -400,8 +400,8 @@ function MatriculaPage() {
             const clasesEstudiante = calendario
                 .filter((cita) => {
                     const perteneceMatricula =
-                        String(cita.matricula) ===
-                        String(matricula.id);
+                        String(cita.matricula) === String(matricula.id) &&
+                        !cita.es_examen
 
                     const esExamen =
                         cita.es_examen === true ||
@@ -467,9 +467,12 @@ function MatriculaPage() {
         }
 
         const instructor =
-            claseInstructorActual?.instructor_nombre ||
             primeraClase?.instructor_nombre ||
             "Pendiente de asignación";
+
+        const telefonoInstructor =
+            primeraClase?.instructor_telefono ||
+            "No registrado";
 
         const fechaInicio = primeraClase?.fecha
             ? new Date(
@@ -491,10 +494,15 @@ function MatriculaPage() {
     Curso: ${getCurso(matricula)}
     Categoría: ${getCategoria(matricula)}
     Instructor: ${instructor}
+    Teléfono del instructor: ${telefonoInstructor}
     Inicio del curso: ${fechaInicio}
     Hora: ${horaInicio}
 
     Entra al siguiente enlace para poder acceder a tu cuenta, revisar tu calendario de clases, revisar el material de estudio y más: ${sistema}
+
+    Usuario:
+    Contraseña:
+
     Accede con tu usuario y contraseña que creaste al momento de matricularte. Si tienes alguna duda o necesitas ayuda, no dudes en contactarnos por este mismo medio.
 
     Esperamos que aproveches al máximo tus clases teóricas y prácticas!
