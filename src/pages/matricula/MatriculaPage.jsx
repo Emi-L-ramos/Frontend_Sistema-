@@ -387,35 +387,103 @@ function MatriculaPage() {
         }
 
         let primeraClase = null;
+        let claseInstructorActual = null;
 
         try {
             const response = await api.get("/calendario/");
             const result = response.data;
 
-            const calendario = Array.isArray(result) ? result : result.results || [];
+            const calendario = Array.isArray(result)
+                ? result
+                : result.results || [];
 
             const clasesEstudiante = calendario
-                .filter((cita) => String(cita.matricula) === String(matricula.id))
+                .filter((cita) => {
+                    const perteneceMatricula =
+                        String(cita.matricula) ===
+                        String(matricula.id);
+
+                    const esExamen =
+                        cita.es_examen === true ||
+                        cita.es_examen === 1 ||
+                        cita.es_examen === "true";
+
+                    const estado = String(
+                        cita.estado || ""
+                    ).toLowerCase();
+
+                    const estaCancelada = [
+                        "cancelada",
+                        "cancelado",
+                    ].includes(estado);
+
+                    return (
+                        perteneceMatricula &&
+                        !esExamen &&
+                        !estaCancelada
+                    );
+                })
                 .sort((a, b) => {
-                    const fechaA = `${a.fecha} ${a.hora_inicio || ""}`;
-                    const fechaB = `${b.fecha} ${b.hora_inicio || ""}`;
+                    const fechaA =
+                        `${a.fecha || ""} ${a.hora_inicio || ""}`;
+
+                    const fechaB =
+                        `${b.fecha || ""} ${b.hora_inicio || ""}`;
+
                     return fechaA.localeCompare(fechaB);
                 });
 
+            // Se conserva la primera clase para mostrar la fecha original de inicio del curso.
             primeraClase = clasesEstudiante[0] || null;
+
+            // El instructor se obtiene desde la primera clase pendiente o reprogramada.
+            claseInstructorActual =
+                clasesEstudiante.find((cita) => {
+                    const estado = String(
+                        cita.estado || ""
+                    ).toLowerCase();
+
+                    return [
+                        "pendiente",
+                        "reprogramada",
+                    ].includes(estado);
+                }) || null;
+
+            // Si ya no existen clases pendientes, se usa la última clase regular como respaldo.
+            if (
+                !claseInstructorActual &&
+                clasesEstudiante.length > 0
+            ) {
+                claseInstructorActual =
+                    clasesEstudiante[
+                        clasesEstudiante.length - 1
+                    ];
+            }
         } catch (error) {
-            console.error("Error obteniendo calendario para WhatsApp:", error);
+            console.error(
+                "Error obteniendo calendario para WhatsApp:",
+                error
+            );
         }
 
-        const instructor = primeraClase?.instructor_nombre || "Pendiente de asignación";
+        const instructor =
+            claseInstructorActual?.instructor_nombre ||
+            primeraClase?.instructor_nombre ||
+            "Pendiente de asignación";
 
         const fechaInicio = primeraClase?.fecha
-            ? new Date(primeraClase.fecha + "T00:00:00").toLocaleDateString("es-NI", {
+            ? new Date(
+                `${primeraClase.fecha}T00:00:00`
+            ).toLocaleDateString("es-NI", {
                 weekday: "long",
                 day: "numeric",
                 month: "long",
                 year: "numeric",
             })
+            : "Pendiente de asignación";
+
+        const horaInicio = primeraClase?.hora_inicio
+            ? primeraClase.hora_inicio.slice(0, 5)
             : "Pendiente de asignación";
 
         const horaInicio = primeraClase?.hora_inicio
