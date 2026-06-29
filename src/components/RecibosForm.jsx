@@ -152,20 +152,19 @@ function RecibosForm({ onSave, initialData }) {
         return () => clearTimeout(delay);
     }, [busquedaEstudiante, matriculaSeleccionada]);
 
-    const cargarInfoMatricula = async (matriculaId, horas = "") => {
-        if (!matriculaId) return;
+    const obtenerTotalCurso = (
+        tipo = tipoCurso,
+        horas = form.horas_reforzamiento
+    ) => {
+        const totalBackend = Number(
+            saldoInfo?.monto_total || 0
+        );
 
-        try {
-            const queryHoras = horas ? `&horas=${horas}` : "";
-
-            const response = await api.get(
-                `/saldo/?matricula=${matriculaId}${queryHoras}`
-            );
-
-            setSaldoInfo(response.data);
-        } catch (error) {
-            console.error("Error cargando saldo:", error);
+        if (totalBackend > 0) {
+            return redondearMonto(totalBackend);
         }
+
+        return calcularTotal(tipo, horas);
     };
 
     const seleccionarEstudiante = (matricula) => {
@@ -288,10 +287,29 @@ function RecibosForm({ onSave, initialData }) {
             };
 
             if (name === "tipo_pago") {
-                const totalActual = calcularTotal(tipoCurso, nuevoForm.horas_reforzamiento);
+                const totalActual = obtenerTotalCurso(
+                    tipoCurso,
+                    nuevoForm.horas_reforzamiento
+                );
+
+                const totalPagadoPrevio = Number(
+                    saldoInfo?.total_pagado || 0
+                );
+
+                const saldoPendiente = Number(
+                    saldoInfo?.saldo_pendiente || 0
+                );
 
                 if (value === "completo") {
-                    nuevoForm.monto_pagado = String(totalActual);
+                    const montoCompleto =
+                        totalPagadoPrevio > 0 &&
+                        saldoPendiente > 0
+                            ? redondearMonto(saldoPendiente)
+                            : totalActual;
+
+                    nuevoForm.monto_pagado = String(
+                        montoCompleto
+                    );
                 } else if (value === "beneficio") {
                     nuevoForm.monto_pagado = "0";
                 } else {
@@ -320,6 +338,8 @@ function RecibosForm({ onSave, initialData }) {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
+
+        const isEditing = !!initialData?.id;
 
         if (!form.matricula) {
             Swal.fire("Error", "Debe seleccionar un estudiante", "error");
@@ -352,7 +372,7 @@ function RecibosForm({ onSave, initialData }) {
             return;
         }
 
-        const totalCurso = calcularTotal();
+        const totalCurso = obtenerTotalCurso();
         const monto = parseFloat(form.monto_pagado || 0);
 
         if (form.tipo_pago !== "beneficio" && (!monto || monto <= 0)) {
@@ -368,56 +388,104 @@ function RecibosForm({ onSave, initialData }) {
         }
 
         if (form.tipo_pago === "completo") {
-            if (Math.round(monto) !== Math.round(totalCurso)) {
+            const totalPagadoPrevio = Number(
+                saldoInfo?.total_pagado || 0
+            );
+
+            const saldoPendiente = Number(
+                saldoInfo?.saldo_pendiente || 0
+            );
+
+            const montoEsperado =
+                totalPagadoPrevio > 0 &&
+                saldoPendiente > 0
+                    ? redondearMonto(saldoPendiente)
+                    : totalCurso;
+
+            const montoCoincide =
+                Math.round(monto) ===
+                Math.round(montoEsperado);
+
+            const esReciboAntiguoParaReparar =
+                isEditing &&
+                Number(
+                    saldoInfo?.cantidad_pagos || 0
+                ) > 1 &&
+                Number(
+                    saldoInfo?.total_pagado || 0
+                ) >= Number(
+                    saldoInfo?.monto_total || totalCurso
+                );
+
+            if (
+                !montoCoincide &&
+                !esReciboAntiguoParaReparar
+            ) {
                 Swal.fire(
                     "Error",
-                    `Para pago completo el monto debe ser C$${totalCurso}`,
+                    `El monto requerido es C$${montoEsperado}`,
                     "error"
                 );
+
                 setLoading(false);
                 return;
             }
         }
 
-        if (form.tipo_pago === "anticipo" && monto >= totalCurso) {
-    Swal.fire(
-        "Monto inválido",
-        `Un anticipo no puede ser igual ni mayor al total del curso. Si pagará C$${totalCurso}, seleccione pago completo.`,
-        "error"
-    );
-    setLoading(false);
-    return;
-}
-
-    if (form.tipo_pago === "anticipo" && saldoInfo) {
-        const saldoPendiente = parseFloat(saldoInfo.saldo_pendiente || 0);
-
-        if (saldoPendiente <= 0) {
+        if (
+            !isEditing &&
+            form.tipo_pago === "anticipo" &&
+            monto >= totalCurso
+        ) {
             Swal.fire(
-                "Matrícula pagada",
-                "Esta matrícula ya fue pagada completamente.",
-                "warning"
+                "Monto inválido",
+                `Un anticipo no puede ser igual ni mayor al total del curso. Si pagará C$${totalCurso}, seleccione pago completo.`,
+                "error"
             );
+
             setLoading(false);
             return;
         }
 
-        if (monto > saldoPendiente) {
-            
-            const totalPagadoPrevio = Number(saldoInfo.total_pagado || 0);
+        if (
+            !isEditing &&
+            form.tipo_pago === "anticipo" &&
+            saldoInfo
+        ) {
+            const saldoPendiente = Number(
+                saldoInfo.saldo_pendiente || 0
+            );
 
-            if (totalPagadoPrevio > 0 && Math.round(monto) !== Math.round(saldoPendiente)) {
+            const totalPagadoPrevio = Number(
+                saldoInfo.total_pagado || 0
+            );
+
+            if (saldoPendiente <= 0) {
+                Swal.fire(
+                    "Matrícula pagada",
+                    "Esta matrícula ya fue pagada completamente.",
+                    "warning"
+                );
+
+                setLoading(false);
+                return;
+            }
+
+            if (
+                totalPagadoPrevio > 0 &&
+                Math.round(monto) !==
+                Math.round(saldoPendiente)
+            ) {
                 Swal.fire(
                     "Monto incorrecto",
                     `El segundo anticipo debe ser exactamente el saldo pendiente: C$${Math.round(saldoPendiente)}.`,
                     "error"
                 );
+
                 setLoading(false);
                 return;
             }
         }
-    }
-        const isEditing = !!initialData?.id;
 
         const montoFinal = parseFloat(form.monto_pagado || 0);
 
@@ -484,7 +552,7 @@ function RecibosForm({ onSave, initialData }) {
         }
     };
 
-    const totalCurso = calcularTotal();
+    const totalCurso = obtenerTotalCurso();
     const horasActuales =
         tipoCurso === "principiante"
             ? Number(valorCursoActual?.cantidad_horas || form.cantidad || 0)
