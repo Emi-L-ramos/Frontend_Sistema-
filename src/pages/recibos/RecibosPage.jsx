@@ -16,6 +16,9 @@ import { CiEdit } from "react-icons/ci";
 import { FiX } from "react-icons/fi";
 import api from "../../api/axios";
 
+const redondearMonto = (valor) =>
+    Math.round(Number(valor || 0));
+
 function RecibosPage() {
     const [recibos, setRecibos] = useState([]);
     const [busqueda, setBusqueda] = useState("");
@@ -95,10 +98,18 @@ function RecibosPage() {
     });
 
     // Calcular totales
-    const totalIngresos = recibos.reduce((acc, r) => {
-        const monto = parseFloat(r.monto_cordobas) || parseFloat(r.monto_pagado) || 0;
-        return acc + monto;
-    }, 0);
+    const totalIngresos = recibos.reduce(
+        (acumulado, recibo) => {
+            const monto = redondearMonto(
+                recibo.monto_pagado ??
+                recibo.monto_cordobas ??
+                0
+            );
+
+            return acumulado + monto;
+        },
+        0
+    );
     
     const mesActual = new Date().getMonth();
     const anioActual = new Date().getFullYear();
@@ -114,10 +125,18 @@ function RecibosPage() {
         );
     });
     
-    const totalMes = recibosMes.reduce((acc, r) => {
-        const monto = parseFloat(r.monto_cordobas) || parseFloat(r.monto_pagado) || 0;
-        return acc + monto;
-    }, 0);
+    const totalMes = recibosMes.reduce(
+        (acumulado, recibo) => {
+            const monto = redondearMonto(
+                recibo.monto_cordobas ??
+                recibo.monto_pagado ??
+                0
+            );
+
+            return acumulado + monto;
+        },
+        0
+    );
     
     const formatearFecha = (fecha) => {
         if (!fecha) return "N/A";
@@ -157,7 +176,11 @@ function RecibosPage() {
             'Estudiante': recibo.estudiante_nombre || `${recibo.matricula_data?.estudiante_nombre || ''} ${recibo.matricula_data?.estudiante_apellido || ''}`.trim(),
             'Cédula': recibo.estudiante_cedula || recibo.matricula_data?.estudiante_cedula || 'N/A',
             'Tipo de Pago': obtenerEstado(recibo),
-            'Monto (C$)': parseFloat(recibo.monto_pagado || recibo.monto_cordobas || 0).toFixed(2),
+            'Monto (C$)': redondearMonto(
+                recibo.monto_pagado ??
+                recibo.monto_cordobas ??
+                0
+            ),
             'Método de Pago': recibo.metodo_pago || 'Efectivo',
             'Observaciones': recibo.observaciones || ''
         }));
@@ -201,7 +224,7 @@ function RecibosPage() {
                                 </p>
 
                                 <h2 className="mt-2 text-2xl font-black text-emerald-600">
-                                    C${totalMes.toFixed(2)}
+                                    C${redondearMonto(totalMes).toLocaleString("es-NI")}
                                 </h2>
 
                                 <p className="mt-2 text-sm font-medium text-slate-500">
@@ -233,7 +256,7 @@ function RecibosPage() {
                                 </h2>
 
                                 <p className="mt-2 text-sm font-medium text-slate-500">
-                                    Total: C${totalMes.toFixed(2)}
+                                    Total: C${redondearMonto(totalMes).toLocaleString("es-NI")}
                                 </p>
                             </div>
                         </div>
@@ -257,7 +280,7 @@ function RecibosPage() {
                                 </p>
 
                                 <h2 className="mt-2 text-2xl font-black text-emerald-600">
-                                    C${totalIngresos.toFixed(2)}
+                                    C${redondearMonto(totalIngresos).toLocaleString("es-NI")}
                                 </h2>
 
                                 <p className="mt-2 text-sm font-medium text-slate-500">
@@ -381,7 +404,11 @@ function RecibosPage() {
                                             </td>
 
                                             <td className="px-5 py-4 whitespace-nowrap font-black text-emerald-600">
-                                                C${parseFloat(r.monto_pagado || r.monto_cordobas || 0).toFixed(2)}
+                                                C${redondearMonto(
+                                                    r.monto_pagado ??
+                                                    r.monto_cordobas ??
+                                                    0
+                                                ).toLocaleString("es-NI")}
                                             </td>
 
                                             <td className="px-5 py-4">
