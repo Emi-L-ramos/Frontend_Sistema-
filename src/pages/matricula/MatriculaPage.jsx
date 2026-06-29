@@ -486,10 +486,6 @@ function MatriculaPage() {
             ? primeraClase.hora_inicio.slice(0, 5)
             : "Pendiente de asignación";
 
-        const horaInicio = primeraClase?.hora_inicio
-            ? primeraClase.hora_inicio.slice(0, 5)
-            : "Pendiente de asignación";
-
         const mensaje = `Hola ${getNombre(matricula)}, tu matrícula ha sido registrada exitosamente.
 
     Curso: ${getCurso(matricula)}
