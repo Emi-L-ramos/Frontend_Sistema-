@@ -1,5 +1,5 @@
 // src/api/calendario.js
-const API_URL = "https://esesaemca.cloud/api";
+const API_URL = import.meta.env.VITE_API_URL || "/api";
 
 const getHeaders = () => {
   const token = localStorage.getItem("token");
