@@ -328,13 +328,24 @@ export default function Asistencia({ userRole }) {
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState("");
 
-  const cargar = async () => {
-    setCargando(true);
+  const cargar = async (
+    mostrarIndicador = true
+  ) => {
+    if (mostrarIndicador) {
+      setCargando(true);
+    }
+
     setError("");
 
     try {
-      const res = await listarAsistencia(fechaInicio, fechaFin);
-      setDatos(Array.isArray(res) ? res : []);
+      const res = await listarAsistencia(
+        fechaInicio,
+        fechaFin
+      );
+
+      setDatos(
+        Array.isArray(res) ? res : []
+      );
     } catch (e) {
       setError(
         e?.response?.data?.error ||
@@ -342,7 +353,9 @@ export default function Asistencia({ userRole }) {
           "Error al cargar asistencia"
       );
     } finally {
-      setCargando(false);
+      if (mostrarIndicador) {
+        setCargando(false);
+      }
     }
   };
 
@@ -476,7 +489,11 @@ const obtenerDetalleKilometraje = (estudiante) => {
     return "Sin marcar";
   };
 
-  const handleMarcar = async (calendarioId, estado, km_inicial = null) => {
+  const handleMarcar = async (
+    calendarioId,
+    estado,
+    km_inicial = null
+  ) => {
     setError("");
 
     try {
@@ -486,19 +503,131 @@ const obtenerDetalleKilometraje = (estudiante) => {
         km_inicial,
       });
 
-      await cargar();
-      await cargarResumenKm();
+      // Actualiza los datos sin bloquear
+      // el cierre de la ventana.
+      void Promise.all([
+        cargar(false),
+        cargarResumenKm(),
+      ]);
+
+      return true;
     } catch (e) {
       setError(
         e?.response?.data?.error ||
           e?.message ||
           "No se pudo marcar la asistencia"
       );
+
+      return false;
     }
   };
 
   const confirmarKmInicial = async () => {
-    if (!modalKmInicio) return;
+    if (!modalKmInicio || guardando) return;
+
+    if (kmInicial === "") {
+      setError(
+        "Debe ingresar el km inicial."
+      );
+      return;
+    }
+
+    const inicial = Number(kmInicial);
+
+    if (!Number.isFinite(inicial)) {
+      setError(
+        "El km inicial debe ser numérico."
+      );
+      return;
+    }
+
+    setGuardando(true);
+
+    try {
+      const guardado = await handleMarcar(
+        modalKmInicio.id,
+        "asistio",
+        inicial
+      );
+
+      if (!guardado) return;
+
+      setModalKmInicio(null);
+      setKmInicial("");
+    } finally {
+      setGuardando(false);
+    }
+  };
+
+  const abrirEditarKm = (data) => {
+    setModalEditarKm(data);
+    setKmInicial(data.km_inicial ?? "");
+    setKmFinal(data.km_final ?? "");
+  };
+
+  const confirmarKmFinal = async () => {
+    if (!modalKmFinal || guardando) return;
+
+    if (kmFinal === "") {
+      setError(
+        "Debe ingresar el km final."
+      );
+      return;
+    }
+
+    const final = Number(kmFinal);
+    const inicial = Number(
+      modalKmFinal.km_inicial
+    );
+
+    if (!Number.isFinite(final)) {
+      setError(
+        "El km final debe ser numérico."
+      );
+      return;
+    }
+
+    if (final < inicial) {
+      setError(
+        "El km final no puede ser menor "
+        + "al inicial."
+      );
+      return;
+    }
+
+    setGuardando(true);
+    setError("");
+
+    try {
+      await finalizarKilometraje({
+        asistencia_id:
+          modalKmFinal.asistencia_id,
+        km_final: final,
+      });
+
+      // Primero cierra la ventana.
+      setModalKmFinal(null);
+      setKmFinal("");
+
+      // Después actualiza en segundo plano.
+      void Promise.all([
+        cargar(false),
+        cargarResumenKm(),
+      ]);
+    } catch (e) {
+      setError(
+        e?.response?.data?.error ||
+          e?.message ||
+          "No se pudo finalizar "
+            + "el kilometraje"
+      );
+    } finally {
+      setGuardando(false);
+    }
+  };
+
+  const confirmarEditarKm = async () => {
+    if (!modalEditarKm) return;
 
     if (kmInicial === "") {
       setError("Debe ingresar el km inicial.");
@@ -512,102 +641,40 @@ const obtenerDetalleKilometraje = (estudiante) => {
       return;
     }
 
-    await handleMarcar(modalKmInicio.id, "asistio", inicial);
+    let final = "";
 
-    setModalKmInicio(null);
-    setKmInicial("");
-  };
+    if (kmFinal !== "") {
+      final = Number(kmFinal);
 
-  const abrirEditarKm = (data) => {
-  setModalEditarKm(data);
-  setKmInicial(data.km_inicial ?? "");
-  setKmFinal(data.km_final ?? "");
-};
+      if (Number.isNaN(final)) {
+        setError("El km final debe ser numérico.");
+        return;
+      }
 
-const confirmarEditarKm = async () => {
-  if (!modalEditarKm) return;
-
-  if (kmInicial === "") {
-    setError("Debe ingresar el km inicial.");
-    return;
-  }
-
-  const inicial = Number(kmInicial);
-
-  if (Number.isNaN(inicial)) {
-    setError("El km inicial debe ser numérico.");
-    return;
-  }
-
-  let final = "";
-
-  if (kmFinal !== "") {
-    final = Number(kmFinal);
-
-    if (Number.isNaN(final)) {
-      setError("El km final debe ser numérico.");
-      return;
-    }
-
-    if (final < inicial) {
-      setError("El km final no puede ser menor al inicial.");
-      return;
-    }
-  }
-
-  try {
-    await editarKilometraje({
-      asistencia_id: modalEditarKm.asistencia_id,
-      km_inicial: inicial,
-      km_final: final,
-    });
-
-    await cargar();
-    await cargarResumenKm();
-
-    setModalEditarKm(null);
-    setKmInicial("");
-    setKmFinal("");
-  } catch (e) {
-    setError(
-      e?.response?.data?.error ||
-        e?.message ||
-        "No se pudo editar el kilometraje"
-    );
-  }
-};
-
-  const confirmarKmFinal = async () => {
-    if (!modalKmFinal) return;
-
-    if (kmFinal === "") {
-      setError("Debe ingresar el km final.");
-      return;
-    }
-
-    const final = Number(kmFinal);
-
-    if (Number.isNaN(final)) {
-      setError("El km final debe ser numérico.");
-      return;
+      if (final < inicial) {
+        setError("El km final no puede ser menor al inicial.");
+        return;
+      }
     }
 
     try {
-      await finalizarKilometraje({
-        asistencia_id: modalKmFinal.asistencia_id,
+      await editarKilometraje({
+        asistencia_id: modalEditarKm.asistencia_id,
+        km_inicial: inicial,
         km_final: final,
       });
 
       await cargar();
       await cargarResumenKm();
 
-      setModalKmFinal(null);
+      setModalEditarKm(null);
+      setKmInicial("");
       setKmFinal("");
     } catch (e) {
       setError(
         e?.response?.data?.error ||
           e?.message ||
-          "No se pudo finalizar el kilometraje"
+          "No se pudo editar el kilometraje"
       );
     }
   };
@@ -855,9 +922,6 @@ const calcularKmRecorrido = (item) => {
 const totalKmSeleccionado = detalleKmSeleccionado.reduce((total, item) => {
   return total + calcularKmRecorrido(item);
 }, 0);
-console.log("ESTUDIANTE MODAL:", modalDetalleEstudiante);
-console.log("DETALLE KM:", detalleKmSeleccionado);
-console.log("TOTAL KM:", totalKmSeleccionado);
 
 const totalClasesKmSeleccionado = detalleKmSeleccionado.filter((item) => {
   const tieneKmInicial =
@@ -1431,9 +1495,12 @@ const totalClasesKmSeleccionado = detalleKmSeleccionado.filter((item) => {
               <button
                 type="button"
                 onClick={confirmarKmInicial}
+                disabled={guardando}
                 className="flex-1 bg-blue-600 hover:bg-blue-700 text-white rounded-xl py-2.5 text-sm font-semibold"
               >
-                Guardar inicio
+                {guardando
+                  ? "Guardando..."
+                  : "Guardar inicio"}
               </button>
             </div>
           </div>
@@ -1486,9 +1553,12 @@ const totalClasesKmSeleccionado = detalleKmSeleccionado.filter((item) => {
               <button
                 type="button"
                 onClick={confirmarKmFinal}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white rounded-xl py-2.5 text-sm font-semibold"
+                disabled={guardando}
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white rounded-xl py-2.5 text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Guardar final
+                {guardando
+                  ? "Guardando..."
+                  : "Guardar final"}
               </button>
             </div>
           </div>

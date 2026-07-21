@@ -32,6 +32,7 @@ function MatriculaForm({ initialData, onSave, onError }) {
         { value: "08AM", label: "08:00 AM" },
         { value: "10AM", label: "10:00 AM" },
         { value: "12PM", label: "12:00 PM" },
+        { value: "02PM", label: "02:00 PM"},
         { value: "04PM", label: "04:00 PM" },
     ];
 
@@ -170,67 +171,66 @@ function MatriculaForm({ initialData, onSave, onError }) {
             }));
         }
     };
+
     const validarFormulario = () => {
-
-     if (
-        ["Intermedio", "Avanzado"].includes(formData.tipo_curso) &&
-        !formData.horas_reforzamiento
-    ) {
-        Swal.fire(
-            "Campo requerido",
-            "Debe seleccionar las horas de reforzamiento.",
-            "warning"
-        );
-        return false;
-    }
-
-    if (
-        ["Intermedio", "Avanzado"].includes(formData.tipo_curso) &&
-        formData.incluye_examen_policial &&
-        Number(formData.horas_reforzamiento) < 3
-    ) {
-        Swal.fire(
-            "Horas insuficientes",
-            "Para incluir el examen policial debe seleccionar al menos 3 horas.",
-            "warning"
-        );
-        return false;
-    }
-
-    return true;
-
         if (!formData.estudiante) {
-            Swal.fire("Campo requerido", "Debe seleccionar un estudiante.", "warning");
+            Swal.fire(
+                "Campo requerido",
+                "Debe seleccionar un estudiante.",
+                "warning"
+            );
             return false;
         }
 
         if (!formData.modalidad) {
-            Swal.fire("Campo requerido", "Debe seleccionar la modalidad.", "warning");
+            Swal.fire(
+                "Campo requerido",
+                "Debe seleccionar la modalidad.",
+                "warning"
+            );
             return false;
         }
 
         if (!formData.horario) {
-            Swal.fire("Campo requerido", "Debe seleccionar el horario.", "warning");
+            Swal.fire(
+                "Campo requerido",
+                "Debe seleccionar el horario.",
+                "warning"
+            );
             return false;
         }
 
         if (!formData.tipo_curso) {
-            Swal.fire("Campo requerido", "Debe seleccionar el tipo de curso.", "warning");
+            Swal.fire(
+                "Campo requerido",
+                "Debe seleccionar el tipo de curso.",
+                "warning"
+            );
             return false;
         }
 
         if (!formData.categoria) {
-            Swal.fire("Campo requerido", "Debe seleccionar la categoría.", "warning");
+            Swal.fire(
+                "Campo requerido",
+                "Debe seleccionar la categoría.",
+                "warning"
+            );
             return false;
         }
 
         if (!formData.aparicion) {
-            Swal.fire("Campo requerido", "Debe seleccionar cómo se enteró.", "warning");
+            Swal.fire(
+                "Campo requerido",
+                "Debe seleccionar cómo se enteró.",
+                "warning"
+            );
             return false;
         }
 
         if (
-            ["Intermedio", "Avanzado"].includes(formData.tipo_curso) &&
+            ["Intermedio", "Avanzado"].includes(
+                formData.tipo_curso
+            ) &&
             !formData.horas_reforzamiento
         ) {
             Swal.fire(
@@ -241,9 +241,27 @@ function MatriculaForm({ initialData, onSave, onError }) {
             return false;
         }
 
+        if (
+            ["Intermedio", "Avanzado"].includes(
+                formData.tipo_curso
+            ) &&
+            formData.incluye_examen_policial &&
+            Number(formData.horas_reforzamiento) < 3
+        ) {
+            Swal.fire(
+                "Horas insuficientes",
+                (
+                    "Para incluir el examen policial debe "
+                    + "seleccionar al menos 3 horas."
+                ),
+                "warning"
+            );
+            return false;
+        }
+
         return true;
     };
-
+    
     const handleSubmit = async (e) => {
         e.preventDefault();
 

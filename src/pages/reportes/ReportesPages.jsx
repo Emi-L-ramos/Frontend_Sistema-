@@ -14,11 +14,25 @@ import {
 import Swal from "sweetalert2";
 import * as XLSX from "xlsx";
 import api from "../../api/axios";
-import { useAuth } from "../../context/AuthContext";
+
+const escaparHtml = (valor) => {
+    return String(valor ?? "").replace(
+        /[&<>"']/g,
+        (caracter) => {
+            const equivalencias = {
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                '"': "&quot;",
+                "'": "&#039;",
+            };
+
+            return equivalencias[caracter];
+        }
+    );
+};
 
 function ReportesPages() {
-    const { user } = useAuth();
-
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filtroEdad, setFiltroEdad] = useState("");
@@ -94,8 +108,6 @@ function ReportesPages() {
             const response = await api.get("/recibo/");
             const result = response.data;
 
-            console.log("RECIBOS CARGADOS:", result);
-
             const lista = Array.isArray(result)
                 ? result
                 : Array.isArray(result.results)
@@ -109,12 +121,6 @@ function ReportesPages() {
         }
     };
 
-    useEffect(() => {
-        fetchMatriculas();
-        fetchRecibos();
-        cargarInstructores();
-    }, []);
-
     const cargarInstructores = async () => {
         try {
             const response = await api.get("/instructores/");
@@ -126,6 +132,12 @@ function ReportesPages() {
             setInstructores([]);
         }
     };
+
+    useEffect(() => {
+        fetchMatriculas();
+        fetchRecibos();
+        cargarInstructores();
+    }, []);
 
     const datosPorEdad = (() => {
         if (!filtroEdad) return data;
@@ -312,6 +324,18 @@ function ReportesPages() {
 
         const ventanaImpresion = window.open("", "_blank");
 
+        if (!ventanaImpresion) {
+            Swal.fire(
+                "Ventana bloqueada",
+                (
+                    "El navegador bloqueó la ventana de impresión. "
+                    + "Permita las ventanas emergentes e inténtelo nuevamente."
+                ),
+                "warning"
+            );
+            return;
+        }
+
         ventanaImpresion.document.write(`
             <html>
                 <head>
@@ -381,13 +405,13 @@ function ReportesPages() {
                                 .map(
                                     (item) => `
                                     <tr>
-                                        <td>${getNombre(item)}</td>
-                                        <td>${getCedula(item)}</td>
-                                        <td>${getEdad(item)}</td>
-                                        <td>${getSexo(item)}</td>
-                                        <td>${getTelefono(item)}</td>
-                                        <td>${getCategoria(item)}</td>
-                                        <td>${getCurso(item)}</td>
+                                        <td>${escaparHtml(getNombre(item))}</td>
+                                        <td>${escaparHtml(getCedula(item))}</td>
+                                        <td>${escaparHtml(getEdad(item))}</td>
+                                        <td>${escaparHtml(getSexo(item))}</td>
+                                        <td>${escaparHtml(getTelefono(item))}</td>
+                                        <td>${escaparHtml(getCategoria(item))}</td>
+                                        <td>${escaparHtml(getCurso(item))}</td>
                                         <td>${
                                             item.estado === "matriculado"
                                                 ? "Matriculado"
@@ -430,6 +454,18 @@ function ReportesPages() {
 
         const ventanaImpresion = window.open("", "_blank");
 
+        if (!ventanaImpresion) {
+            Swal.fire(
+                "Ventana bloqueada",
+                (
+                    "El navegador bloqueó la ventana de impresión. "
+                    + "Permita las ventanas emergentes e inténtelo nuevamente."
+                ),
+                "warning"
+            );
+            return;
+        }
+
         ventanaImpresion.document.write(`
             <html>
                 <head>
@@ -452,9 +488,11 @@ function ReportesPages() {
 
                     <div class="datos">
                         <p>
-                            <strong>Desde:</strong> ${fechaDesde || "Inicio"}
+                            <strong>Desde:</strong>
+                            ${escaparHtml(fechaDesde || "Inicio")}
                             &nbsp;&nbsp;
-                            <strong>Hasta:</strong> ${fechaHasta || "Fin"}
+                            <strong>Hasta:</strong>
+                            ${escaparHtml(fechaHasta || "Fin")}
                         </p>
 
                         <p><strong>Fecha de generación:</strong> ${new Date().toLocaleString()}</p>
@@ -479,12 +517,12 @@ function ReportesPages() {
                                 .map(
                                     (item) => `
                                     <tr>
-                                        <td>${getFechaMatricula(item)}</td>
-                                        <td>${getNombre(item)}</td>
-                                        <td>${getCedula(item)}</td>
-                                        <td>${getEdad(item)}</td>
-                                        <td>${getCategoria(item)}</td>
-                                        <td>${getCurso(item)}</td>
+                                        <td>${escaparHtml(getFechaMatricula(item))}</td>
+                                        <td>${escaparHtml(getNombre(item))}</td>
+                                        <td>${escaparHtml(getCedula(item))}</td>
+                                        <td>${escaparHtml(getEdad(item))}</td>
+                                        <td>${escaparHtml(getCategoria(item))}</td>
+                                        <td>${escaparHtml(getCurso(item))}</td>
                                         <td>${
                                             item.estado === "matriculado"
                                                 ? "Matriculado"
@@ -623,16 +661,34 @@ function ReportesPages() {
             const filas = data.estudiantes.map((item, index) => `
                 <tr>
                     <td>${index + 1}</td>
-                    <td>${item.estudiante || ""}</td>
-                    <td>${item.fecha || ""}</td>
-                    <td>${item.numero_recibo || ""}</td>
-                    <td>${item.codigo_egreso || ""}</td>
-                    <td>C$ ${Number(item.cobro || 0).toLocaleString()}</td>
-                    <td>${item.observaciones || ""}</td>
+                    <td>${escaparHtml(item.estudiante || "")}</td>
+                    <td>
+                        ${escaparHtml(item.fecha_matricula || "")}
+                    </td>
+                    <td>
+                        ${escaparHtml(item.fecha_finalizacion || "")}
+                    </td>
+                    <td>${escaparHtml(item.numero_recibo || "")}</td>
+                    <td>
+                        C$ ${Number(item.cobro || 0).toLocaleString()}
+                    </td>
+                    <td>${escaparHtml(item.observaciones || "")}</td>
                 </tr>
             `).join("");
 
             const ventana = window.open("", "_blank");
+
+            if (!ventana) {
+                Swal.fire(
+                    "Ventana bloqueada",
+                    (
+                        "El navegador bloqueó la ventana de impresión. "
+                        + "Permita las ventanas emergentes e inténtelo nuevamente."
+                    ),
+                    "warning"
+                );
+                return;
+            }
 
             ventana.document.write(`
                 <html>
@@ -649,10 +705,11 @@ function ReportesPages() {
                             }
 
                             .page {
+                                position: relative;
                                 width: 8.5in;
                                 min-height: 11in;
                                 margin: 0 auto;
-                                padding: 35px 45px;
+                                padding: 35px 45px 100px 45px;
                                 box-sizing: border-box;
                                 display: flex;
                                 flex-direction: column;
@@ -739,28 +796,49 @@ function ReportesPages() {
                             }
 
                             .firmas {
-                                display: flex;
-                                justify-content: space-between;
-                                gap: 70px;
-                                margin-top: 35px;
+                                display: grid;
+                                grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+                                column-gap: 100px;
+                                align-items: start;
+                                margin-top: 45px;
+                                break-inside: avoid;
+                                page-break-inside: avoid;
                             }
 
                             .firma {
-                                width: 45%;
+                                width: 100%;
                                 text-align: center;
                                 font-size: 12px;
-                                border-top: 1px solid #000;
-                                padding-top: 6px;
+                                line-height: 1.35;
+                            }
+
+                            .linea-firma {
+                                width: 100%;
+                                margin-bottom: 8px;
+                                border-top: 1.5px solid #000;
+                            }
+
+                            .nombre-firma {
+                                font-weight: bold;
+                            }
+
+                            .cargo-firma {
+                                margin-top: 2px;
+                                font-weight: bold;
                             }
 
                             .footer {
-                                margin-top: auto;
+                                position: fixed;
+                                right: 45px;
+                                bottom: 18px;
+                                left: 45px;
                                 border-top: 2px solid #222;
                                 padding-top: 8px;
                                 text-align: center;
                                 font-size: 10px;
                                 line-height: 1.35;
                                 font-weight: bold;
+                                background: #ffffff;
                             }
 
                             @media print {
@@ -771,7 +849,13 @@ function ReportesPages() {
                                 .page {
                                     width: 8.5in;
                                     min-height: 11in;
-                                    padding: 30px 40px;
+                                    padding: 30px 40px 95px 40px;
+                                }
+
+                                .footer {
+                                    right: 40px;
+                                    bottom: 15px;
+                                    left: 40px;
                                 }
                             }
                         </style>
@@ -792,12 +876,12 @@ function ReportesPages() {
                             </div>
 
                             <div class="fecha">
-                                León, ${data.fecha_emision || ""}
+                                León, ${escaparHtml(data.fecha_emision || "")}
                             </div>
 
                             <div class="destinatario">
                                 <p>Licenciado</p>
-                                <p><strong>${data.firmas?.gerente_nombre || ""}</strong></p>
+                                <p><strong>${escaparHtml(data.firmas?.gerente_nombre || "")}
                                 <p>Gerente General de ESESA.</p>
                                 <p>Sus Manos.</p>
                             </div>
@@ -806,21 +890,27 @@ function ReportesPages() {
 
                             <p class="parrafo">
                                 De la manera más atenta le solicito la autorización para el pago por los servicios 
-                                de inducción en la Escuela de Manejo Cacique Adiact, prestados por el instructor
-                                <strong>${data.instructor?.nombre || ""}</strong>, durante el período comprendido
-                                del <strong>${data.fecha_desde || "inicio"}</strong> al
-                                <strong>${data.fecha_hasta || "actual"}</strong>. La inducción les fue impartida
-                                a los siguientes estudiantes de dicha Escuela:
+                                de Inducción en la Escuela de Manejo Cacique Adiact, prestados por el instructor
+                                <strong>
+                                    ${escaparHtml(data.instructor?.nombre || "")},
+                                </strong> durante el período comprendido
+                                del <strong>
+                                    ${escaparHtml(data.fecha_desde || "inicio")}
+                                </strong> al
+                                <strong>
+                                    ${escaparHtml(data.fecha_hasta || "actual")}.
+                                </strong> La Inducción les fue impartida a los siguientes estudiantes de dicha 
+                                Escuela:
                             </p>
 
                             <table>
                                 <thead>
                                     <tr>
-                                        <th>No.</th>
+                                        <th>N°</th>
                                         <th>Alumnos Atendidos<br/>Nombres y Apellidos</th>
-                                        <th>Fecha</th>
-                                        <th>No. Recibo</th>
-                                        <th>Código de Egreso</th>
+                                        <th>Fecha de<br/>Matrícula</th>
+                                        <th>Fecha de<br/>Finalización</th>
+                                        <th>N° de Factura</th>
                                         <th>Cobro por Alumno</th>
                                         <th>Observaciones</th>
                                     </tr>
@@ -840,23 +930,37 @@ function ReportesPages() {
                                 éxitos en sus funciones.
                             </p>
 
+                            <br/>
                             <p class="despedida">
                                 De usted, 
                                 
                                 Muy atentamente.
                             </p>
 
+                            <br/><br/><br/>
                             <div class="firmas">
                                 <div class="firma">
                                     <div class="linea-firma"></div>
-                                    <strong>${data.instructor?.nombre || ""}</strong><br>
-                                    Instructor de Manejo
+
+                                    <div class="nombre-firma">
+                                        ${escaparHtml(data.instructor?.nombre || "")}
+                                    </div>
+
+                                    <div class="cargo-firma">
+                                        Instructor de Manejo
+                                    </div>
                                 </div>
 
                                 <div class="firma">
                                     <div class="linea-firma"></div>
-                                    <strong>${data.firmas?.director_nombre || ""}</strong><br>
-                                    Director Inst. Formación y Capacitación.
+
+                                    <div class="nombre-firma">
+                                        ${escaparHtml(data.firmas?.director_nombre || "")}
+                                    </div>
+
+                                    <div class="cargo-firma">
+                                        Director Inst. Formación y Capacitación
+                                    </div>
                                 </div>
                             </div>
 
@@ -1007,12 +1111,12 @@ function ReportesPages() {
         }
     };
 
-    const descargarCertificadosWord = async () => {
+    const descargarCertificadosPowerPoint = async () => {
         try {
             if (!fechaCertificadoDesde || !fechaCertificadoHasta) {
                 Swal.fire(
                     "Fechas requeridas",
-                    "Debe seleccionar la fecha desde y la fecha hasta para generar el Word.",
+                    "Debe seleccionar la fecha desde y la fecha hasta para generar el PowerPoint.",
                     "info"
                 );
                 return;
@@ -1023,7 +1127,7 @@ function ReportesPages() {
             params.append("hasta", fechaCertificadoHasta);
 
             const response = await api.get(
-                `/certificados-egresados-word/?${params.toString()}`,
+                `/certificados-egresados-powerpoint/?${params.toString()}`,
                 {
                     responseType: "blob",
                     validateStatus: () => true,
@@ -1037,7 +1141,7 @@ function ReportesPages() {
 
                 Swal.fire(
                     "Error",
-                    errorText || "No se pudo generar el Word de certificados.",
+                    errorText || "No se pudo generar el PowerPoint de certificados.",
                     "error"
                 );
                 return;
@@ -1048,7 +1152,7 @@ function ReportesPages() {
 
             const a = document.createElement("a");
             a.href = url;
-            a.download = `certificados_${fechaCertificadoDesde}_${fechaCertificadoHasta}.docx`;
+            a.download = `certificados_${fechaCertificadoDesde}_${fechaCertificadoHasta}.pptx`;
 
             document.body.appendChild(a);
             a.click();
@@ -1057,7 +1161,7 @@ function ReportesPages() {
             window.URL.revokeObjectURL(url);
 
             Swal.fire(
-                "Word generado",
+                "PowerPoint generado",
                 "Los certificados fueron descargados correctamente.",
                 "success"
             );
@@ -1135,7 +1239,7 @@ function ReportesPages() {
                                     </h2>
 
                                     <p className="text-sm text-slate-500 mt-1">
-                                        Genera certificados Word para estudiantes egresados del curso principiante con nota teórica y práctica mayor o igual a 80.
+                                        Genera certificados PowerPoint para estudiantes egresados del curso principiante con nota teórica y práctica mayor o igual a 80.
                                     </p>
                                 </div>
                             </div>
@@ -1176,11 +1280,11 @@ function ReportesPages() {
                                     </button>
 
                                     <button
-                                        onClick={descargarCertificadosWord}
+                                        onClick={descargarCertificadosPowerPoint}
                                         className="w-full h-12 rounded-2xl bg-amber-600 text-white font-bold flex items-center justify-center gap-2 hover:bg-amber-700 transition cursor-pointer"
                                     >
                                         <FiFileText />
-                                        Descargar Word
+                                        Descargar PowerPoint
                                     </button>
                                 </div>
 
@@ -1502,7 +1606,7 @@ function ReportesPages() {
 
                                 <div className="flex-1">
                                     <h2 className="text-2xl font-extrabold text-slate-900">
-                                        Informe de inducción de instructores
+                                        Solicitud de Pago a Instructores
                                     </h2>
                                     <p className="text-sm text-slate-500 mt-1">
                                         Descarga el informe de estudiantes atendidos con sus dos notas registradas.

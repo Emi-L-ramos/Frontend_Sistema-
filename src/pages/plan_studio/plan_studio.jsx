@@ -21,7 +21,6 @@
     const [error, setError] = useState(null);
     const [accionEnProceso, setAccionEnProceso] = useState(false);
     
-    const pollingIntervalRef = useRef(null);
     const isMounted = useRef(true);
 
     const rol = userRole?.toLowerCase();
@@ -93,61 +92,8 @@
       return null;
     };
 
-    const calcularProgresoReal = (progresos = []) => {
-      const items = Array.isArray(progresos) ? progresos : [];
-
-      if (items.length === 0) {
-        return {
-          total: 0,
-          completados: 0,
-          porcentaje: 0,
-          completo: false,
-        };
-      }
-
-      const progresoDiario = items.find((item) => item.modo_diario);
-
-      if (progresoDiario) {
-        const total = Number(progresoDiario.total_clases_diarias || 0);
-        const completados = Number(progresoDiario.checks_diarios_completados || 0);
-
-        return {
-          total,
-          completados,
-          porcentaje: total > 0 ? Math.round((completados / total) * 100) : 0,
-          completo: total > 0 && completados >= total,
-        };
-      }
-
-      const total = items.length;
-
-      const completados = items.filter((item) => {
-        return item.completado || (
-          item.estudiante_completado &&
-          item.instructor_completado
-        );
-      }).length;
-
-      return {
-        total,
-        completados,
-        porcentaje: total > 0 ? Math.round((completados / total) * 100) : 0,
-        completo: total > 0 && completados >= total,
-      };
-    };
-
-    const actualizarDesbloqueos = useCallback(async (datosBase = null) => {
+    const actualizarDesbloqueos = useCallback(async (data = []) => {
       try {
-        let data = datosBase;
-
-        if (!data) {
-          const response = await axios.get("/progreso-tema/");
-
-          data = Array.isArray(response.data)
-            ? response.data
-            : response.data.results || [];
-        }
-
         const matriculasIds = [
           ...new Set(
             data
@@ -157,9 +103,13 @@
           ),
         ];
 
-        for (const matriculaId of matriculasIds) {
+        if (!matriculasIds.length) return;
+
+        for (let inicio = 0; inicio < matriculasIds.length; inicio += 100) {
+          const grupoIds = matriculasIds.slice(inicio, inicio + 100);
+
           await axios.post("/progreso-tema/actualizar-desbloqueos/", {
-            matricula_id: matriculaId,
+            matricula_ids: grupoIds,
           });
         }
       } catch (error) {
@@ -190,11 +140,14 @@
       });
 
       setProgresos(sortedData);
+      return sortedData;
     } catch (error) {
       console.error("Error cargando progreso:", error);
       if (mostrarCargaInicial) {
         setError("Error al cargar el progreso. Por favor, recarga la página.");
       }
+
+      return null;
     } finally {
       if (mostrarCargaInicial) setCargando(false);
     }
@@ -204,11 +157,12 @@
     isMounted.current = true;
 
     const cargarInicial = async () => {
-      await obtenerProgresos(true);
+      const datos = await obtenerProgresos(true);
 
-      actualizarDesbloqueos().then(() => {
-        obtenerProgresos(false);
-      });
+      if (!datos?.length) return;
+
+      await actualizarDesbloqueos(datos);
+      await obtenerProgresos(false);
     };
 
     cargarInicial();
@@ -299,8 +253,6 @@
         );
 
         await axios.post(endpoint, payload);
-        await new Promise((resolve) => setTimeout(resolve, 300));
-        await actualizarDesbloqueos();
         await obtenerProgresos(false);
         
       } catch (error) {
@@ -679,6 +631,9 @@
       estudiantesFiltrados.find((e) => e.key === matriculaSeleccionada) ||
       estudiantesFiltrados[0];
 
+    const usaChecksActual =
+      estudianteActual?.usa_checks !== false;
+
     const calcularProgreso = (progresos = []) => {
       const items = Array.isArray(progresos) ? progresos : [];
 
@@ -733,7 +688,7 @@
 
       if (!item.desbloqueado) {
         return {
-          texto: "Bloqueado",
+          texto: "Pendiente por día",
           clase: "bg-slate-100 text-slate-500",
         };
       }
@@ -950,15 +905,38 @@
 
               <div className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-sm">
                 <div className="overflow-x-auto">
-                  <table className="w-full min-w-[900px] border-collapse">
+                  <table
+                    className={`w-full border-collapse ${
+                      usaChecksActual
+                        ? "min-w-[900px]"
+                        : "min-w-[520px]"
+                    }`}
+                  >
                     <thead>
                       <tr className="border-b border-slate-200 bg-slate-50 text-left text-xs font-black uppercase tracking-wide text-slate-500">
-                        <th className="w-[60px] px-5 py-4">#</th>
-                        <th className="px-5 py-4">Tema / Subtema</th>
-                        <th className="w-[160px] px-5 py-4">Estado</th>
-                        <th className="w-[190px] px-5 py-4">Instructor</th>
-                        <th className="w-[190px] px-5 py-4">Estudiante</th>
-                        <th className="w-[70px] px-5 py-4"></th>
+                        <th className="w-[80px] px-5 py-4">
+                          N.º
+                        </th>
+
+                        <th className="px-5 py-4">
+                          Tema
+                        </th>
+
+                        {usaChecksActual && (
+                          <>
+                            <th className="w-[160px] px-5 py-4">
+                              Estado
+                            </th>
+
+                            <th className="w-[190px] px-5 py-4">
+                              Instructor
+                            </th>
+
+                            <th className="w-[190px] px-5 py-4">
+                              Estudiante
+                            </th>
+                          </>
+                        )}
                       </tr>
                     </thead>
 
@@ -969,10 +947,7 @@
 
                         const estado = usaChecks
                           ? obtenerEstadoAdmin(item)
-                          : {
-                              texto: "Contenido del curso",
-                              clase: "bg-violet-100 text-violet-700",
-                            };
+                          : null;
 
                         return (
                           <tr
@@ -993,110 +968,107 @@
 
                                 <div>
                                   <h3 className="text-sm font-black text-slate-900">
-                                    {item.subtema?.titulo ||
-                                      item.subtema_titulo ||
-                                      item.tema_titulo ||
+                                    {item.tema_titulo ||
+                                      item.subtema?.tema?.titulo ||
                                       "Tema sin título"}
                                   </h3>
 
                                   <p className="mt-1 text-xs font-medium text-slate-500">
-                                    {item.subtema?.tema?.titulo ||
-                                      item.tema_titulo ||
-                                      "Plan de estudio"}
+                                    {item.subtemas_count ??
+                                      obtenerSubtemasDelItem(item).length}{" "}
+                                    subtemas
                                   </p>
                                 </div>
                               </div>
                             </td>
 
-                            <td className="px-5 py-5 align-middle">
-                              <span
-                                className={`inline-flex rounded-full px-3 py-1 text-xs font-black ${estado.clase}`}
-                              >
-                                {estado.texto}
-                              </span>
-                            </td>
+                            {usaChecks && (
+                              <>
+                                <td className="px-5 py-5 align-middle">
+                                  <span
+                                    className={`inline-flex rounded-full px-3 py-1 text-xs font-black ${estado.clase}`}
+                                  >
+                                    {estado.texto}
+                                  </span>
+                                </td>
 
-                            <td className="px-5 py-5 align-middle">
-                              {usaChecks ? (
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    marcarClase(
-                                      item.id,
-                                      "admin_instructor",
-                                      !item.instructor_completado
-                                    )
-                                  }
-                                  disabled={accionEnProceso || !item.desbloqueado}
-                                  className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-black transition ${
-                                    item.instructor_completado
-                                      ? "bg-green-50 text-green-700"
+                                <td className="px-5 py-5 align-middle">
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      marcarClase(
+                                        item.id,
+                                        "admin_instructor",
+                                        !item.instructor_completado
+                                      )
+                                    }
+                                    disabled={
+                                      accionEnProceso ||
+                                      !item.desbloqueado
+                                    }
+                                    className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-black transition ${
+                                      item.instructor_completado
+                                        ? "bg-green-50 text-green-700"
+                                        : item.desbloqueado
+                                        ? "bg-blue-50 text-blue-700 hover:bg-blue-100"
+                                        : "cursor-not-allowed bg-slate-100 text-slate-400"
+                                    }`}
+                                  >
+                                    {item.instructor_completado ? (
+                                      <CheckCircle2 className="h-4 w-4" />
+                                    ) : item.desbloqueado ? (
+                                      <span className="h-4 w-4 rounded-full border-2 border-blue-500" />
+                                    ) : (
+                                      <Lock className="h-4 w-4" />
+                                    )}
+
+                                    {item.instructor_completado
+                                      ? "Clase dada"
                                       : item.desbloqueado
-                                      ? "bg-blue-50 text-blue-700 hover:bg-blue-100"
-                                      : "cursor-not-allowed bg-slate-100 text-slate-400"
-                                  }`}
-                                >
-                                  {item.instructor_completado ? (
-                                    <CheckCircle2 className="h-4 w-4" />
-                                  ) : item.desbloqueado ? (
-                                    <span className="h-4 w-4 rounded-full border-2 border-blue-500" />
-                                  ) : (
-                                    <Lock className="h-4 w-4" />
-                                  )}
+                                      ? "Pendiente"
+                                      : "Pendiente por día"}
+                                  </button>
+                                </td>
 
-                                  {item.instructor_completado
-                                    ? "Clase dada"
-                                    : item.desbloqueado
-                                    ? "Pendiente"
-                                    : "Bloqueado"}
-                                </button>
-                              ) : (
-                                <span className="inline-flex rounded-full bg-slate-100 px-3 py-2 text-xs font-black text-slate-500">
-                                  No aplica
-                                </span>
-                              )}
-                            </td>
+                                <td className="px-5 py-5 align-middle">
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      marcarClase(
+                                        item.id,
+                                        "admin_estudiante",
+                                        !item.estudiante_completado
+                                      )
+                                    }
+                                    disabled={
+                                      accionEnProceso ||
+                                      !item.desbloqueado
+                                    }
+                                    className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-black transition ${
+                                      item.estudiante_completado
+                                        ? "bg-green-50 text-green-700"
+                                        : item.desbloqueado
+                                        ? "bg-blue-50 text-blue-700 hover:bg-blue-100"
+                                        : "cursor-not-allowed bg-slate-100 text-slate-400"
+                                    }`}
+                                  >
+                                    {item.estudiante_completado ? (
+                                      <CheckCircle2 className="h-4 w-4" />
+                                    ) : item.desbloqueado ? (
+                                      <span className="h-4 w-4 rounded-full border-2 border-blue-500" />
+                                    ) : (
+                                      <Lock className="h-4 w-4" />
+                                    )}
 
-                            <td className="px-5 py-5 align-middle">
-                              {usaChecks ? (
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    marcarClase(
-                                      item.id,
-                                      "admin_estudiante",
-                                      !item.estudiante_completado
-                                    )
-                                  }
-                                  disabled={accionEnProceso || !item.desbloqueado}
-                                  className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-black transition ${
-                                    item.estudiante_completado
-                                      ? "bg-green-50 text-green-700"
+                                    {item.estudiante_completado
+                                      ? "Clase recibida"
                                       : item.desbloqueado
-                                      ? "bg-blue-50 text-blue-700 hover:bg-blue-100"
-                                      : "cursor-not-allowed bg-slate-100 text-slate-400"
-                                  }`}
-                                >
-                                  {item.estudiante_completado ? (
-                                    <CheckCircle2 className="h-4 w-4" />
-                                  ) : item.desbloqueado ? (
-                                    <span className="h-4 w-4 rounded-full border-2 border-blue-500" />
-                                  ) : (
-                                    <Lock className="h-4 w-4" />
-                                  )}
-
-                                  {item.estudiante_completado
-                                    ? "Clase recibida"
-                                    : item.desbloqueado
-                                    ? "Pendiente"
-                                    : "Bloqueado"}
-                                </button>
-                              ) : (
-                                <span className="inline-flex rounded-full bg-slate-100 px-3 py-2 text-xs font-black text-slate-500">
-                                  No aplica
-                                </span>
-                              )}
-                            </td>
+                                      ? "Pendiente"
+                                      : "Pendiente por día"}
+                                  </button>
+                                </td>
+                              </>
+                            )}
                           </tr>
                         );
                       })}
@@ -1282,7 +1254,7 @@
 
       if (!item.desbloqueado) {
         return {
-          texto: "Bloqueado",
+          texto: "Pendiente por día",
           clase: "bg-slate-100 text-slate-500",
         };
       }
@@ -1456,8 +1428,8 @@
                     </div>
                   </div>
 
-                  {usaChecksActual ? (
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                    {usaChecksActual ? (
                       <div className="flex items-center gap-5">
                         <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full border-[7px] border-blue-600 bg-white">
                           <span className="text-lg font-black text-blue-600">
@@ -1478,40 +1450,42 @@
                             {avanceActual.dadas} de {avanceActual.total}{" "}
                             {avanceActual.etiqueta}
                           </p>
+
+                          <p className="mt-1 text-xs font-semibold text-slate-400">
+                            Los checks son solo de control; no bloquean el examen.
+                          </p>
                         </div>
                       </div>
+                    ) : (
+                      <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4">
+                        <p className="text-sm font-black text-emerald-700">
+                          Examen teórico disponible
+                        </p>
 
-                      <button
-                        type="button"
-                        onClick={() =>
-                          habilitarExamenTeorico(matriculaActualId)
-                        }
-                        disabled={
-                          habilitandoExamen ||
-                          !avanceActual.completo
-                        }
-                        className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 text-sm font-black text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
-                      >
-                        <BookOpen className="h-5 w-5" />
+                        <p className="mt-1 text-sm font-medium text-emerald-600">
+                          Este curso no depende de checks del plan de estudio.
+                        </p>
+                      </div>
+                    )}
 
-                        {habilitandoExamen
-                          ? "Habilitando..."
-                          : avanceActual.completo
-                          ? "Habilitar examen teórico"
-                          : "Plan incompleto"}
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4">
-                      <p className="text-sm font-black text-emerald-700">
-                        Examen teórico disponible automáticamente
-                      </p>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        habilitarExamenTeorico(matriculaActualId)
+                      }
+                      disabled={
+                        habilitandoExamen ||
+                        !matriculaActualId
+                      }
+                      className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 text-sm font-black text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      <BookOpen className="h-5 w-5" />
 
-                      <p className="mt-1 text-sm font-medium text-emerald-600">
-                        Este curso no utiliza checks del plan de estudio.
-                      </p>
-                    </div>
-                  )}
+                      {habilitandoExamen
+                        ? "Habilitando..."
+                        : "Habilitar examen teórico"}
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -1550,8 +1524,14 @@
                             : "bg-slate-50"
                         }`}
                       >
-                        <div className="grid grid-cols-1 gap-4 px-5 py-4 lg:grid-cols-[1fr_170px_120px] lg:items-center">
-                          <div className="flex items-center gap-4">
+                        <div
+                            className={`grid grid-cols-1 gap-4 px-5 py-4 lg:items-center ${
+                              usaChecksActual
+                                ? "lg:grid-cols-[1fr_170px_120px]"
+                                : "lg:grid-cols-1"
+                            }`}
+                          >
+                            <div className="flex items-center gap-4">
                             <button
                               type="button"
                               onClick={() => toggleTema(item.id)}
@@ -1587,48 +1567,56 @@
                             </div>
                           </div>
 
-                          <div>
-                            <span
-                              className={`inline-flex rounded-full px-3 py-1 text-xs font-black ${estado.clase}`}
-                            >
-                              {estado.texto}
-                            </span>
-                          </div>
+                          {usaChecksActual && (  
+                            <div>
+                              <span
+                                className={`inline-flex rounded-full px-3 py-1 text-xs font-black ${estado.clase}`}
+                              >
+                                {estado.texto}
+                              </span>
+                            </div>
+                          )}  
 
                           <div className="flex justify-start lg:justify-end">
                             {usaChecksActual ? (
-                              <button
-                                type="button"
-                                disabled={
-                                  !item.desbloqueado ||
-                                  item.instructor_completado ||
-                                  accionEnProceso
-                                }
-                                onClick={() =>
-                                  marcarClase(item.id, "instructor", true)
-                                }
-                                className={`inline-flex h-10 items-center justify-center gap-2 rounded-xl px-4 text-xs font-black transition ${
-                                  item.instructor_completado
-                                    ? "bg-green-100 text-green-700"
-                                    : item.desbloqueado
-                                    ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
-                                    : "cursor-not-allowed bg-slate-100 text-slate-400"
-                                }`}
-                              >
-                                {item.instructor_completado ? (
-                                  <CheckCircle2 className="h-4 w-4" />
-                                ) : item.desbloqueado ? (
-                                  <span className="h-4 w-4 rounded-full border-2 border-blue-500" />
-                                ) : (
-                                  <Lock className="h-4 w-4" />
-                                )}
+                              <div className="flex justify-start lg:justify-end">
+                                <button
+                                  type="button"
+                                  disabled={
+                                    !item.desbloqueado ||
+                                    item.instructor_completado ||
+                                    accionEnProceso
+                                  }
+                                  onClick={() =>
+                                    marcarClase(
+                                      item.id,
+                                      "instructor",
+                                      true
+                                    )
+                                  }
+                                  className={`inline-flex h-10 items-center justify-center gap-2 rounded-xl px-4 text-xs font-black transition ${
+                                    item.instructor_completado
+                                      ? "bg-green-100 text-green-700"
+                                      : item.desbloqueado
+                                      ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
+                                      : "cursor-not-allowed bg-slate-100 text-slate-400"
+                                  }`}
+                                >
+                                  {item.instructor_completado ? (
+                                    <CheckCircle2 className="h-4 w-4" />
+                                  ) : item.desbloqueado ? (
+                                    <span className="h-4 w-4 rounded-full border-2 border-blue-500" />
+                                  ) : (
+                                    <Lock className="h-4 w-4" />
+                                  )}
 
-                                {item.instructor_completado
-                                  ? "Dado"
-                                  : item.desbloqueado
-                                  ? "Marcar"
-                                  : "Bloqueado"}
-                              </button>
+                                  {item.instructor_completado
+                                    ? "Dado"
+                                    : item.desbloqueado
+                                    ? "Marcar"
+                                    : "Pendiente por día"}
+                                </button>
+                              </div>
                             ) : (
                               <span className="inline-flex h-10 items-center justify-center rounded-xl bg-slate-100 px-4 text-xs font-black text-slate-600">
                                 Solo lectura
@@ -1687,7 +1675,7 @@
 
                     <span className="inline-flex items-center gap-2">
                       <span className="h-3 w-3 rounded-full bg-slate-400" />
-                      Bloqueado
+                      Pendiente por día
                     </span>
                   </div>
                 )}
@@ -1881,7 +1869,7 @@
       }
 
       return {
-        texto: "Bloqueado",
+        texto: "Pendiente por día",
         clase: "bg-slate-100 text-slate-500",
       };
     };
@@ -2062,7 +2050,13 @@
                                 : "bg-slate-50"
                             }`}
                           >
-                            <div className="grid grid-cols-1 gap-4 px-5 py-4 lg:grid-cols-[1fr_160px_140px] lg:items-center">
+                            <div
+                              className={`grid grid-cols-1 gap-4 px-5 py-4 lg:items-center ${
+                                usaChecks
+                                  ? "lg:grid-cols-[1fr_160px_140px]"
+                                  : "lg:grid-cols-1"
+                              }`}
+                            >
                               <div className="flex items-center gap-4">
                                 <button
                                   type="button"
@@ -2115,48 +2109,56 @@
                                 </div>
                               </div>
 
-                              <div className="flex justify-start lg:justify-center">
-                                <span
-                                  className={`inline-flex rounded-full px-3 py-1 text-xs font-black ${estado.clase}`}
-                                >
-                                  {estado.texto}
-                                </span>
-                              </div>
+                              {usaChecks && (  
+                                <div className="flex justify-start lg:justify-center">
+                                  <span
+                                    className={`inline-flex rounded-full px-3 py-1 text-xs font-black ${estado.clase}`}
+                                  >
+                                    {estado.texto}
+                                  </span>
+                                </div>
+                              )}  
 
                               <div className="flex justify-start lg:justify-end">
                                 {usaChecks ? (
-                                  <button
-                                    type="button"
-                                    disabled={
-                                      !item.desbloqueado ||
-                                      item.estudiante_completado ||
-                                      accionEnProceso
-                                    }
-                                    onClick={() =>
-                                      marcarClase(item.id, "estudiante", true)
-                                    }
-                                    className={`inline-flex h-10 min-w-[120px] items-center justify-center gap-2 rounded-xl px-4 text-xs font-black transition ${
-                                      item.estudiante_completado
-                                        ? "bg-green-100 text-green-700"
-                                        : item.desbloqueado
-                                        ? "bg-violet-100 text-violet-700 hover:bg-violet-200"
-                                        : "cursor-not-allowed bg-slate-100 text-slate-400"
-                                    }`}
-                                  >
-                                    {item.estudiante_completado ? (
-                                      <CheckCircle2 className="h-4 w-4" />
-                                    ) : item.desbloqueado ? (
-                                      <span className="h-4 w-4 rounded-full border-2 border-violet-500" />
-                                    ) : (
-                                      <Lock className="h-4 w-4" />
-                                    )}
+                                  <div className="flex justify-start lg:justify-end">
+                                    <button
+                                      type="button"
+                                      disabled={
+                                        !item.desbloqueado ||
+                                        item.estudiante_completado ||
+                                        accionEnProceso
+                                      }
+                                      onClick={() =>
+                                        marcarClase(
+                                          item.id,
+                                          "estudiante",
+                                          true
+                                        )
+                                      }
+                                      className={`inline-flex h-10 min-w-[120px] items-center justify-center gap-2 rounded-xl px-4 text-xs font-black transition ${
+                                        item.estudiante_completado
+                                          ? "bg-green-100 text-green-700"
+                                          : item.desbloqueado
+                                          ? "bg-violet-100 text-violet-700 hover:bg-violet-200"
+                                          : "cursor-not-allowed bg-slate-100 text-slate-400"
+                                      }`}
+                                    >
+                                      {item.estudiante_completado ? (
+                                        <CheckCircle2 className="h-4 w-4" />
+                                      ) : item.desbloqueado ? (
+                                        <span className="h-4 w-4 rounded-full border-2 border-violet-500" />
+                                      ) : (
+                                        <Lock className="h-4 w-4" />
+                                      )}
 
-                                    {item.estudiante_completado
-                                      ? "Recibido"
-                                      : item.desbloqueado
-                                      ? "Marcar"
-                                      : "Bloqueado"}
-                                  </button>
+                                      {item.estudiante_completado
+                                        ? "Recibido"
+                                        : item.desbloqueado
+                                        ? "Marcar"
+                                        : "Pendiente por día"}
+                                    </button>
+                                  </div>
                                 ) : (
                                   <span className="inline-flex h-10 min-w-[120px] items-center justify-center rounded-xl bg-slate-100 px-4 text-xs font-black text-slate-600">
                                     Solo lectura
@@ -2198,53 +2200,57 @@
                       })}
                     </div>
 
-                    {((usaChecks && avance.completo) || !usaChecks) && (
-                      <div className="border-t border-slate-100 bg-slate-50 px-5 py-5">
-                        <div className="rounded-2xl border border-green-200 bg-green-50 p-5">
-                          <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-                            <div className="flex items-start gap-4">
-                              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-green-100 text-green-700">
-                                <CheckCircle2 className="h-7 w-7" />
-                              </div>
-
-                              <div>
-                                <h4 className="text-lg font-black text-green-800">
-                                  {usaChecks
-                                    ? "Has completado este plan."
-                                    : "Examen teórico disponible."}
-                                </h4>
-
-                                <p className="mt-1 text-sm font-medium text-green-700">
-                                  {usaChecks
-                                    ? "Tus clases ya aparecen completadas dentro del plan de estudio."
-                                    : "Este curso no requiere completar checks para realizar el examen teórico."}
-                                </p>
-                              </div>
+                    <div className="border-t border-slate-100 bg-slate-50 px-5 py-5">
+                      <div className="rounded-2xl border border-green-200 bg-green-50 p-5">
+                        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+                          <div className="flex items-start gap-4">
+                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-green-100 text-green-700">
+                              <CheckCircle2 className="h-7 w-7" />
                             </div>
 
-                            {examenDisponible && !examenRealizado && (
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  navigate("/dashboard/mi-examen-teorico")
-                                }
-                                className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 text-sm font-black text-white shadow-sm transition hover:bg-blue-700"
-                              >
-                                <BookOpen className="h-5 w-5" />
-                                Realizar examen teórico
-                              </button>
-                            )}
+                            <div>
+                              <h4 className="text-lg font-black text-green-800">
+                                {examenRealizado
+                                  ? "Examen teórico realizado."
+                                  : examenDisponible
+                                  ? "Examen teórico disponible."
+                                  : "Seguimiento del plan de estudio."}
+                              </h4>
 
-                            {examenRealizado && (
-                              <div className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-green-100 px-5 text-sm font-black text-green-700">
-                                <CheckCircle2 className="h-5 w-5" />
-                                Examen teórico realizado
-                              </div>
-                            )}
+                              <p className="mt-1 text-sm font-medium text-green-700">
+                                {examenRealizado
+                                  ? "Ya completaste el examen teórico."
+                                  : examenDisponible
+                                  ? "Tu examen fue habilitado y puedes realizarlo."
+                                  : usaChecks
+                                  ? "Los checks son opcionales y no bloquean la habilitación del examen."
+                                  : "Consulta los temas y subtemas correspondientes a tu curso."}
+                              </p>
+                            </div>
                           </div>
+
+                          {examenDisponible && !examenRealizado && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                navigate("/dashboard/mi-examen-teorico")
+                              }
+                              className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 text-sm font-black text-white shadow-sm transition hover:bg-blue-700"
+                            >
+                              <BookOpen className="h-5 w-5" />
+                              Realizar examen teórico
+                            </button>
+                          )}
+
+                          {examenRealizado && (
+                            <div className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-green-100 px-5 text-sm font-black text-green-700">
+                              <CheckCircle2 className="h-5 w-5" />
+                              Examen teórico realizado
+                            </div>
+                          )}
                         </div>
                       </div>
-                    )}
+                    </div>
                   </div>
                 )}
               </div>

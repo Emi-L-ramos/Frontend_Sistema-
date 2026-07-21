@@ -1,6 +1,10 @@
 // src/pages/login/LoginPage.jsx
 
-import { useState } from "react";
+import {
+  useEffect,
+  useState,
+} from "react";
+
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
@@ -15,6 +19,31 @@ function LoginPage() {
 
   const { login } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const sesionExpirada = sessionStorage.getItem(
+      "sesion_expirada"
+    );
+
+    if (sesionExpirada !== "1") {
+      return;
+    }
+
+    sessionStorage.removeItem(
+      "sesion_expirada"
+    );
+
+    Swal.fire({
+      title: "Sesión finalizada",
+      text: (
+        "Tu sesión dejó de ser válida. "
+        + "Inicia sesión nuevamente."
+      ),
+      icon: "warning",
+      confirmButtonText: "Entendido",
+      confirmButtonColor: "#2563eb",
+    });
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

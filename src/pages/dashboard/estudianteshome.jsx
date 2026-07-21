@@ -26,6 +26,8 @@ function EstudianteHome({ setActiveTab }) {
         temas_completados: 0,
         total_temas: 0,
         unidad: "temas",
+        aplica_progreso: false,
+        tipo_curso: null,
     });
 
     const [loadingAsistencia, setLoadingAsistencia] = useState(true);
@@ -55,8 +57,6 @@ function EstudianteHome({ setActiveTab }) {
             const data = Array.isArray(response.data)
                 ? response.data
                 : response.data.results || [];
-
-            console.log("Clases del estudiante:", data);
 
             setClases(data);
         } catch (error) {
@@ -102,6 +102,8 @@ function EstudianteHome({ setActiveTab }) {
                 temas_completados: response.data.temas_completados || 0,
                 total_temas: response.data.total_temas || 0,
                 unidad: response.data.unidad || "temas",
+                aplica_progreso: Boolean(response.data.aplica_progreso),
+                tipo_curso: response.data.tipo_curso || null,
             });
         } catch (error) {
             console.error("Error cargando progreso del plan:", error);
@@ -111,6 +113,8 @@ function EstudianteHome({ setActiveTab }) {
                 temas_completados: 0,
                 total_temas: 0,
                 unidad: "temas",
+                aplica_progreso: false,
+                tipo_curso: null,
             });
         } finally {
             setLoadingProgresoPlan(false);
@@ -209,6 +213,10 @@ function EstudianteHome({ setActiveTab }) {
     };
 
     const unidadProgreso = progresoPlan.unidad || "temas";
+
+    const mostrarPlanEstudio = Boolean(
+        progresoPlan.aplica_progreso
+    );
 
     const textoUnidadCompletada =
         unidadProgreso === "clases" ? "clases completadas" : "temas completados";
@@ -364,7 +372,13 @@ function EstudianteHome({ setActiveTab }) {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+                <div
+                    className={`grid grid-cols-1 gap-5 md:grid-cols-2 ${
+                        mostrarPlanEstudio
+                            ? "xl:grid-cols-3"
+                            : "xl:grid-cols-2"
+                    }`}
+                >
                     <TarjetaResumen
                         variante="blue"
                         icono={<CalendarCheck />}
@@ -373,21 +387,23 @@ function EstudianteHome({ setActiveTab }) {
                         descripcion={`${asistencia.asistidas} de ${asistencia.total} asistencias registradas`}
                     />
 
-                    <TarjetaResumen
-                        variante="green"
-                        icono={<BookOpen />}
-                        titulo="Plan de Estudio"
-                        valor={
-                            loadingProgresoPlan
-                                ? "..."
-                                : `${progresoPlan.porcentaje}%`
-                        }
-                        descripcion={
-                            loadingProgresoPlan
-                                ? "Cargando avance del plan"
-                                : `${progresoPlan.temas_completados} de ${progresoPlan.total_temas} ${textoUnidadCompletada}`
-                        }
-                    />
+                    {mostrarPlanEstudio && (
+                        <TarjetaResumen
+                            variante="green"
+                            icono={<BookOpen />}
+                            titulo="Plan de Estudio"
+                            valor={
+                                loadingProgresoPlan
+                                    ? "..."
+                                    : `${progresoPlan.porcentaje}%`
+                            }
+                            descripcion={
+                                loadingProgresoPlan
+                                    ? "Cargando avance del plan"
+                                    : `${progresoPlan.temas_completados} de ${progresoPlan.total_temas} ${textoUnidadCompletada}`
+                            }
+                        />
+                    )}
 
                     <TarjetaResumen
                         variante="orange"
@@ -413,7 +429,13 @@ function EstudianteHome({ setActiveTab }) {
                     />
                 </div>
 
-                <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.05fr_1fr]">
+                <div
+                    className={`grid grid-cols-1 gap-6 ${
+                        mostrarPlanEstudio
+                            ? "xl:grid-cols-[1.05fr_1fr]"
+                            : "xl:grid-cols-1"
+                    }`}
+                >
                     <div className="rounded-[24px] border border-slate-200 bg-white p-6 shadow-sm">
                         <div className="mb-5 flex items-center gap-3">
                             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
@@ -442,81 +464,83 @@ function EstudianteHome({ setActiveTab }) {
                         )}
                     </div>
 
-                    <div className="space-y-6">
-                        <div className="rounded-[24px] border border-slate-200 bg-white p-6 shadow-sm">
-                            <div className="mb-5 flex items-center gap-3">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50 text-violet-600">
-                                    <BookOpen size={22} />
+                    {mostrarPlanEstudio && (
+                        <div className="space-y-6">
+                            <div className="rounded-[24px] border border-slate-200 bg-white p-6 shadow-sm">
+                                <div className="mb-5 flex items-center gap-3">
+                                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50 text-violet-600">
+                                        <BookOpen size={22} />
+                                    </div>
+
+                                    <h3 className="text-xl font-black text-slate-950">
+                                        Plan de Estudio
+                                    </h3>
                                 </div>
 
-                                <h3 className="text-xl font-black text-slate-950">
-                                    Plan de Estudio
-                                </h3>
+                                <div className="mb-2 flex justify-between text-sm font-semibold text-slate-500">
+                                    <span>Avance del plan</span>
+                                    <span>
+                                        {loadingProgresoPlan
+                                            ? "..."
+                                            : `${progresoPlan.porcentaje}%`}
+                                    </span>
+                                </div>
+
+                                <div className="mb-3 h-3 w-full overflow-hidden rounded-full bg-slate-200">
+                                    <div
+                                        className="h-full rounded-full bg-blue-600 transition-all"
+                                        style={{ width: `${progresoPlan.porcentaje}%` }}
+                                    />
+                                </div>
+
+                                <p className="text-sm font-semibold text-slate-500">
+                                    {progresoPlan.temas_completados} de{" "}
+                                    {progresoPlan.total_temas} {textoUnidadCompletada}
+                                </p>
                             </div>
 
-                            <div className="mb-2 flex justify-between text-sm font-semibold text-slate-500">
-                                <span>Avance del plan</span>
-                                <span>
-                                    {loadingProgresoPlan
-                                        ? "..."
-                                        : `${progresoPlan.porcentaje}%`}
-                                </span>
-                            </div>
+                            <div className="rounded-[24px] border border-slate-200 bg-white p-6 shadow-sm">
+                                <div className="mb-5 flex items-center gap-3">
+                                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                                        <PieChart size={22} />
+                                    </div>
 
-                            <div className="mb-3 h-3 w-full overflow-hidden rounded-full bg-slate-200">
-                                <div
-                                    className="h-full rounded-full bg-blue-600 transition-all"
-                                    style={{ width: `${progresoPlan.porcentaje}%` }}
-                                />
-                            </div>
+                                    <h3 className="text-xl font-black text-slate-950">
+                                        Resumen del Curso
+                                    </h3>
+                                </div>
 
-                            <p className="text-sm font-semibold text-slate-500">
-                                {progresoPlan.temas_completados} de{" "}
-                                {progresoPlan.total_temas} {textoUnidadCompletada}
-                            </p>
+                                <div className="grid grid-cols-3 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                                    <div className="border-r border-slate-200 p-4 text-center">
+                                        <p className="text-sm font-semibold text-slate-500">
+                                            Total
+                                        </p>
+                                        <p className="mt-2 text-3xl font-black text-blue-600">
+                                            {loadingProgresoPlan ? "..." : totalResumenCurso}
+                                        </p>
+                                    </div>
+
+                                    <div className="border-r border-slate-200 p-4 text-center">
+                                        <p className="text-sm font-semibold text-slate-500">
+                                            Completados
+                                        </p>
+                                        <p className="mt-2 text-3xl font-black text-green-600">
+                                            {loadingProgresoPlan ? "..." : completadosResumenCurso}
+                                        </p>
+                                    </div>
+
+                                    <div className="p-4 text-center">
+                                        <p className="text-sm font-semibold text-slate-500">
+                                            Pendientes
+                                        </p>
+                                        <p className="mt-2 text-3xl font-black text-orange-500">
+                                            {loadingProgresoPlan ? "..." : pendientesResumenCurso}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-
-                        <div className="rounded-[24px] border border-slate-200 bg-white p-6 shadow-sm">
-                            <div className="mb-5 flex items-center gap-3">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
-                                    <PieChart size={22} />
-                                </div>
-
-                                <h3 className="text-xl font-black text-slate-950">
-                                    Resumen del Curso
-                                </h3>
-                            </div>
-
-                            <div className="grid grid-cols-3 overflow-hidden rounded-2xl border border-slate-200 bg-white">
-                                <div className="border-r border-slate-200 p-4 text-center">
-                                    <p className="text-sm font-semibold text-slate-500">
-                                        Total
-                                    </p>
-                                    <p className="mt-2 text-3xl font-black text-blue-600">
-                                        {loadingProgresoPlan ? "..." : totalResumenCurso}
-                                    </p>
-                                </div>
-
-                                <div className="border-r border-slate-200 p-4 text-center">
-                                    <p className="text-sm font-semibold text-slate-500">
-                                        Completados
-                                    </p>
-                                    <p className="mt-2 text-3xl font-black text-green-600">
-                                        {loadingProgresoPlan ? "..." : completadosResumenCurso}
-                                    </p>
-                                </div>
-
-                                <div className="p-4 text-center">
-                                    <p className="text-sm font-semibold text-slate-500">
-                                        Pendientes
-                                    </p>
-                                    <p className="mt-2 text-3xl font-black text-orange-500">
-                                        {loadingProgresoPlan ? "..." : pendientesResumenCurso}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    )}    
                 </div>
             </div>
         </div>

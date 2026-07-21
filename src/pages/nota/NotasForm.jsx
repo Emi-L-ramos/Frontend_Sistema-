@@ -52,10 +52,6 @@ function NotasForm({ open, onClose, onNotaGuardada }) {
         });
       }
     } catch (err) {
-      console.log(
-        "ERROR CARGANDO ESTUDIANTES:",
-        err
-      );
 
       setError(
         "No se pudieron cargar los estudiantes asignados."

@@ -91,18 +91,18 @@ function Configuraciones() {
     {
       key: "pagosInstructor",
       titulo: "Pago de instructores",
-      subtitulo: "Monto por alumno",
+      subtitulo: "Tarifa por hora",
       descripcion:
-        "Configura el monto que se le paga al instructor por alumno. Si registras un pago activo, el sistema puede usarlo como pago vigente.",
+        ("Configura el monto que se paga al instructor por cada hora impartida. El reporte multiplicará esta tarifa por las horas correspondientes a cada alumno."),
       endpoint: endpoints.pagosInstructor,
       icono: IoCashOutline,
       color: "amber",
       campos: [
         {
           name: "monto_por_alumno",
-          label: "Monto por alumno",
+          label: "Tarifa por hora",
           type: "number",
-          placeholder: "Ejemplo: 500",
+          placeholder: "Ejemplo: 60",
           required: true,
         },
         {
@@ -134,7 +134,7 @@ function Configuraciones() {
       columnas: [
         {
           key: "monto_por_alumno",
-          label: "Monto",
+          label: "Tarifa por hora",
           money: true,
         },
         {

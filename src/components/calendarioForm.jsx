@@ -1,6 +1,16 @@
 // src/components/calendarioForm.jsx
 import { useEffect, useState, useMemo } from "react";
-import { X, Calendar, User, BookOpen, ChevronRight, Clock, Search, ChevronLeft } from "lucide-react";
+import {
+  X,
+  Calendar,
+  User,
+  BookOpen,
+  ChevronRight,
+  Clock,
+  Search,
+  ChevronLeft,
+  AlertCircle,
+} from "lucide-react";
 import {
   crearBloqueCitas,
   crearCalendarioManual,
@@ -122,7 +132,7 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
           listarInstructores(),
           listarMatriculas()
         ]);
-        console.log("Datos de instructores recibidos:", inst); 
+
         setInstructores(Array.isArray(inst) ? inst : []); // Asegura que sea un array
         setMatriculas(Array.isArray(mats) ? mats : []);
       } catch (error) {
@@ -166,19 +176,15 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
   }, [matriculas, busquedaEstudiante]);
 
     const generarFechas = (fechaInicio) => {
-      if (!fechaInicio || !estudianteSeleccionado) return [];
+      if (!fechaInicio || !estudianteSeleccionado) {
+        return [];
+      }
 
-      // const tipoCurso = String(estudianteSeleccionado.tipo_curso || "").toLowerCase();
-
-      // const modalidad = String(
-      //     estudianteSeleccionado.modalidad || ""
-      //   ).toLowerCase();
-
-        const horasTotales = obtenerHorasTotales();
-
-        const numClases = Math.ceil(
-          horasTotales / horasPorDia
-        );
+      const modalidad = obtenerModalidadActual();
+      const horasTotales = obtenerHorasTotales();
+      const numClases = Math.ceil(
+        horasTotales / horasPorDia
+      );
 
       const fechas = [];
       let fecha = new Date(fechaInicio + "T00:00:00");
@@ -201,17 +207,11 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
     };
 
   const actualizarFechaMinima = (estudiante) => {
-    const hoy = obtenerHoyLocal();
+    const fechaMatricula = crearFechaLocal(
+      estudiante?.fecha_registro
+    );
 
-    if (estudiante && estudiante.f_matricula) {
-      const fechaMatricula = crearFechaLocal(estudiante.f_matricula);
-      const minFecha = fechaMatricula && fechaMatricula > hoy ? fechaMatricula : hoy;
-
-      setFechaMinima(minFecha);
-      return;
-    }
-
-    setFechaMinima(hoy);
+    setFechaMinima(fechaMatricula);
   };
 
   const seleccionarEstudiante = (matricula) => {
@@ -332,56 +332,6 @@ const seleccionarFecha = (fecha) => {
   setMostrarCalendario(true);
   setMostrarCalendarioSelector(false);
 };
-  const agregarExamenManual = async () => {
-    if (!examenManual.fecha) {
-      setError("Debe seleccionar una fecha para el examen");
-      return;
-    }
-    if (!form.instructor_id || !form.matricula_id) {
-      setError("Debe seleccionar instructor y estudiante primero");
-      return;
-    }
-    if (fechasGeneradas.length < 7) {
-
-      setError("Debe crear el bloque de 7 clases teóricas");
-      return;
-    }
-    
-    const fechaExamen = new Date(examenManual.fecha);
-    const ultimaClase = fechasGeneradas[fechasGeneradas.length - 1];
-    
-    if (ultimaClase && fechaExamen <= ultimaClase) {
-      setError("La fecha del examen debe ser posterior a la última clase teórica");
-      return;
-    }
-    
-    setCargando(true);
-    try {
-      await crearExamenManual({
-        instructor_id: parseInt(form.instructor_id),
-        matricula_id: parseInt(form.matricula_id),
-        fecha: examenManual.fecha,
-        hora_inicio: examenManual.hora_inicio,
-        hora_fin: examenManual.hora_fin
-      });
-      setMostrarExamenManual(false);
-      setExamenManual({ fecha: "", hora_inicio: "08:00", hora_fin: "10:00" });
-      setError("Examen programado exitosamente");
-      await Swal.fire({
-                    icon: "success",
-                    title: "Examen Registrado",
-                    text: "Examen Programado Exitosamente",
-                    confirmButtonColor: "#16a34a",
-                  });
-        
-
-      setTimeout(() => setError(""), 3000);
-    } catch (err) {
-      setError(err.message || "Error al programar el examen");
-    } finally {
-      setCargando(false);
-    }
-  };
 
   const obtenerDiasMes = (fecha) => {
     const year = fecha.getFullYear();
@@ -515,7 +465,7 @@ try {
                     text: "Bloque y Examen creado exitosamente.",
                     confirmButtonColor: "#16a34a",
                   });
-        } catch (examError) {
+        } catch {
           setError("Bloque creado, pero hubo un error al crear el examen");
         }
       } else {
@@ -527,8 +477,6 @@ try {
                   confirmButtonColor: "#16a34a",
                 });
                 // navigate("/dashboard/calandario");
-
-
       }
       setTimeout(() => {
         onCreada?.();
@@ -553,12 +501,6 @@ try {
   };
 
   if (!abierto) return null;
-
-  const horarioClase = estudianteSeleccionado?.horario || "";
-  const fechaMinimaStr = fechaMinima
-    ? formatearFechaInput(fechaMinima)
-    : formatearFechaInput(obtenerHoyLocal());
-
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-all duration-300">
@@ -673,7 +615,12 @@ try {
                             <p className="font-medium text-gray-800 text-sm">{est.estudiante_nombre || "Sin nombre"}</p>
                             <p className="text-xs text-gray-500">
                               Cédula: {est.estudiante_cedula || "N/A"} | Horario: {est.horario || "No definido"} | Curso: {est.tipo_curso || "N/A"}
-                              {est.f_matricula && <span className="ml-2">Matrícula: {new Date(est.f_matricula).toLocaleDateString()}</span>}
+                              {est.fecha_registro && (
+                                <span className="ml-2">
+                                  Matrícula:{" "}
+                                  {formatearFecha(est.fecha_registro)}
+                                </span>
+                              )}
                             </p>
                           </div>
                           <ChevronRight className="w-4 h-4 text-gray-400" />
@@ -700,8 +647,13 @@ try {
                       </p>
                       <p className="text-xs text-green-600">
                         Cédula: {estudianteSeleccionado.estudiante_cedula || "N/A"} | Horario: {estudianteSeleccionado.horario || "No definido"} | Curso: {estudianteSeleccionado.tipo_curso || "N/A"}
-                        {estudianteSeleccionado.f_matricula && (
-                          <span className="ml-2">Matrícula: {new Date(estudianteSeleccionado.f_matricula).toLocaleDateString()}</span>
+                        {estudianteSeleccionado.fecha_registro && (
+                          <span className="ml-2">
+                            Matrícula:{" "}
+                            {formatearFecha(
+                              estudianteSeleccionado.fecha_registro
+                            )}
+                          </span>
                         )}
                       </p>
                     </div>
@@ -988,12 +940,12 @@ try {
             </div>
           )}
 
-          {/* {error && (
-            <div className={`${error.includes('✅') ? 'bg-green-50 border-green-200 text-green-700' : 'bg-red-50 border-red-200 text-red-700'} border-2 text-sm rounded-xl p-4 flex items-start gap-2 animate-pulse`}>
+          {error && (
+            <div className="border-2 border-red-200 bg-red-50 text-red-700 text-sm rounded-xl p-4 flex items-start gap-2">
               <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
               <span>{error}</span>
             </div>
-          )} */}
+          )}
 
           <div className="flex justify-end gap-3 pt-4 ">
             <button type="button" onClick={onClose} className="px-5 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 hover:scale-105 transition-all duration-200 hover:cursor-pointer" disabled={cargando}>

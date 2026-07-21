@@ -1,5 +1,9 @@
-import { useState, useEffect } from "react";
-import Chart from "react-apexcharts";
+import {
+  lazy,
+  Suspense,
+  useState,
+  useEffect,
+} from "react";
 import Swal from "sweetalert2";
 import api from "../../api/axios";
 import { useAuth } from "../../context/AuthContext";
@@ -18,10 +22,31 @@ import {
   FiUsers,
 } from "react-icons/fi";
 
+const Chart = lazy(
+  () => import("react-apexcharts")
+);
+
 const MESES = {
   "01":"Ene","02":"Feb","03":"Mar","04":"Abr",
   "05":"May","06":"Jun","07":"Jul","08":"Ago",
   "09":"Sep","10":"Oct","11":"Nov","12":"Dic",
+};
+
+const escaparHtml = (valor) => {
+  return String(valor ?? "").replace(
+    /[&<>"']/g,
+    (caracter) => {
+      const equivalencias = {
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;",
+      };
+
+      return equivalencias[caracter];
+    }
+  );
 };
 
 function DashboardHome() {
@@ -129,7 +154,7 @@ const cargarNotificaciones = async () => {
               margin-bottom:8px;
             ">
               <strong style="color:#0f172a;font-size:14px;">
-                ${n.tipo_texto || "Notificación pendiente"}
+                ${escaparHtml(n.tipo_texto || "Notificación pendiente")}
               </strong>
 
               <span style="
@@ -141,7 +166,7 @@ const cargarNotificaciones = async () => {
                 border-radius:999px;
                 white-space:nowrap;
               ">
-                ${n.quien_falta || "Pendiente"}
+                ${escaparHtml(n.quien_falta || "Pendiente")}
               </span>
             </div>
 
@@ -151,7 +176,7 @@ const cargarNotificaciones = async () => {
               line-height:1.5;
               margin:0 0 10px 0;
             ">
-              ${n.mensaje || "Hay una notificación pendiente."}
+              ${escaparHtml(n.mensaje || "Hay una notificación pendiente.")}
             </p>
 
             <div style="
@@ -168,7 +193,7 @@ const cargarNotificaciones = async () => {
               ">
                 <div style="font-size:11px;color:#94a3b8;">Estudiante</div>
                 <div style="font-size:12px;color:#334155;font-weight:700;">
-                  ${n.estudiante || "No asignado"}
+                  ${escaparHtml(n.estudiante || "No asignado")}
                 </div>
               </div>
 
@@ -180,7 +205,7 @@ const cargarNotificaciones = async () => {
               ">
                 <div style="font-size:11px;color:#94a3b8;">Tema</div>
                 <div style="font-size:12px;color:#334155;font-weight:700;">
-                  ${n.tema || "Sin tema"}
+                  ${escaparHtml(n.tema || "Sin tema")}
                 </div>
               </div>
             </div>
@@ -190,7 +215,7 @@ const cargarNotificaciones = async () => {
               color:#94a3b8;
               font-size:11px;
             ">
-              ${formatearFecha(n.fecha_creacion)}
+              ${escaparHtml(formatearFecha(n.fecha_creacion))}
             </div>
           </div>
         `;
@@ -412,7 +437,7 @@ const cargarNotificaciones = async () => {
               </h2>
 
               <p className="mt-3 text-sm font-medium text-slate-500">
-                {cargando ? "" : "Inscritos en el ciclo actual"}
+                {cargando ? "" : "Con matrícula no finalizada"}
               </p>
             </div>
 
@@ -528,12 +553,20 @@ const cargarNotificaciones = async () => {
           </div>
         ) : (
           <div className="rounded-2xl">
-            <Chart
-              options={options}
-              series={series}
-              type="area"
-              height={340}
-            />
+            <Suspense
+              fallback={
+                <div className="flex h-[340px] items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50 text-slate-400">
+                  Cargando gráfica...
+                </div>
+              }
+            >
+              <Chart
+                options={options}
+                series={series}
+                type="area"
+                height={340}
+              />
+            </Suspense>
 
             <div className="mx-auto -mt-2 w-full max-w-xl rounded-3xl bg-slate-50 border border-slate-100 shadow-sm px-6 py-4 grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr] gap-4 items-center">
               <div className="flex items-center gap-4">

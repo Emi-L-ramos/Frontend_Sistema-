@@ -4,7 +4,6 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "../../api/axios";
 import Swal from "sweetalert2";
-
 import {
   Plus,
   Trash2,
@@ -18,7 +17,6 @@ import {
 
 function ExamenTeoricoPage() {
   const navigate = useNavigate();
-
   const [preguntas, setPreguntas] = useState([]);
   const [texto, setTexto] = useState("");
   const [guardando, setGuardando] = useState(false);
@@ -35,7 +33,9 @@ function ExamenTeoricoPage() {
 
   const obtenerPreguntas = async () => {
     try {
-      const response = await axios.get("/preguntas-examen-teorico/");
+      const response = await axios.get(
+        "/preguntas-examen-teorico/?activa=true"
+      );
       setPreguntas(response.data);
     } catch (error) {
       console.error("Error obteniendo preguntas:", error);
@@ -251,7 +251,10 @@ function ExamenTeoricoPage() {
     const resultado = await Swal.fire({
       icon: "warning",
       title: "¿Eliminar pregunta?",
-      text: "Esta acción eliminará la pregunta y sus opciones.",
+      text: (
+        "La pregunta dejará de utilizarse en exámenes nuevos. "
+        + "Si nunca se ha usado, se eliminará completamente."
+      ),
       showCancelButton: true,
       confirmButtonText: "Sí, eliminar",
       cancelButtonText: "Cancelar",
@@ -262,12 +265,25 @@ function ExamenTeoricoPage() {
     if (!resultado.isConfirmed) return;
 
     try {
-      await axios.delete(`/preguntas-examen-teorico/${id}/`);
+      const response = await axios.delete(
+        `/preguntas-examen-teorico/${id}/`
+      );
 
-      Swal.fire({
+      const fueDesactivada = Boolean(
+        response.data?.desactivada
+      );
+
+      await Swal.fire({
         icon: "success",
-        title: "Pregunta eliminada",
-        text: "La pregunta fue eliminada correctamente.",
+        title: (
+          fueDesactivada
+            ? "Pregunta retirada"
+            : "Pregunta eliminada"
+        ),
+        text: (
+          response.data?.message
+          || "La pregunta fue eliminada correctamente."
+        ),
         confirmButtonColor: "#059669",
       });
 
@@ -277,12 +293,21 @@ function ExamenTeoricoPage() {
 
       obtenerPreguntas();
     } catch (error) {
-      console.error("Error eliminando pregunta:", error);
+      console.error(
+        "Error eliminando pregunta:",
+        error
+      );
+
+      const mensaje = (
+        error.response?.data?.error
+        || error.response?.data?.detail
+        || "No se pudo eliminar la pregunta."
+      );
 
       Swal.fire({
         icon: "error",
         title: "Error",
-        text: "No se pudo eliminar la pregunta.",
+        text: mensaje,
         confirmButtonColor: "#059669",
       });
     }
@@ -516,7 +541,6 @@ function ExamenTeoricoPage() {
                             : "text-slate-300"
                         }`}
                       />
-
                       <span className="text-slate-700">{opcion.texto}</span>
                     </div>
                   ))}

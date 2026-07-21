@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Search,
   Plus,
@@ -9,10 +9,20 @@ import {
   ClipboardCheck,
   TrendingUp,
   CheckCircle2,
-  Filter,
 } from "lucide-react";
 import axios from "../../api/axios";
+import Paginacion from "../../components/Paginacion";
 import NotasForm from "./NotasForm";
+
+const REGISTROS_POR_PAGINA = 25;
+
+const RESUMEN_INICIAL = {
+  total: 0,
+  aprobados: 0,
+  reprobados: 0,
+  pendientes: 0,
+  promedio: "0.0",
+};
 
 function NotasPages({ userRole }) {
   const [notas, setNotas] = useState([]);
@@ -20,155 +30,59 @@ function NotasPages({ userRole }) {
   const [filtroTipo, setFiltroTipo] = useState("Todas");
   const [modalAbierto, setModalAbierto] = useState(false);
 
+  const [pagina, setPagina] = useState(1);
+  const [totalRegistros, setTotalRegistros] = useState(0);
+  const [cargando, setCargando] = useState(false);
+  const [resumen, setResumen] = useState(RESUMEN_INICIAL);
+
   const rol = userRole?.toLowerCase();
 
   useEffect(() => {
-    obtenerNotas();
-  }, []);
+    const temporizador = setTimeout(() => {
+      obtenerNotas();
+    }, 350);
+
+    return () => clearTimeout(temporizador);
+  }, [pagina, busqueda, filtroTipo]);
 
   const obtenerNotas = async () => {
+    setCargando(true);
+
     try {
-      const response = await axios.get("/notas/");
-      setNotas(response.data);
+      const response = await axios.get(
+        "/notas/agrupadas/",
+        {
+          params: {
+            page: pagina,
+            page_size: REGISTROS_POR_PAGINA,
+            ...(busqueda.trim() && {
+              buscar: busqueda.trim(),
+            }),
+            ...(filtroTipo !== "Todas" && {
+              tipo_curso: filtroTipo,
+            }),
+          },
+        }
+      );
+
+      setNotas(response.data.results || []);
+      setTotalRegistros(response.data.count || 0);
+      setResumen(
+        response.data.resumen || RESUMEN_INICIAL
+      );
     } catch (error) {
-      console.error("Error cargando notas:", error);
+      console.error(
+        "Error cargando notas:",
+        error
+      );
+
+      setNotas([]);
+      setTotalRegistros(0);
+      setResumen(RESUMEN_INICIAL);
+    } finally {
+      setCargando(false);
     }
   };
-
-  const notasFiltradas = useMemo(() => {
-    return notas.filter((nota) => {
-      const texto = `
-        ${nota.estudiante_nombre || ""}
-        ${nota.estudiante_cedula || ""}
-        ${nota.instructor_nombre || ""}
-        ${nota.plan_nombre || ""}
-        ${nota.tipo_curso || ""}
-        ${nota.modalidad || ""}
-      `.toLowerCase();
-
-      const coincideBusqueda = texto.includes(busqueda.toLowerCase());
-
-      const coincideTipo =
-        filtroTipo === "Todas" ||
-        nota.tipo_curso?.toLowerCase() === filtroTipo.toLowerCase();
-
-      return coincideBusqueda && coincideTipo;
-    });
-  }, [notas, busqueda, filtroTipo]);
-
-  const notasAgrupadas = useMemo(() => {
-    const agrupadas = {};
-
-    notasFiltradas.forEach((nota) => {
-      const matriculaId = nota.matricula;
-
-      if (!agrupadas[matriculaId]) {
-        agrupadas[matriculaId] = {
-          ...nota,
-          nota_practica: null,
-          nota_teorica: null,
-          comentario_practico: "",
-          comentario_teorico: "",
-        };
-      }
-
-      if (nota.tipo_nota === "practico") {
-        agrupadas[matriculaId].nota_practica = nota.nota;
-        agrupadas[matriculaId].comentario_practico = nota.comentario;
-      }
-
-      if (nota.tipo_nota === "teorico") {
-        agrupadas[matriculaId].nota_teorica = nota.nota;
-        agrupadas[matriculaId].comentario_teorico = nota.comentario;
-      }
-    });
-
-    return Object.values(agrupadas);
-  }, [notasFiltradas]);
-
-  const resumen = useMemo(() => {
-    const total = notasAgrupadas.length;
-
-    const aprobados = notasAgrupadas.filter((nota) => {
-      const practicaOk =
-        nota.nota_practica !== null &&
-        nota.nota_practica !== undefined &&
-        nota.nota_practica !== "" &&
-        Number(nota.nota_practica) >= 80;
-
-      const teoricaOk =
-        nota.nota_teorica !== null &&
-        nota.nota_teorica !== undefined &&
-        nota.nota_teorica !== "" &&
-        Number(nota.nota_teorica) >= 80;
-
-      return practicaOk || teoricaOk;
-    }).length;
-
-    const reprobados = notasAgrupadas.filter((nota) => {
-      const tienePractica =
-        nota.nota_practica !== null &&
-        nota.nota_practica !== undefined &&
-        nota.nota_practica !== "";
-
-      const tieneTeorica =
-        nota.nota_teorica !== null &&
-        nota.nota_teorica !== undefined &&
-        nota.nota_teorica !== "";
-
-      if (!tienePractica || !tieneTeorica) {
-        return false;
-      }
-
-      return Number(nota.nota_practica) < 80 || Number(nota.nota_teorica) < 80;
-    }).length;
-
-    const pendientes = notasAgrupadas.filter(
-      (nota) =>
-        nota.nota_practica === null ||
-        nota.nota_practica === undefined ||
-        nota.nota_practica === "" ||
-        nota.nota_teorica === null ||
-        nota.nota_teorica === undefined ||
-        nota.nota_teorica === ""
-    ).length;
-
-    const notasNumericas = [];
-
-    notasAgrupadas.forEach((nota) => {
-      if (
-        nota.nota_practica !== null &&
-        nota.nota_practica !== undefined &&
-        nota.nota_practica !== ""
-      ) {
-        notasNumericas.push(Number(nota.nota_practica));
-      }
-
-      if (
-        nota.nota_teorica !== null &&
-        nota.nota_teorica !== undefined &&
-        nota.nota_teorica !== ""
-      ) {
-        notasNumericas.push(Number(nota.nota_teorica));
-      }
-    });
-
-    const promedio =
-      notasNumericas.length > 0
-        ? (
-            notasNumericas.reduce((total, nota) => total + nota, 0) /
-            notasNumericas.length
-          ).toFixed(1)
-        : "0.0";
-
-    return {
-      total,
-      aprobados,
-      reprobados,
-      pendientes,
-      promedio,
-    };
-  }, [notasAgrupadas]);
 
   return (
     <div className="min-h-screen bg-[#f7f9fd] px-4 py-5 md:px-6 lg:px-8">
@@ -218,15 +132,20 @@ function NotasPages({ userRole }) {
                     type="text"
                     placeholder="Buscar por estudiante, cédula, instructor o plan..."
                     className="h-full w-full bg-transparent pl-3 text-sm font-medium text-slate-700 outline-none placeholder:text-slate-400"
-                    value={busqueda}
-                    onChange={(e) => setBusqueda(e.target.value)}
+                    onChange={(e) => {
+                      setBusqueda(e.target.value);
+                      setPagina(1);
+                    }}
                   />
                 </div>
               )}
 
               <select
                 value={filtroTipo}
-                onChange={(e) => setFiltroTipo(e.target.value)}
+                onChange={(e) => {
+                  setFiltroTipo(e.target.value);
+                  setPagina(1);
+                }}
                 className="h-14 min-w-[190px] rounded-2xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
               >
                 <option value="Todas">Todas</option>
@@ -234,16 +153,6 @@ function NotasPages({ userRole }) {
                 <option value="Intermedio">Intermedio</option>
                 <option value="Avanzado">Avanzado</option>
               </select>
-
-              {rol === "admin" && (
-                <button
-                  type="button"
-                  className="inline-flex h-14 items-center justify-center gap-2 rounded-2xl border border-blue-200 bg-white px-5 text-sm font-black text-blue-600 transition hover:bg-blue-50"
-                >
-                  <Filter size={19} />
-                  Filtros
-                </button>
-              )}
             </div>
 
             {rol === "instructor" && (
@@ -258,14 +167,41 @@ function NotasPages({ userRole }) {
           </div>
         </div>
         )}
-        {rol === "admin" && <TablaAdmin notas={notasAgrupadas} />}
-        {rol === "instructor" && <TablaInstructor notas={notasAgrupadas} />}
-        {rol === "estudiante" && <TablaEstudiante notas={notasAgrupadas} />}
+
+        {rol === "admin" && (
+          <TablaAdmin notas={notas} />
+        )}
+
+        {rol === "instructor" && (
+          <TablaInstructor notas={notas} />
+        )}
+
+        {rol === "estudiante" && (
+          <TablaEstudiante notas={notas} />
+        )}
+
+        {totalRegistros > REGISTROS_POR_PAGINA && (
+          <div className="mt-4 overflow-hidden rounded-[20px] border border-slate-200 bg-white shadow-sm">
+            <Paginacion
+              pagina={pagina}
+              total={totalRegistros}
+              porPagina={REGISTROS_POR_PAGINA}
+              cargando={cargando}
+              onChange={setPagina}
+            />
+          </div>
+        )}
 
         <NotasForm
           open={modalAbierto}
           onClose={() => setModalAbierto(false)}
-          onNotaGuardada={obtenerNotas}
+          onNotaGuardada={() => {
+            if (pagina === 1) {
+              obtenerNotas();
+            } else {
+              setPagina(1);
+            }
+          }}
         />
       </div>
     </div>

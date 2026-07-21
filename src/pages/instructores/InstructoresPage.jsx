@@ -3,6 +3,7 @@ import Swal from "sweetalert2";
 import api from "../../api/axios";
 import { Image, Upload, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 import { VscChromeClose } from "react-icons/vsc";
+import Paginacion from "../../components/Paginacion";
 import {
     FaChalkboardTeacher,
     FaUserCheck,
@@ -17,14 +18,18 @@ import {
     FaUserTie,
 } from "react-icons/fa";
 
-function InstructoresPage() {
+const REGISTROS_POR_PAGINA = 25;
 
+function InstructoresPage() {
     const [instructores, setInstructores] = useState([]);
     const [loading, setLoading] = useState(true);
     const [modal, setModal] = useState(false);
     const [editData, setEditData] = useState(null);
     const [calendarioActivo, setCalendarioActivo] = useState(null);
     const [mesActual, setMesActual] = useState(new Date());
+    const [busqueda, setBusqueda] = useState("");
+    const [pagina, setPagina] = useState(1);
+    const [totalRegistros, setTotalRegistros] = useState(0);
 
 const meses = [
     "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
@@ -115,7 +120,7 @@ const seleccionarFechaCalendario = (fecha) => {
         categoria_instructor: "",
         edad: "",
         foto: null,
-        foto_base64: "",
+        tiene_foto: false,
         eliminar_foto: false,
         cedula: "",
         nacionalidad: "",
@@ -132,33 +137,55 @@ const seleccionarFechaCalendario = (fecha) => {
 
     const cargarInstructores = async () => {
         try {
-            const response = await api.get("/instructores/");
-            const data = response.data;
+            setLoading(true);
 
-            console.log("Respuesta instructores:", data);
+            const response = await api.get("/instructores/", {
+                params: {
+                    page: pagina,
+                    page_size: REGISTROS_POR_PAGINA,
+                    buscar: busqueda.trim() || undefined,
+                },
+            });
 
-            setInstructores(Array.isArray(data) ? data : data.results || []);
+            const resultado = response.data;
+
+            if (Array.isArray(resultado)) {
+                setInstructores(resultado);
+                setTotalRegistros(resultado.length);
+            } else {
+                setInstructores(resultado.results || []);
+                setTotalRegistros(resultado.count || 0);
+            }
         } catch (error) {
-            console.error("Error cargando instructores:", error);
+            console.error(
+                "Error cargando instructores:",
+                error
+            );
+
             setInstructores([]);
 
-            const mensaje =
+            Swal.fire(
+                "Error",
                 error.response?.data?.detail ||
-                "Error cargando instructores";
-
-            Swal.fire("Error", mensaje, "error");
+                    "Error cargando instructores",
+                "error"
+            );
+        } finally {
+            setLoading(false);
         }
     };
 
     useEffect(() => {
-        const iniciar = async () => {
-            setLoading(true);
-            await cargarInstructores();
-            setLoading(false);
-        };
+        const temporizador = setTimeout(() => {
+            cargarInstructores();
+        }, 350);
 
-        iniciar();
-    }, []);
+        return () => clearTimeout(temporizador);
+    }, [pagina, busqueda]);
+
+    useEffect(() => {
+        setPagina(1);
+    }, [busqueda]);
 
     const limpiarForm = () => {
         setForm({
@@ -169,7 +196,7 @@ const seleccionarFechaCalendario = (fecha) => {
             categoria_instructor: "",
             edad: "",
             foto: null,
-            foto_base64: "",
+            tiene_foto: false,
             eliminar_foto: false,
             cedula: "",
             nacionalidad: "",
@@ -192,33 +219,50 @@ const seleccionarFechaCalendario = (fecha) => {
         setModal(true);
     };
 
-    const abrirEditar = (instructor) => {
-        setEditData(instructor);
+    const abrirEditar = async (instructor) => {
+        try {
+            const response = await api.get(
+                `/instructores/${instructor.id}/`
+            );
 
-        setForm({
-            nombre: instructor.nombre || "",
-            apellido: instructor.apellido || "",
-            numero_telefono: instructor.numero_telefono || "",
-            direccion: instructor.direccion || "",
-            categoria_instructor: instructor.categoria_instructor || "",
-            edad: instructor.edad || "",
-            foto: null,
-            foto_base64: instructor.foto_base64 || "",
-            eliminar_foto: false,
-            cedula: instructor.cedula || "",
-            nacionalidad: instructor.nacionalidad || "",
-            nivel_escolar: instructor.nivel_escolar || "",
-            antecedentes_penales: instructor.antecedentes_penales || "",
-            centro_trabajo: instructor.centro_trabajo || "",
-            cargo: instructor.cargo || "",
-            curso_aprobado_instructor: instructor.curso_aprobado_instructor || "",
-            fecha_ingreso: instructor.fecha_ingreso || "",
-            fecha_salida: instructor.fecha_salida || "",
-            motivo_salida: instructor.motivo_salida || "",
-            infracciones_resoluciones: instructor.infracciones_resoluciones || "",
-        });
+            const detalle = response.data;
 
-        setModal(true);
+            setEditData(detalle);
+
+            setForm({
+                nombre: detalle.nombre || "",
+                apellido: detalle.apellido || "",
+                numero_telefono: detalle.numero_telefono || "",
+                direccion: detalle.direccion || "",
+                categoria_instructor: detalle.categoria_instructor || "",
+                edad: detalle.edad || "",
+                foto: null,
+                tiene_foto: Boolean(detalle.tiene_foto),
+                eliminar_foto: false,
+                cedula: detalle.cedula || "",
+                nacionalidad: detalle.nacionalidad || "",
+                nivel_escolar: detalle.nivel_escolar || "",
+                antecedentes_penales: detalle.antecedentes_penales || "",
+                centro_trabajo: detalle.centro_trabajo || "",
+                cargo: detalle.cargo || "",
+                curso_aprobado_instructor:
+                    detalle.curso_aprobado_instructor || "",
+                fecha_ingreso: detalle.fecha_ingreso || "",
+                fecha_salida: detalle.fecha_salida || "",
+                motivo_salida: detalle.motivo_salida || "",
+                infracciones_resoluciones:
+                    detalle.infracciones_resoluciones || "",
+            });
+
+            setModal(true);
+        } catch (error) {
+            Swal.fire(
+                "Error",
+                error.response?.data?.detail ||
+                    "No se pudo cargar el instructor.",
+                "error"
+            );
+        }
     };
 
     const cerrarModal = () => {
@@ -228,10 +272,82 @@ const seleccionarFechaCalendario = (fecha) => {
 
     const convertirImagenABase64 = (file) => {
         return new Promise((resolve, reject) => {
+            const tiposPermitidos = [
+                "image/jpeg",
+                "image/png",
+                "image/webp",
+            ];
+
+            if (!tiposPermitidos.includes(file.type)) {
+                reject(
+                    new Error(
+                        "La fotografía debe ser JPG, PNG o WEBP."
+                    )
+                );
+                return;
+            }
+
+            if (file.size > 10 * 1024 * 1024) {
+                reject(
+                    new Error(
+                        "La fotografía original no puede superar 10 MB."
+                    )
+                );
+                return;
+            }
+
             const reader = new FileReader();
 
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = reject;
+            reader.onload = () => {
+                const imagen = new window.Image();
+
+                imagen.onload = () => {
+                    const dimensionMaxima = 800;
+
+                    const escala = Math.min(
+                        1,
+                        dimensionMaxima / imagen.width,
+                        dimensionMaxima / imagen.height
+                    );
+
+                    const ancho = Math.round(
+                        imagen.width * escala
+                    );
+
+                    const alto = Math.round(
+                        imagen.height * escala
+                    );
+
+                    const canvas = document.createElement("canvas");
+
+                    canvas.width = ancho;
+                    canvas.height = alto;
+
+                    const contexto = canvas.getContext("2d");
+
+                    contexto.fillStyle = "#ffffff";
+                    contexto.fillRect(0, 0, ancho, alto);
+                    contexto.drawImage(imagen, 0, 0, ancho, alto);
+
+                    resolve(
+                        canvas.toDataURL("image/jpeg", 0.82)
+                    );
+                };
+
+                imagen.onerror = () => reject(
+                    new Error(
+                        "No se pudo procesar la fotografía."
+                    )
+                );
+
+                imagen.src = reader.result;
+            };
+
+            reader.onerror = () => reject(
+                new Error(
+                    "No se pudo leer la fotografía."
+                )
+            );
 
             reader.readAsDataURL(file);
         });
@@ -241,14 +357,6 @@ const seleccionarFechaCalendario = (fecha) => {
         e.preventDefault();
 
         try {
-            let fotoBase64Final = form.foto_base64 || "";
-
-            if (form.eliminar_foto) {
-                fotoBase64Final = "";
-            } else if (form.foto instanceof File) {
-                fotoBase64Final = await convertirImagenABase64(form.foto);
-            }
-
             const payload = {
                 nombre: form.nombre,
                 apellido: form.apellido,
@@ -267,8 +375,15 @@ const seleccionarFechaCalendario = (fecha) => {
                 fecha_salida: form.fecha_salida || null,
                 motivo_salida: form.motivo_salida || "",
                 infracciones_resoluciones: form.infracciones_resoluciones || "",
-                foto_base64: fotoBase64Final,
             };
+
+            if (form.eliminar_foto) {
+                payload.foto_base64 = "";
+            } else if (form.foto instanceof File) {
+                payload.foto_base64 = await convertirImagenABase64(
+                    form.foto
+                );
+            }
 
             if (editData) {
                 await api.patch(`/instructores/${editData.id}/`, payload);
@@ -294,7 +409,7 @@ const seleccionarFechaCalendario = (fecha) => {
 
             const mensaje = data && typeof data === "object"
                 ? Object.values(data).flat().join("\n")
-                : "No se pudo guardar el instructor.";
+                : error.message || "No se pudo guardar el instructor.";
 
             Swal.fire("Error", mensaje, "error");
         }
@@ -323,16 +438,16 @@ const seleccionarFechaCalendario = (fecha) => {
         }
     };
 
-    const despedirInstructor = async (instructor) => {
+    const desactivarInstructor = async (instructor) => {
         const { isConfirmed } = await Swal.fire({
-            title: "Despedir instructor",
+            title: "Desactivar instructor",
             text: `¿Deseas desactivar a ${instructor.nombre_completo}?`,
             icon: "warning",
             input: "textarea",
             inputLabel: "Motivo de salida",
             inputPlaceholder: "Escriba el motivo...",
             showCancelButton: true,
-            confirmButtonText: "Despedir",
+            confirmButtonText: "Desactivar",
             cancelButtonText: "Cancelar",
         });
 
@@ -346,7 +461,7 @@ const seleccionarFechaCalendario = (fecha) => {
             );
 
             await api.post(
-                `/instructores/${instructor.id}/despedir/`,
+                `/instructores/${instructor.id}/desactivar/`,
                 formData
             );
 
@@ -375,10 +490,6 @@ const seleccionarFechaCalendario = (fecha) => {
             `${inst.nombre || ""} ${inst.apellido || ""}`.trim() ||
             "Instructor"
         );
-    };
-
-    const getFotoInstructor = (inst) => {
-        return inst.foto_base64 || inst.foto_url || inst.foto || "";
     };
 
     const getCategoriaInstructor = (inst) => {
@@ -534,8 +645,20 @@ const seleccionarFechaCalendario = (fecha) => {
                                 </h2>
 
                                 <p className="mt-1 text-sm font-medium text-slate-500">
-                                    {instructores.length} instructor(es) registrados
+                                    {totalRegistros} instructor(es) registrados
                                 </p>
+                            </div>
+
+                            <div className="relative w-full md:w-80">
+                                <input
+                                    type="text"
+                                    value={busqueda}
+                                    onChange={(event) => {
+                                        setBusqueda(event.target.value);
+                                    }}
+                                    placeholder="Buscar instructor..."
+                                    className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+                                />
                             </div>
 
                             <div className="inline-flex w-fit items-center gap-2 rounded-full bg-blue-50 px-4 py-2 text-xs font-black text-blue-600 ring-1 ring-blue-100">
@@ -587,18 +710,8 @@ const seleccionarFechaCalendario = (fecha) => {
                                             >
                                                 <td className="px-5 py-4">
                                                     <div className="flex items-center gap-3">
-                                                        <div className="h-14 w-14 shrink-0 overflow-hidden rounded-2xl bg-slate-100 shadow-sm ring-1 ring-slate-200">
-                                                            {getFotoInstructor(inst) ? (
-                                                                <img
-                                                                    src={getFotoInstructor(inst)}
-                                                                    alt={getNombreInstructor(inst)}
-                                                                    className="h-full w-full object-cover"
-                                                                />
-                                                            ) : (
-                                                                <div className="flex h-full w-full items-center justify-center bg-blue-50 text-blue-600">
-                                                                    <FaUserTie className="text-2xl" />
-                                                                </div>
-                                                            )}
+                                                        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 shadow-sm ring-1 ring-slate-200">
+                                                            <FaUserTie className="text-2xl" />
                                                         </div>
 
                                                         <div className="min-w-0">
@@ -671,25 +784,17 @@ const seleccionarFechaCalendario = (fecha) => {
                                                             Editar
                                                         </button>
 
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => despedirInstructor(inst)}
-                                                            title="Despedir instructor"
-                                                            className="inline-flex h-10 items-center justify-center gap-2 rounded-2xl bg-orange-50 px-4 text-sm font-black text-orange-600 ring-1 ring-orange-100 transition hover:-translate-y-0.5 hover:bg-orange-100 hover:cursor-pointer"
-                                                        >
-                                                            <FaUserSlash className="text-sm" />
-                                                            Despedir
-                                                        </button>
-
-                                                        {/*<button
-                                                            type="button"
-                                                            onClick={() => eliminarInstructor(inst)}
-                                                            title="Eliminar instructor"
-                                                            className="inline-flex h-10 items-center justify-center gap-2 rounded-2xl bg-red-50 px-4 text-sm font-black text-red-600 ring-1 ring-red-100 transition hover:-translate-y-0.5 hover:bg-red-100 hover:cursor-pointer"
-                                                        >
-                                                            <FaTrashAlt className="text-sm" />
-                                                            Eliminar
-                                                        </button>*/}
+                                                        {esInstructorActivo(inst) && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => desactivarInstructor(inst)}
+                                                                title="Desactivar instructor"
+                                                                className="inline-flex h-10 items-center justify-center gap-2 rounded-2xl bg-orange-50 px-4 text-sm font-black text-orange-600 ring-1 ring-orange-100 transition hover:-translate-y-0.5 hover:bg-orange-100 hover:cursor-pointer"
+                                                            >
+                                                                <FaUserSlash className="text-sm" />
+                                                                Desactivar
+                                                            </button>
+                                                        )}
                                                     </div>
                                                 </td>
                                             </tr>
@@ -706,6 +811,14 @@ const seleccionarFechaCalendario = (fecha) => {
                                             </tr>
                                         )}
                                     </tbody>
+
+                                    <Paginacion
+                                        pagina={pagina}
+                                        total={totalRegistros}
+                                        porPagina={REGISTROS_POR_PAGINA}
+                                        cargando={loading}
+                                        onChange={setPagina}
+                                    />
                                 </table>
                             </div>
                         </div>
@@ -976,7 +1089,7 @@ const seleccionarFechaCalendario = (fecha) => {
 
                                     <input
                                         type="file"
-                                        accept="image/*"
+                                        accept="image/jpeg,image/png,image/webp"
                                         onChange={(e) =>
                                             setForm({
                                                 ...form,
@@ -989,7 +1102,7 @@ const seleccionarFechaCalendario = (fecha) => {
                                 </label>
                             </div>
 
-                            {editData?.foto_base64 && (
+                            {form.tiene_foto && !form.eliminar_foto && (
                                 <button
                                     type="button"
                                     onClick={() =>

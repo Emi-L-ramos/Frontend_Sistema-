@@ -12,12 +12,15 @@ import {
     XCircle,
 } from "lucide-react";
 import api from "../../api/axios";
+import Paginacion from "../../components/Paginacion";
 import {
     FaUserGraduate,
     FaUsers,
     FaUserCheck,
     FaSearch,
 } from "react-icons/fa";
+
+const REGISTROS_POR_PAGINA = 25;
 
 function EstudiantesPage() {
     const { token } = useAuth();
@@ -27,6 +30,8 @@ function EstudiantesPage() {
     const [showModal, setShowModal] = useState(false);
     const [editData, setEditData] = useState(null);
     const [busqueda, setBusqueda] = useState("");
+    const [pagina, setPagina] = useState(1);
+    const [totalRegistros, setTotalRegistros] = useState(0);
 
     const [form, setForm] = useState({
         nombre: "",
@@ -49,22 +54,47 @@ function EstudiantesPage() {
         try {
             setLoading(true);
 
-            const response = await api.get("/estudiantes/");
-            const data = response.data;
+            const response = await api.get("/estudiantes/", {
+                params: {
+                    page: pagina,
+                    page_size: REGISTROS_POR_PAGINA,
+                    buscar: busqueda.trim() || undefined,
+                },
+            });
 
-            setEstudiantes(Array.isArray(data) ? data : data.results || []);
+            const resultado = response.data;
+
+            if (Array.isArray(resultado)) {
+                setEstudiantes(resultado);
+                setTotalRegistros(resultado.length);
+            } else {
+                setEstudiantes(resultado.results || []);
+                setTotalRegistros(resultado.count || 0);
+            }
         } catch (error) {
-            Swal.fire("Error", "Error de conexión con el servidor", "error");
+            Swal.fire(
+                "Error",
+                "Error de conexión con el servidor",
+                "error"
+            );
         } finally {
             setLoading(false);
         }
     };
 
     useEffect(() => {
-        if (token) {
+        if (!token) return;
+
+        const temporizador = setTimeout(() => {
             fetchEstudiantes();
-        }
-    }, [token]);
+        }, 350);
+
+        return () => clearTimeout(temporizador);
+    }, [token, pagina, busqueda]);
+
+    useEffect(() => {
+        setPagina(1);
+    }, [busqueda]);
 
     const resetForm = () => {
         setForm({
@@ -187,17 +217,7 @@ function EstudiantesPage() {
         }
     };
 
-    const estudiantesFiltrados = estudiantes.filter((estudiante) => {
-        const texto = `
-            ${estudiante.nombre || ""}
-            ${estudiante.apellido || ""}
-            ${estudiante.cedula || ""}
-            ${estudiante.correo_electronico || ""}
-            ${estudiante.telefono_movil || ""}
-        `.toLowerCase();
-
-        return texto.includes(busqueda.toLowerCase());
-    });
+    const estudiantesFiltrados = estudiantes;
 
     const obtenerIniciales = (estudiante) => {
         const nombre = estudiante.nombre?.charAt(0) || "";
@@ -266,7 +286,9 @@ function EstudiantesPage() {
                             </p>
 
                             <p className="mt-4 text-4xl font-black text-emerald-600">
-                                {estudiantes.filter((estudiante) => estudiante.activo).length}
+                                {estudiantes.filter(
+                                    (estudiante) => estudiante.tiene_matricula_activa
+                                ).length}
                             </p>
 
                             <p className="mt-3 text-base font-medium text-slate-500">
@@ -352,7 +374,7 @@ function EstudiantesPage() {
                             </h2>
 
                             <p className="mt-1 text-sm text-slate-500">
-                                {estudiantesFiltrados.length} estudiante(s) encontrados
+                                {totalRegistros} estudiante(s) encontrados
                             </p>
                         </div>
 
@@ -414,18 +436,18 @@ function EstudiantesPage() {
                                             <td className="px-5 py-4 text-center">
                                                 <span
                                                     className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-black ${
-                                                        estudiante.activo
+                                                        estudiante.tiene_matricula_activa
                                                             ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
-                                                            : "bg-red-50 text-red-700 ring-1 ring-red-100"
+                                                            : "bg-slate-100 text-slate-600 ring-1 ring-slate-200"
                                                     }`}
                                                 >
-                                                    {estudiante.activo ? (
+                                                    {estudiante.tiene_matricula_activa ? (
                                                         <CheckCircle2 className="h-3.5 w-3.5" />
                                                     ) : (
                                                         <XCircle className="h-3.5 w-3.5" />
                                                     )}
 
-                                                    {estudiante.activo ? "Activo" : "Inactivo"}
+                                                    {estudiante.texto_estado_academico || "Sin matrícula"}
                                                 </span>
                                             </td>
 
@@ -464,6 +486,15 @@ function EstudiantesPage() {
                             </tbody>
                         </table>
                     </div>
+
+                    <Paginacion
+                        pagina={pagina}
+                        total={totalRegistros}
+                        porPagina={REGISTROS_POR_PAGINA}
+                        cargando={loading}
+                        onChange={setPagina}
+                    />
+                    
                 </div>
             )}
         </div>

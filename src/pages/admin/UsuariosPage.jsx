@@ -4,12 +4,16 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import Swal from "sweetalert2";
 import api from "../../api/axios";
+import Paginacion from "../../components/Paginacion";
 import {
     FaUsers,
     FaUserShield,
     FaChalkboardTeacher,
     FaUserGraduate,
+    FaSearch,
 } from "react-icons/fa";
+
+const USUARIOS_POR_PAGINA = 25;
 
 function UsuariosPage() {
     const { token, user: usuarioActual } = useAuth();
@@ -20,7 +24,21 @@ function UsuariosPage() {
     const [busquedaMatricula, setBusquedaMatricula] = useState("");
     const [instructores, setInstructores] = useState([]);
     const [busquedaInstructor, setBusquedaInstructor] = useState("");
+    const [busquedaEstudiante, setBusquedaEstudiante] = useState("");
+    const [paginaEstudiantes, setPaginaEstudiantes] = useState(1);
+    const [conteoAdmin, setConteoAdmin] = useState(0);
+    const [conteoInstructores, setConteoInstructores] = useState(0);
+    const [conteoEstudiantes, setConteoEstudiantes] = useState(0);
+
+    const [
+        totalEstudiantesFiltrados,
+        setTotalEstudiantesFiltrados,
+    ] = useState(0);
     const [loading, setLoading] = useState(true);
+    const [
+        cargandoEstudiantes,
+        setCargandoEstudiantes,
+    ] = useState(false);
     const [showModal, setShowModal] = useState(false);
     const [editData, setEditData] = useState(null);
 
@@ -69,49 +87,147 @@ function UsuariosPage() {
         return acc;
     }, {});
 
-    const fetchUsuarios = async () => {
+    const fetchUsuariosFijos = async (
+        mostrarCargaGeneral = false
+    ) => {
         try {
-            setLoading(true);
-
-            let url = "/usuarios/";
-            let todosLosUsuarios = [];
-
-            while (url) {
-                console.log("Cargando usuarios desde:", url);
-
-                const response = await api.get(url);
-                const data = response.data;
-
-                console.log("RESPUESTA USUARIOS:", data);
-
-                if (Array.isArray(data)) {
-                    todosLosUsuarios = data;
-                    url = null;
-                } else {
-                    todosLosUsuarios = [
-                        ...todosLosUsuarios,
-                        ...(data.results || [])
-                    ];
-
-                    if (data.next) {
-                        const nextUrl = new URL(data.next);
-                        url = `${nextUrl.pathname.replace("/api", "")}${nextUrl.search}`;
-                    } else {
-                        url = null;
-                    }
-                }
+            if (mostrarCargaGeneral) {
+                setLoading(true);
             }
 
-            console.log("TODOS LOS USUARIOS CARGADOS:", todosLosUsuarios);
-            console.log("TOTAL ESTUDIANTES:", todosLosUsuarios.filter(u =>
-                String(u.rol || u.rol_nombre || "").toLowerCase() === "estudiante"
-            ));
+            const [
+                respuestaAdmin,
+                respuestaInstructores,
+                respuestaTotalEstudiantes,
+            ] = await Promise.all([
+                api.get("/usuarios/", {
+                    params: {
+                        rol: "admin",
+                    },
+                }),
 
-            setUsuarios(todosLosUsuarios);
+                api.get("/usuarios/", {
+                    params: {
+                        rol: "instructor",
+                    },
+                }),
+
+                api.get("/usuarios/", {
+                    params: {
+                        rol: "estudiante",
+                        page: 1,
+                        page_size: 1,
+                    },
+                }),
+            ]);
+
+            const adminData = respuestaAdmin.data;
+            const instructoresData =
+                respuestaInstructores.data;
+            const totalData =
+                respuestaTotalEstudiantes.data;
+
+            const administradores = Array.isArray(adminData)
+                ? adminData
+                : adminData.results || [];
+
+            const usuariosInstructores = Array.isArray(
+                instructoresData
+            )
+                ? instructoresData
+                : instructoresData.results || [];
+
+            setUsuarios((usuariosAnteriores) => {
+                const estudiantesExistentes =
+                    usuariosAnteriores.filter(
+                        (usuario) =>
+                            normalizarRol(usuario.rol) ===
+                            "estudiante"
+                    );
+
+                return [
+                    ...administradores,
+                    ...usuariosInstructores,
+                    ...estudiantesExistentes,
+                ];
+            });
+
+            setConteoAdmin(
+                Array.isArray(adminData)
+                    ? adminData.length
+                    : adminData.count || 0
+            );
+
+            setConteoInstructores(
+                Array.isArray(instructoresData)
+                    ? instructoresData.length
+                    : instructoresData.count || 0
+            );
+
+            setConteoEstudiantes(
+                Array.isArray(totalData)
+                    ? totalData.length
+                    : totalData.count || 0
+            );
         } catch (error) {
-            console.error("Error cargando usuarios:", error);
+            console.error(
+                "Error cargando administradores e instructores:",
+                error
+            );
         } finally {
-            setLoading(false);
+            if (mostrarCargaGeneral) {
+                setLoading(false);
+            }
+        }
+    };
+
+    const fetchUsuariosEstudiantes = async () => {
+        try {
+            setCargandoEstudiantes(true);
+
+            const response = await api.get("/usuarios/", {
+                params: {
+                    rol: "estudiante",
+                    page: paginaEstudiantes,
+                    page_size: USUARIOS_POR_PAGINA,
+                    buscar:
+                        busquedaEstudiante.trim() ||
+                        undefined,
+                },
+            });
+
+            const data = response.data;
+
+            const estudiantes = Array.isArray(data)
+                ? data
+                : data.results || [];
+
+            setUsuarios((usuariosAnteriores) => {
+                const usuariosFijos =
+                    usuariosAnteriores.filter(
+                        (usuario) =>
+                            normalizarRol(usuario.rol) !==
+                            "estudiante"
+                    );
+
+                return [
+                    ...usuariosFijos,
+                    ...estudiantes,
+                ];
+            });
+
+            setTotalEstudiantesFiltrados(
+                Array.isArray(data)
+                    ? data.length
+                    : data.count || 0
+            );
+        } catch (error) {
+            console.error(
+                "Error cargando estudiantes:",
+                error
+            );
+        } finally {
+            setCargandoEstudiantes(false);
         }
     };
 
@@ -119,8 +235,6 @@ function UsuariosPage() {
         try {
             const response = await api.get("/roles/");
             const data = response.data;
-
-            console.log("ROLES DESDE API:", data);
 
             const colores = {
                 admin: "bg-red-100 text-red-700",
@@ -160,9 +274,17 @@ function UsuariosPage() {
 
     const fetchMatriculas = async () => {
         try {
-            const response = await api.get("/matricula/");
+            const response = await api.get(
+                "/matricula/?estado=matriculado"
+            );
+
             const data = response.data;
-            setMatriculas(Array.isArray(data) ? data : data.results || []);
+
+            setMatriculas(
+                Array.isArray(data)
+                    ? data
+                    : data.results || []
+            );
         } catch (error) {
             console.error("Error cargando matrículas:", error);
         }
@@ -170,7 +292,9 @@ function UsuariosPage() {
 
     const fetchInstructores = async () => {
         try {
-            const response = await api.get("/instructores/");
+            const response = await api.get(
+            "/instructores/?activo=true"
+            );
             const data = response.data;
             setInstructores(Array.isArray(data) ? data : data.results || []);
         } catch (error) {
@@ -224,9 +348,20 @@ function UsuariosPage() {
 
         try {
             if (editData) {
-                await api.put(`/usuarios/${editData.id}/`, userData);
+                await api.put(
+                    `/usuarios/${editData.id}/`,
+                    userData
+                );
+            } else if (form.rol === "estudiante") {
+                await api.post(
+                    "/usuarios/crear-estudiante/",
+                    userData
+                );
             } else {
-                await api.post("/usuarios/", userData);
+                await api.post(
+                    "/usuarios/",
+                    userData
+                );
             }
 
             Swal.fire(
@@ -235,7 +370,8 @@ function UsuariosPage() {
                 "success"
             );
 
-            fetchUsuarios();
+            fetchUsuariosFijos();
+            fetchUsuariosEstudiantes();
             setShowModal(false);
             resetForm();
 
@@ -271,7 +407,8 @@ function UsuariosPage() {
             await api.delete(`/usuarios/${id}/`);
 
             Swal.fire("Eliminado", "Usuario eliminado correctamente", "success");
-            fetchUsuarios();
+            fetchUsuariosFijos();
+            fetchUsuariosEstudiantes();
 
         } catch (error) {
             Swal.fire("Error", "No se pudo eliminar el usuario", "error");
@@ -281,11 +418,25 @@ function UsuariosPage() {
     useEffect(() => {
         if (!token) return;
 
-        fetchUsuarios();
+        fetchUsuariosFijos(true);
         fetchRoles();
         fetchMatriculas();
         fetchInstructores();
     }, [token]);
+
+    useEffect(() => {
+        if (!token) return;
+
+        const temporizador = setTimeout(() => {
+            fetchUsuariosEstudiantes();
+        }, 350);
+
+        return () => clearTimeout(temporizador);
+    }, [
+        token,
+        paginaEstudiantes,
+        busquedaEstudiante,
+    ]);
 
     const getRolVisual = (rolValue) => {
         const rol = normalizarRol(rolValue);
@@ -379,9 +530,9 @@ function UsuariosPage() {
         return (username || "U").charAt(0).toUpperCase();
     };
 
-    const totalAdmin = usuariosPorRol.admin?.length || 0;
-    const totalInstructores = usuariosPorRol.instructor?.length || 0;
-    const totalEstudiantes = usuariosPorRol.estudiante?.length || 0;
+    const totalAdmin = conteoAdmin;
+    const totalInstructores = conteoInstructores;
+    const totalEstudiantes = conteoEstudiantes;
 
     return (
         <div className="min-h-screen w-full min-w-0 overflow-x-hidden bg-[#f6f8fc] px-4 py-5 md:px-8 lg:px-10">
@@ -514,6 +665,11 @@ function UsuariosPage() {
                     <div className="space-y-6">
                         {roles.map((rol) => {
                             const lista = usuariosPorRol[rol.value] || [];
+
+                            const terminoEstudiante = busquedaEstudiante
+                                .trim()
+                                .toLowerCase();
+
                             const visual = getRolVisual(rol.value);
 
                             return (
@@ -533,7 +689,9 @@ function UsuariosPage() {
                                                     </h2>
 
                                                     <span className={`inline-flex rounded-full px-3 py-1 text-xs font-black ring-1 ${visual.badge}`}>
-                                                        {lista.length} usuario(s)
+                                                        {rol.value === "estudiante"
+                                                            ? totalEstudiantesFiltrados
+                                                            : lista.length} usuario(s)
                                                     </span>
                                                 </div>
 
@@ -543,9 +701,31 @@ function UsuariosPage() {
                                             </div>
                                         </div>
 
-                                        <span className={`inline-flex w-fit rounded-full px-4 py-2 text-xs font-black ring-1 ${visual.badge}`}>
-                                            {rol.label}
-                                        </span>
+                                        <div className="flex w-full flex-col gap-3 md:w-auto md:items-end">
+                                            {rol.value === "estudiante" && (
+                                                <div className="relative w-full md:w-80">
+                                                    <FaSearch className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm text-slate-400" />
+
+                                                    <input
+                                                        type="search"
+                                                        value={busquedaEstudiante}
+                                                        onChange={(event) => {
+                                                            setBusquedaEstudiante(
+                                                                event.target.value
+                                                            );
+
+                                                            setPaginaEstudiantes(1);
+                                                        }}
+                                                        placeholder="Buscar estudiante..."
+                                                        className="h-11 w-full rounded-2xl border border-slate-200 bg-white pl-11 pr-4 text-sm font-semibold text-slate-700 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
+                                                    />
+                                                </div>
+                                            )}
+
+                                            <span className={`inline-flex w-fit rounded-full px-4 py-2 text-xs font-black ring-1 ${visual.badge}`}>
+                                                {rol.label}
+                                            </span>
+                                        </div>
                                     </div>
 
                                     {lista.length > 0 ? (
@@ -624,10 +804,44 @@ function UsuariosPage() {
                                                                     </td>
 
                                                                     <td className="px-5 py-4 text-center">
-                                                                        <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-black text-emerald-700 ring-1 ring-emerald-100">
-                                                                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
-                                                                            Activo
-                                                                        </span>
+                                                                        {(() => {
+                                                                            const textoEstado =
+                                                                                u.texto_estado_usuario ||
+                                                                                (u.is_active ? "Activo" : "Inactivo");
+
+                                                                            const estadoNormalizado =
+                                                                                textoEstado.toLowerCase();
+
+                                                                            const clasesEstado =
+                                                                                estadoNormalizado === "activo"
+                                                                                    ? "bg-emerald-50 text-emerald-700 ring-emerald-100"
+                                                                                    : estadoNormalizado === "pendiente"
+                                                                                        ? "bg-amber-50 text-amber-700 ring-amber-100"
+                                                                                        : estadoNormalizado === "finalizado"
+                                                                                            ? "bg-slate-100 text-slate-700 ring-slate-200"
+                                                                                            : "bg-red-50 text-red-700 ring-red-100";
+
+                                                                            const puntoEstado =
+                                                                                estadoNormalizado === "activo"
+                                                                                    ? "bg-emerald-500"
+                                                                                    : estadoNormalizado === "pendiente"
+                                                                                        ? "bg-amber-500"
+                                                                                        : estadoNormalizado === "finalizado"
+                                                                                            ? "bg-slate-500"
+                                                                                            : "bg-red-500";
+
+                                                                            return (
+                                                                                <span
+                                                                                    className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-black ring-1 ${clasesEstado}`}
+                                                                                >
+                                                                                    <span
+                                                                                        className={`h-1.5 w-1.5 rounded-full ${puntoEstado}`}
+                                                                                    ></span>
+
+                                                                                    {textoEstado}
+                                                                                </span>
+                                                                            );
+                                                                        })()}
                                                                     </td>
 
                                                                     <td className="px-5 py-4">
@@ -678,9 +892,21 @@ function UsuariosPage() {
                                             </div>
 
                                             <p className="font-semibold text-slate-400">
-                                                No hay usuarios con este rol.
+                                                {rol.value === "estudiante" && terminoEstudiante
+                                                    ? "No se encontraron estudiantes."
+                                                    : "No hay usuarios con este rol."}
                                             </p>
                                         </div>
+                                    )}
+
+                                    {rol.value === "estudiante" && (
+                                        <Paginacion
+                                            pagina={paginaEstudiantes}
+                                            total={totalEstudiantesFiltrados}
+                                            porPagina={USUARIOS_POR_PAGINA}
+                                            cargando={cargandoEstudiantes}
+                                            onChange={setPaginaEstudiantes}
+                                        />
                                     )}
                                 </div>
                             );

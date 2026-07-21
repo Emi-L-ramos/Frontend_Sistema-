@@ -4,8 +4,17 @@ import { useNavigate } from "react-router-dom";
 import { FiSearch, FiX } from "react-icons/fi";
 import api from "../api/axios";
 
-const redondearMonto = (valor) => Math.round(Number(valor || 0));
+const obtenerMontoReal = (valor) =>
+    Number(valor || 0);
 
+const redondearMontoCobro = (valor) =>
+    Math.round(obtenerMontoReal(valor));
+
+const formatearDinero = (valor) =>
+    obtenerMontoReal(valor).toLocaleString("es-NI", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    });
 
 function normalizarTipoCurso(matricula) {
     const tipo = String(matricula?.tipo_curso || "").toLowerCase();
@@ -29,8 +38,9 @@ function conceptoPorTipo(tipo) {
     return "Pago de curso principiante";
 }
 
-function RecibosForm({ onSave, initialData }) {
+function RecibosForm({ onSave, initialData = null }) {
     const navigate = useNavigate();
+    const isEditing = Boolean(initialData?.id);
 
     const initialState = {
         matricula: "",
@@ -56,6 +66,34 @@ function RecibosForm({ onSave, initialData }) {
     const [valoresCurso, setValoresCurso] = useState([]);
     const [valorCursoActual, setValorCursoActual] = useState(null);
 
+    useEffect(() => {
+        if (!initialData?.id) return;
+
+        const matricula = initialData.matricula_data || null;
+
+        setForm({
+            matricula: initialData.matricula || "",
+            numero_recibo: initialData.numero_recibo || "",
+            fecha_pago: initialData.fecha_pago || "",
+            tipo_pago: initialData.tipo_pago || "anticipo",
+            monto_pagado: String(initialData.monto_pagado ?? ""),
+            cantidad: initialData.cantidad || "",
+            monto_unitario: initialData.monto_unitario || "",
+            concepto: initialData.concepto || "",
+            horas_reforzamiento:
+                matricula?.horas_reforzamiento || "",
+            observaciones: initialData.observaciones || "",
+        });
+
+        setMatriculaSeleccionada(matricula);
+
+        setBusquedaEstudiante(
+            initialData.estudiante_nombre ||
+            matricula?.estudiante_nombre ||
+            "Estudiante"
+        );
+    }, [initialData]);
+
     const tipoCurso = matriculaSeleccionada
         ? normalizarTipoCurso(matriculaSeleccionada)
         : "principiante";
@@ -72,14 +110,15 @@ function RecibosForm({ onSave, initialData }) {
         if (!valorCurso) return 0;
 
         if (tipo === "principiante") {
-            return redondearMonto(valorCurso.precio_total);
+            return obtenerMontoReal(valorCurso.precio_total);
         }
-
         const h = Number(horas || 0);
 
         if (h <= 0) return 0;
 
-        return redondearMonto(h * Number(valorCurso.precio_hora || 0));
+        return obtenerMontoReal(
+            h * Number(valorCurso.precio_hora || 0)
+        );
     };
 
     const cargarValoresCurso = async () => {
@@ -187,7 +226,7 @@ function RecibosForm({ onSave, initialData }) {
         );
 
         if (totalBackend > 0) {
-            return redondearMonto(totalBackend);
+            return obtenerMontoReal(totalBackend);
         }
 
         return calcularTotal(tipo, horas);
@@ -257,52 +296,6 @@ function RecibosForm({ onSave, initialData }) {
         setMostrarResultados(false);
     };
 
-    useEffect(() => {
-        if (initialData && initialData.id) {
-            setForm({
-                matricula: initialData.matricula || "",
-                numero_recibo: initialData.numero_recibo || "",
-                fecha_pago: initialData.fecha_pago
-                    ? initialData.fecha_pago.split("T")[0]
-                    : new Date().toISOString().split("T")[0],
-                tipo_pago: initialData.tipo_pago || "anticipo",
-                monto_pagado: initialData.monto_pagado || "",
-                cantidad: initialData.cantidad || "",
-                monto_unitario: initialData.monto_unitario || "",
-                concepto: initialData.concepto || "Pago de curso principiante",
-                horas_reforzamiento: initialData.horas_reforzamiento || "",
-                observaciones: initialData.observaciones || "",
-            });
-
-            if (initialData.matricula) {
-                cargarInfoMatricula(initialData.matricula, initialData.horas_reforzamiento);
-
-                const buscarMatricula = async () => {
-                    try {
-                        const response = await api.get(`/matricula/${initialData.matricula}/`);
-                        const mat = response.data;
-
-                        const tipo = normalizarTipoCurso(mat);
-                        const valorCurso = obtenerValorCurso(tipo);
-
-                        setMatriculaSeleccionada(mat);
-                        setValorCursoActual(valorCurso || null);
-
-                        setBusquedaEstudiante(
-                            `${mat.estudiante_nombre || "Sin nombre"} - ${mat.estudiante_cedula || "Sin cédula"}`
-                        );
-                    } catch (error) {
-                        console.error("Error cargando matrícula:", error);
-                    }
-                };
-
-                buscarMatricula();
-            }
-        } else {
-            limpiarSeleccion();
-        }
-    }, [initialData, valoresCurso]);
-
     const handleChange = (e) => {
         const { name, value } = e.target;
 
@@ -330,7 +323,7 @@ function RecibosForm({ onSave, initialData }) {
                     const montoCompleto =
                         totalPagadoPrevio > 0 &&
                         saldoPendiente > 0
-                            ? redondearMonto(saldoPendiente)
+                            ? redondearMontoCobro(saldoPendiente)
                             : totalActual;
 
                     nuevoForm.monto_pagado = String(
@@ -356,7 +349,7 @@ function RecibosForm({ onSave, initialData }) {
         ) {
             setForm((prev) => ({
                 ...prev,
-                monto_pagado: String(redondearMonto(saldoInfo.saldo_pendiente || 0)),
+                monto_pagado: String(redondearMontoCobro(saldoInfo.saldo_pendiente || 0)),
             }));
         }
     }, [form.tipo_pago, saldoInfo]);
@@ -365,7 +358,97 @@ function RecibosForm({ onSave, initialData }) {
         e.preventDefault();
         setLoading(true);
 
-        const isEditing = !!initialData?.id;
+        if (isEditing) {
+            const numeroRecibo = String(
+                form.numero_recibo || ""
+            ).trim();
+
+            const montoEditado = Number(
+                form.monto_pagado
+            );
+
+            if (!numeroRecibo) {
+                Swal.fire(
+                    "Error",
+                    "Debe ingresar el número de recibo.",
+                    "error"
+                );
+
+                setLoading(false);
+                return;
+            }
+
+            if (
+                !Number.isFinite(montoEditado) ||
+                montoEditado < 0
+            ) {
+                Swal.fire(
+                    "Error",
+                    "Debe ingresar un monto válido.",
+                    "error"
+                );
+
+                setLoading(false);
+                return;
+            }
+
+            if (
+                form.tipo_pago !== "beneficio" &&
+                montoEditado <= 0
+            ) {
+                Swal.fire(
+                    "Error",
+                    "El monto debe ser mayor a cero.",
+                    "error"
+                );
+
+                setLoading(false);
+                return;
+            }
+
+            try {
+                await api.patch(
+                    `/recibo/${initialData.id}/`,
+                    {
+                        numero_recibo: numeroRecibo,
+                        monto_pagado: montoEditado,
+                    }
+                );
+
+                await Swal.fire({
+                    title: "¡Recibo actualizado!",
+                    text: (
+                        "El número de recibo y el monto "
+                        + "fueron actualizados correctamente."
+                    ),
+                    icon: "success",
+                    confirmButtonText: "Aceptar",
+                });
+
+                if (onSave) {
+                    onSave();
+                }
+            } catch (error) {
+                const data = error.response?.data;
+
+                const mensaje =
+                    data?.error ||
+                    data?.detail ||
+                    data?.numero_recibo?.[0] ||
+                    data?.monto_pagado?.[0] ||
+                    "No se pudo actualizar el recibo.";
+
+                Swal.fire(
+                    "Error",
+                    mensaje,
+                    "error"
+                );
+            } finally {
+                setLoading(false);
+            }
+
+            return;
+        }
 
         if (!form.matricula) {
             Swal.fire("Error", "Debe seleccionar un estudiante", "error");
@@ -425,7 +508,7 @@ function RecibosForm({ onSave, initialData }) {
             const montoEsperado =
                 totalPagadoPrevio > 0 &&
                 saldoPendiente > 0
-                    ? redondearMonto(saldoPendiente)
+                    ? redondearMontoCobro(saldoPendiente)
                     : totalCurso;
 
             const montoCoincide =
@@ -433,7 +516,6 @@ function RecibosForm({ onSave, initialData }) {
                 Math.round(montoEsperado);
 
             const esReciboAntiguoParaReparar =
-                isEditing &&
                 Number(
                     saldoInfo?.cantidad_pagos || 0
                 ) > 1 &&
@@ -459,7 +541,6 @@ function RecibosForm({ onSave, initialData }) {
         }
 
         if (
-            !isEditing &&
             form.tipo_pago === "anticipo" &&
             monto >= totalCurso
         ) {
@@ -474,7 +555,6 @@ function RecibosForm({ onSave, initialData }) {
         }
 
         if (
-            !isEditing &&
             form.tipo_pago === "anticipo" &&
             saldoInfo
         ) {
@@ -504,7 +584,7 @@ function RecibosForm({ onSave, initialData }) {
             ) {
                 Swal.fire(
                     "Monto incorrecto",
-                    `El segundo anticipo debe ser exactamente el saldo pendiente: C$${Math.round(saldoPendiente)}.`,
+                    `El segundo anticipo debe ser exactamente el saldo pendiente: C$${formatearDinero(redondearMontoCobro(saldoPendiente))}.`,
                     "error"
                 );
 
@@ -535,22 +615,15 @@ function RecibosForm({ onSave, initialData }) {
             concepto: form.concepto,
             monto_pagado: montoFinal,
             horas_reforzamiento: horasEnvio,
-            estado: "pagado",
             observaciones: form.observaciones || "",
         };
 
-        console.log("DATOS ENVIADOS RECIBO:", datosEnvio);
-
         try {
-            if (isEditing) {
-                await api.put(`/recibo/${initialData.id}/`, datosEnvio);
-            } else {
-                await api.post("/recibo/", datosEnvio);
-            }
+            await api.post("/recibo/", datosEnvio);
 
             Swal.fire({
-                title: isEditing ? "¡Recibo actualizado!" : "¡Recibo creado!",
-                text: `Monto registrado: C$${redondearMonto(montoFinal)}`,
+                title: "¡Recibo creado!",
+                text: `Monto registrado: C$${formatearDinero(montoFinal)}`,
                 icon: "success",
                 confirmButtonText: "Aceptar",
             }).then(() => {
@@ -584,33 +657,12 @@ function RecibosForm({ onSave, initialData }) {
             ? Number(valorCursoActual?.cantidad_horas || form.cantidad || 0)
             : Number(form.horas_reforzamiento || 0);
 
-   const montoAnticipo = parseFloat(form.monto_pagado || 0);
-    const cantidadPagos = Number(saldoInfo?.cantidad_pagos || 0);
-    const totalPagadoPrevio = Number(saldoInfo?.total_pagado || 0);
-    const saldoPendienteBackend = Number(saldoInfo?.saldo_pendiente || 0);
-
     const esSegundoAnticipo =
         form.tipo_pago === "anticipo" &&
         saldoInfo &&
         Number(saldoInfo.total_pagado || 0) > 0 &&
         Number(saldoInfo.saldo_pendiente || 0) > 0;
 
-    const saldoBase =
-        saldoInfo && saldoPendienteBackend > 0
-            ? saldoPendienteBackend
-            : totalCurso;
-
-    const montoMostrado =
-        form.tipo_pago === "beneficio"
-            ? 0
-            : montoAnticipo;
-
-    const saldoPendienteLocal =
-        saldoInfo
-            ? redondearMonto(saldoPendienteBackend)
-            : totalCurso > 0
-                ? redondearMonto(totalCurso - montoMostrado)
-                : null;
    return (
     <form onSubmit={handleSubmit} className="space-y-6">
         <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
@@ -632,14 +684,14 @@ function RecibosForm({ onSave, initialData }) {
                             {tipoCurso === "principiante" ? (
                                 <p className="text-sm text-gray-500 mt-1">
                                     Principiante: {horasActuales} horas · Total fijo{" "}
-                                    <strong>C${totalCurso}</strong>
+                                    <strong>C${formatearDinero(totalCurso)}</strong>
                                 </p>
                             ) : horasActuales > 0 ? (
                                 <p className="text-sm text-gray-500 mt-1">
                                     {etiquetaTipoCurso(tipoCurso)}: {horasActuales} hora
                                     {horasActuales !== 1 ? "s" : ""} × C$
-                                    {redondearMonto(valorCursoActual?.precio_hora || form.monto_unitario || 0)} ={" "}
-                                    <strong>C${totalCurso}</strong>
+                                    {formatearDinero(valorCursoActual?.precio_hora || form.monto_unitario || 0)} ={" "}
+                                    <strong>C${formatearDinero(totalCurso)}</strong>
                                 </p>
                             ) : (
                                 <p className="text-sm text-gray-400 italic mt-1">
@@ -653,7 +705,7 @@ function RecibosForm({ onSave, initialData }) {
                                 Monto total
                             </p>
                             <p className="text-4xl font-extrabold text-blue-700">
-                                {totalCurso > 0 ? `C$ ${totalCurso}` : "—"}
+                                {totalCurso > 0 ? `C$ ${formatearDinero(totalCurso)}` : "—"}
                             </p>
                         </div>
                     </div>
@@ -672,10 +724,13 @@ function RecibosForm({ onSave, initialData }) {
                             placeholder="Escribe nombre o cédula..."
                             value={busquedaEstudiante}
                             onChange={(e) => {
+                                if (isEditing) return;
+
                                 setBusquedaEstudiante(e.target.value);
 
                                 if (matriculaSeleccionada) {
                                     setMatriculaSeleccionada(null);
+
                                     setForm((prev) => ({
                                         ...prev,
                                         matricula: "",
@@ -686,7 +741,7 @@ function RecibosForm({ onSave, initialData }) {
                             autoComplete="off"
                         />
 
-                        {busquedaEstudiante && (
+                        {busquedaEstudiante && !isEditing && (
                             <button
                                 type="button"
                                 onClick={limpiarSeleccion}
@@ -832,6 +887,7 @@ function RecibosForm({ onSave, initialData }) {
                     <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-1">Fecha *</label>
                         <input
+                            disabled={isEditing}
                             type="date"
                             name="fecha_pago"
                             value={form.fecha_pago}
@@ -900,6 +956,7 @@ function RecibosForm({ onSave, initialData }) {
                             Tipo de Pago *
                         </label>
                         <select
+                            disabled={isEditing}
                             name="tipo_pago"
                             value={form.tipo_pago}
                             onChange={handleChange}
@@ -926,7 +983,13 @@ function RecibosForm({ onSave, initialData }) {
                                     ? "bg-gray-100 text-gray-700 font-semibold"
                                     : "bg-white"
                             }`}
-                            readOnly={form.tipo_pago === "completo" || esSegundoAnticipo}
+                            readOnly={
+                                !isEditing &&
+                                (
+                                    form.tipo_pago === "completo" ||
+                                    esSegundoAnticipo
+                                )
+                            }
                             required={form.tipo_pago !== "beneficio"}
                         />
                     </div>
@@ -936,6 +999,7 @@ function RecibosForm({ onSave, initialData }) {
                             Observaciones
                         </label>
                         <textarea
+                            readOnly={isEditing}
                             name="observaciones"
                             value={form.observaciones}
                             onChange={handleChange}
@@ -956,21 +1020,21 @@ function RecibosForm({ onSave, initialData }) {
                             <div className="bg-white border border-slate-200 rounded-xl p-4">
                                 <p className="text-gray-500">Monto total</p>
                                 <p className="font-extrabold text-gray-800 text-xl mt-1">
-                                    C${redondearMonto(saldoInfo.monto_total || 0)}
+                                    C${formatearDinero(saldoInfo.monto_total || 0)}
                                 </p>
                             </div>
 
                             <div className="bg-white border border-slate-200 rounded-xl p-4">
                                 <p className="text-gray-500">Pagado</p>
                                 <p className="font-extrabold text-green-600 text-xl mt-1">
-                                    C${redondearMonto(saldoInfo.total_pagado || 0)}
+                                    C${formatearDinero(saldoInfo.total_pagado || 0)}
                                 </p>
                             </div>
 
                             <div className="bg-white border border-slate-200 rounded-xl p-4">
                                 <p className="text-gray-500">Saldo pendiente</p>
                                 <p className="font-extrabold text-orange-600 text-xl mt-1">
-                                    C${redondearMonto(saldoInfo.saldo_pendiente || 0)}
+                                    C${formatearDinero(saldoInfo.saldo_pendiente || 0)}
                                 </p>
                             </div>
 
@@ -990,7 +1054,12 @@ function RecibosForm({ onSave, initialData }) {
                         disabled={loading}
                         className="px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed shadow-sm transition"
                     >
-                        {loading ? "Guardando..." : "Guardar Recibo"}
+                        {loading
+                            ? "Guardando..."
+                            : isEditing
+                            ? "Actualizar Recibo"
+                            : "Guardar Recibo"
+                        }
                     </button>
                 </div>
             </div>

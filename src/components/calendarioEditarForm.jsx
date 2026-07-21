@@ -463,21 +463,18 @@ export default function CalendarioEditarForm({
                   }
 
                   const fechaISO = obtenerFechaISO(fecha);
-                  const esSeleccionada = fechaISO === form.fecha;
+                  const esSeleccionada =
+                    fechaISO === form.fecha;
                   const esHoy = fechaISO === hoyISO;
-                  const esPasada = fechaISO < hoyISO;
 
                   return (
                     <button
                       key={fechaISO}
                       type="button"
-                      onClick={() => !esPasada && seleccionarFecha(fecha)}
-                      disabled={esPasada}
+                      onClick={() => seleccionarFecha(fecha)}
                       className={`hover:cursor-pointer h-10 w-10 sm:h-11 sm:w-11 md:h-12 md:w-12 mx-auto rounded-full text-sm md:text-base font-bold transition-all ${
                         esSeleccionada
                           ? "bg-blue-600 text-white shadow-md scale-105"
-                          : esPasada
-                          ? "text-gray-300 cursor-not-allowed"
                           : esHoy
                           ? "bg-blue-50 text-blue-700 border border-blue-200"
                           : "text-gray-700 hover:bg-blue-50"

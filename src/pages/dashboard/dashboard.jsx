@@ -1,21 +1,10 @@
-import { useState, useEffect } from "react";
+import {
+  lazy,
+  Suspense,
+  useState,
+  useEffect,
+} from "react";
 import { useAuth } from "../../context/AuthContext";
-import DashboardHome from "./dashboardhome";
-import MatriculaPage from "../matricula/MatriculaPage";
-import RecibosPage from "../recibos/RecibosPage";
-import Calendario from "../calendario/calendario";
-import NotasPages from "../nota/notas";
-import PlanStudio from "../plan_studio/plan_studio";
-import Configuraciones from "./configuraciones";
-import Asistencia from "../asistencia/asistencia";
-import PerfilEstudiante from "../perfil_studiante/perfil_estudiante";
-import UsuariosPage from "../admin/UsuariosPage";
-import EstudiantesPage from "../estudiantes/EstudiantesPage";
-import ReportesPages from "../reportes/ReportesPages";
-import InstructoresPage from "../instructores/InstructoresPage";
-import VerPlanEstudio from "../plan_studio/VerPlanEstudio";
-import PlanEstudioForm from "../plan_studio/PlanEstudioForm";
-
 import { LuLayoutDashboard, LuClipboardCheck } from "react-icons/lu";
 import { TbMenu2, TbCalendarTime } from "react-icons/tb";
 import { HiOutlineDocumentCurrencyDollar } from "react-icons/hi2";
@@ -26,28 +15,121 @@ import { IoSchoolOutline } from "react-icons/io5";
 import { FaUsers } from "react-icons/fa";
 import { PiStudent } from "react-icons/pi";
 import { FaSquarePollVertical } from "react-icons/fa6";
-
-import InstructorHome from "./instructorhome";
-import EstudianteHome from "./estudianteshome";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import axios from "../../api/axios";
 import { BsThreeDotsVertical } from "react-icons/bs";
 import { IoSettingsOutline, IoLogOutOutline } from "react-icons/io5";
 
+const DashboardHome = lazy(
+  () => import("./dashboardhome")
+);
+
+const InstructorHome = lazy(
+  () => import("./instructorhome")
+);
+
+const EstudianteHome = lazy(
+  () => import("./estudianteshome")
+);
+
+const MatriculaPage = lazy(
+  () => import("../matricula/MatriculaPage")
+);
+
+const RecibosPage = lazy(
+  () => import("../recibos/RecibosPage")
+);
+
+const Calendario = lazy(
+  () => import("../calendario/calendario")
+);
+
+const NotasPages = lazy(
+  () => import("../nota/notas")
+);
+
+const PlanStudio = lazy(
+  () => import("../plan_studio/plan_studio")
+);
+
+const Configuraciones = lazy(
+  () => import("./configuraciones")
+);
+
+const Asistencia = lazy(
+  () => import("../asistencia/asistencia")
+);
+
+const PerfilEstudiante = lazy(
+  () => import("../perfil_studiante/perfil_estudiante")
+);
+
+const UsuariosPage = lazy(
+  () => import("../admin/UsuariosPage")
+);
+
+const EstudiantesPage = lazy(
+  () => import("../estudiantes/EstudiantesPage")
+);
+
+const ReportesPages = lazy(
+  () => import("../reportes/ReportesPages")
+);
+
+const InstructoresPage = lazy(
+  () => import("../instructores/InstructoresPage")
+);
+
+const VerPlanEstudio = lazy(
+  () => import("../plan_studio/VerPlanEstudio")
+);
+
+const PlanEstudioForm = lazy(
+  () => import("../plan_studio/PlanEstudioForm")
+);
+
+const escaparHtml = (valor) => {
+  return String(valor ?? "").replace(
+    /[&<>"']/g,
+    (caracter) => {
+      const equivalencias = {
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;",
+      };
+
+      return equivalencias[caracter];
+    }
+  );
+};
+
 function Dashboard() {
-  const { user, logout } = useAuth();
+  const {
+    user,
+    logout,
+    esRol,
+  } = useAuth();
   const navigate = useNavigate();
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("dashboard");
   const [menuUsuarioAbierto, setMenuUsuarioAbierto] = useState(false);
 
-  const rol = user?.rol?.toLowerCase() || "";
+  const rol = String(user?.rol || "")
+    .trim()
+    .toLowerCase();
 
-  const esAdmin = rol === "admin" || rol === "administrador";
-  const esInstructor = rol === "instructor";
-  const esEstudiante = rol === "estudiante";
+  const esAdmin = esRol(
+    "admin",
+    "administrador",
+    "secretaria"
+  );
+
+  const esInstructor = esRol("instructor");
+  const esEstudiante = esRol("estudiante");
 
   useEffect(() => {
     if (esAdmin) {
@@ -111,20 +193,20 @@ function Dashboard() {
                     ${faltaInstructor ? "Pendiente para el estudiante" : "Pendiente para el instructor"}
                   </div>
                   <p style="margin:0 0 10px 0; color:#374151; font-size:13px; line-height:1.5;">
-                    ${n.mensaje || "Hay un check pendiente."}
+                    ${escaparHtml(n.mensaje || "Hay un check pendiente.")}
                   </p>
                   <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px;">
                     <div style="background:#fef2f2; border:1px solid #fee2e2; border-radius:10px; padding:8px;">
                       <div style="font-size:11px; color:#9ca3af;">Estudiante</div>
-                      <div style="font-size:12px; color:#374151; font-weight:700;">${n.estudiante || "No asignado"}</div>
+                      <div style="font-size:12px; color:#374151; font-weight:700;">${escaparHtml(n.estudiante || "No asignado")}</div>
                     </div>
                     <div style="background:#fef2f2; border:1px solid #fee2e2; border-radius:10px; padding:8px;">
                       <div style="font-size:11px; color:#9ca3af;">Tema</div>
-                      <div style="font-size:12px; color:#374151; font-weight:700;">${n.tema || "Sin tema"}</div>
+                      <div style="font-size:12px; color:#374151; font-weight:700;">${escaparHtml(n.tema || "Sin tema")}</div>
                     </div>
                   </div>
                   <div style="margin-top:9px; font-size:11px; color:#9ca3af;">
-                    ${formatearFecha(n.fecha_creacion)}
+                    ${escaparHtml(formatearFecha(n.fecha_creacion))}
                   </div>
                 </div>
               </div>
@@ -163,32 +245,57 @@ function Dashboard() {
     setIsSidebarOpen(false);
   };
 
-  const cerrarSesion = () => {
+  const cerrarSesion = async () => {
     setMenuUsuarioAbierto(false);
-    Swal.fire({
+
+    const result = await Swal.fire({
       title: "¿Cerrar sesión?",
-      text: "Se cerrará tu sesión actual y volverás al inicio de sesión.",
+      text: (
+        "Se cerrará tu sesión actual y volverás "
+        + "al inicio de sesión."
+      ),
       icon: "warning",
       showCancelButton: true,
       confirmButtonText: "Sí, salir",
       cancelButtonText: "Cancelar",
       confirmButtonColor: "#dc2626",
       cancelButtonColor: "#64748b",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        logout();
-        navigate("/login");
-      }
+      allowOutsideClick: false,
     });
+
+    if (!result.isConfirmed) {
+      return;
+    }
+
+    await logout();
+
+    navigate(
+      "/login",
+      {
+        replace: true,
+      }
+    );
   };
 
   function renderContent() {
     switch (activeTab) {
       case "dashboard":
-        if (esAdmin) return <DashboardHome />;
-        if (esInstructor) return <InstructorHome />;
-        if (esEstudiante) return <EstudianteHome setActiveTab={setActiveTab} />;
-        return <DashboardHome />;
+        if (esAdmin) {
+          return <DashboardHome />;
+        }
+
+        if (esInstructor) {
+          return <InstructorHome />;
+        }
+
+        if (esEstudiante) {
+          return (
+            <EstudianteHome
+              setActiveTab={setActiveTab}
+            />
+          );
+        }
+        return null;
 
       case "reportes":
         if (!esAdmin) return <DashboardHome />;
@@ -242,7 +349,22 @@ function Dashboard() {
         return <PlanEstudioForm />;
 
       default:
-        return <DashboardHome />;
+        if (esAdmin) {
+          return <DashboardHome />;
+        }
+
+        if (esInstructor) {
+          return <InstructorHome />;
+        }
+
+        if (esEstudiante) {
+          return (
+            <EstudianteHome
+              setActiveTab={setActiveTab}
+            />
+          );
+        }
+        return null;
     }
   }
 
@@ -603,7 +725,21 @@ function Dashboard() {
         )}
 
         <main className="flex-1 overflow-y-auto p-3 md:p-4 bg-slate-50">
-          {renderContent()}
+          <Suspense
+            fallback={
+              <div className="flex min-h-[350px] items-center justify-center">
+                <div className="text-center">
+                  <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-blue-600" />
+
+                  <p className="font-semibold text-slate-500">
+                    Cargando módulo...
+                  </p>
+                </div>
+              </div>
+            }
+          >
+            {renderContent()}
+          </Suspense>
         </main>
       </div>
     </div>

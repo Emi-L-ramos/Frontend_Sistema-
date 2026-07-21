@@ -52,6 +52,13 @@ export default function Calendario() {
   const esInstructor = rol === "instructor";
   const esEstudiante = rol === "estudiante";
 
+  const examenPolicialPendiente = (cita) => {
+    return (
+      Boolean(cita?.es_examen) &&
+      String(cita?.estado || "").toLowerCase() === "pendiente"
+    );
+  };
+
   const hoy = new Date();
   const [vy, setVy] = useState(hoy.getFullYear());
   const [vm, setVm] = useState(hoy.getMonth());
@@ -67,19 +74,48 @@ export default function Calendario() {
   const [citaSeleccionada, setCitaSeleccionada] = useState(null);
 
   const cargar = async () => {
-    const mes = `${vy}-${String(vm + 1).padStart(2, "0")}`;
+    const mes = `${vy}-${String(
+      vm + 1
+    ).padStart(2, "0")}`;
+
     try {
-      const data = await listarCitas({
+      const solicitudMes = listarCitas({
         mes,
-        instructor: esInstructor ? undefined : filtroInstructor,
+        instructor: esInstructor
+          ? undefined
+          : filtroInstructor,
       });
-      setCitas(data.results || data);
+
+      const solicitudHoy = esInstructor
+        ? Promise.resolve([])
+        : citasDeHoy();
+
+      const [
+        dataMes,
+        dataHoy,
+      ] = await Promise.all([
+        solicitudMes,
+        solicitudHoy,
+      ]);
+
+      setCitas(
+        Array.isArray(dataMes)
+          ? dataMes
+          : dataMes.results || []
+      );
+
       if (!esInstructor) {
-        const hoyData = await citasDeHoy();
-        setHoyCitas(hoyData.results || hoyData);
+        setHoyCitas(
+          Array.isArray(dataHoy)
+            ? dataHoy
+            : dataHoy.results || []
+        );
       }
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      console.error(
+        'Error cargando calendario:',
+        error
+      );
     }
   };
 
@@ -94,6 +130,23 @@ export default function Calendario() {
   }, [esInstructor]);
 
   const cells = useMemo(() => buildMonthCells(vy, vm), [vy, vm]);
+
+  const citasPorFecha = useMemo(() => {
+    return citas.reduce(
+      (resultado, cita) => {
+        const fecha = cita.fecha;
+
+        if (!resultado[fecha]) {
+          resultado[fecha] = [];
+        }
+
+        resultado[fecha].push(cita);
+
+        return resultado;
+      },
+      {}
+    );
+  }, [citas]);
 
   const goPrev = () => {
     if (vm === 0) {
@@ -420,7 +473,7 @@ export default function Calendario() {
                       );
                     }
 
-                    const dia = citas.filter((a) => a.fecha === c.dateStr);
+                    const dia = citasPorFecha[c.dateStr] || [];
                     const visibles = dia.slice(0, 2);
                     const extra = dia.length - visibles.length;
                     const esHoy = c.dateStr === hoyStr;
@@ -514,9 +567,7 @@ export default function Calendario() {
                 )}
 
                 {asignacionesPanelInstructor.map((a) => {
-                  const examenProcesable =
-                    a.es_examen &&
-                    String(a.estado || "").toLowerCase() === "pendiente";
+                  const examenProcesable = examenPolicialPendiente(a);
 
                   return (
                     <button
@@ -524,7 +575,11 @@ export default function Calendario() {
                       type="button"
                       disabled={!examenProcesable}
                       onClick={() => {
-                        if (!examenProcesable) return;
+                        if (!examenPolicialPendiente(a)) {
+                          setModalResultadoExamen(false);
+                          setCitaSeleccionada(null);
+                          return;
+                        }
 
                         setCitaSeleccionada(a);
                         setModalResultadoExamen(true);
@@ -589,7 +644,33 @@ export default function Calendario() {
               setModalResultadoExamen(false);
               setCitaSeleccionada(null);
             }}
-            onActualizado={cargar}
+            onActualizado={(citaActualizada) => {
+              if (citaActualizada?.id) {
+                setCitas((prev) =>
+                  prev.map((item) =>
+                    item.id === citaActualizada.id
+                      ? {
+                          ...item,
+                          ...citaActualizada,
+                        }
+                      : item
+                  )
+                );
+
+                setHoyCitas((prev) =>
+                  prev.map((item) =>
+                    item.id === citaActualizada.id
+                      ? {
+                          ...item,
+                          ...citaActualizada,
+                        }
+                      : item
+                  )
+                );
+              }
+
+              cargar();
+            }}
           />
         </div>
       </div>

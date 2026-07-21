@@ -8,58 +8,60 @@ import {
     FiTrendingUp,
     FiCreditCard,
 } from "react-icons/fi";
-import { RiDeleteBinLine } from "react-icons/ri";
+import { CiEdit, CiSearch } from "react-icons/ci";
 import Swal from "sweetalert2";
-import * as XLSX from 'xlsx';
 import RecibosForm from "../../components/RecibosForm";
-import { CiEdit } from "react-icons/ci";
 import { FiX } from "react-icons/fi";
 import api from "../../api/axios";
+import Paginacion from "../../components/Paginacion";
 
-const redondearMonto = (valor) =>
-    Math.round(Number(valor || 0));
+const obtenerMontoReal = (valor) =>
+    Number(valor || 0);
+
+const formatearDinero = (valor) =>
+    obtenerMontoReal(valor).toLocaleString("es-NI", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    });
+    
+const REGISTROS_POR_PAGINA = 25;
 
 function RecibosPage() {
     const [recibos, setRecibos] = useState([]);
     const [busqueda, setBusqueda] = useState("");
+    const [editData, setEditData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
-    const [editData, setEditData] = useState(null);
+    const [pagina, setPagina] = useState(1);
+    const [totalRegistros, setTotalRegistros] = useState(0);
+
+    const [resumen, setResumen] = useState({
+        ingresos_mes: 0,
+        ingresos_totales: 0,
+        recibos_mes: 0,
+    });
 
     const fetchRecibos = async () => {
         try {
             setLoading(true);
 
-            let url = "/recibo/";
-            let todosLosRecibos = [];
+            const response = await api.get("/recibo/", {
+                params: {
+                    page: pagina,
+                    page_size: REGISTROS_POR_PAGINA,
+                    buscar: busqueda.trim() || undefined,
+                },
+            });
 
-            while (url) {
-                const response = await api.get(url);
-                const data = response.data;
+            const resultado = response.data;
 
-                if (Array.isArray(data)) {
-                    todosLosRecibos = data;
-                    url = null;
-                } else {
-                    const pagina = Array.isArray(data.results)
-                        ? data.results
-                        : [];
-
-                    todosLosRecibos = [
-                        ...todosLosRecibos,
-                        ...pagina,
-                    ];
-
-                    url = data.next || null;
-                }
+            if (Array.isArray(resultado)) {
+                setRecibos(resultado);
+                setTotalRegistros(resultado.length);
+            } else {
+                setRecibos(resultado.results || []);
+                setTotalRegistros(resultado.count || 0);
             }
-
-            console.log(
-                "RECIBOS CARGADOS:",
-                todosLosRecibos.length
-            );
-
-            setRecibos(todosLosRecibos);
         } catch (error) {
             console.error(
                 "Error cargando recibos:",
@@ -68,6 +70,7 @@ function RecibosPage() {
 
             const mensaje =
                 error.response?.data?.detail ||
+                error.response?.data?.error ||
                 "No se pudieron cargar los recibos.";
 
             Swal.fire(
@@ -80,95 +83,52 @@ function RecibosPage() {
         }
     };
 
-    const eliminarRecibo = async (id) => {
-        const confirm = await Swal.fire({
-            title: "¿Eliminar recibo?",
-            text: "Esta acción actualizará el saldo pendiente del estudiante",
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonColor: "#d33",
-            confirmButtonText: "Sí, eliminar",
-            cancelButtonText: "Cancelar",
-        });
-
-        if (!confirm.isConfirmed) return;
-
+    const fetchResumen = async () => {
         try {
-            await api.delete(`/recibo/${id}/`);
+            const response = await api.get(
+                "/recibo/resumen/"
+            );
 
-            Swal.fire("Eliminado", "El recibo ha sido eliminado", "success");
-            fetchRecibos();
-
+            setResumen(response.data);
         } catch (error) {
-            console.error("Error eliminando recibo:", error);
-
-            const mensaje =
-                error.response?.data?.detail ||
-                "No se pudo eliminar el recibo";
-
-            Swal.fire("Error", mensaje, "error");
+            console.error(
+                "Error cargando resumen de recibos:",
+                error
+            );
         }
     };
 
     useEffect(() => {
-        fetchRecibos();
+        const temporizador = setTimeout(() => {
+            fetchRecibos();
+        }, 350);
+
+        return () => clearTimeout(temporizador);
+    }, [pagina, busqueda]);
+
+    useEffect(() => {
+        setPagina(1);
+    }, [busqueda]);
+
+    useEffect(() => {
+        fetchResumen();
     }, []);
 
     // Filtrar recibos
-    const filtrados = recibos.filter(r => {
-        const searchTerm = busqueda.toLowerCase();
-        const estudianteNombre = `${r.matricula_data?.estudiante_nombre || ''} ${r.matricula_data?.estudiante_apellido || ''}`.toLowerCase();
-        const numeroRecibo = (r.numero_recibo || '').toLowerCase();
-        const cedula = (r.estudiante_cedula || '').toLowerCase();
-        
-        return (
-            numeroRecibo.includes(searchTerm) ||
-            estudianteNombre.includes(searchTerm) ||
-            cedula.includes(searchTerm)
-        );
-    });
-
-    // Calcular totales
-    const totalIngresos = recibos.reduce(
-        (acumulado, recibo) => {
-            const monto = redondearMonto(
-                recibo.monto_pagado ??
-                recibo.monto_cordobas ??
-                0
-            );
-
-            return acumulado + monto;
-        },
-        0
+    const filtrados = recibos;
+ 
+    const totalIngresos = Number(
+        resumen.ingresos_totales || 0
     );
-    
-    const mesActual = new Date().getMonth();
-    const anioActual = new Date().getFullYear();
-    
-    const recibosMes = recibos.filter(r => {
-        if (!r.fecha_pago) return false;
 
-        const [year, month] = String(r.fecha_pago).split("T")[0].split("-");
-
-        return (
-            Number(month) - 1 === mesActual &&
-            Number(year) === anioActual
-        );
-    });
-    
-    const totalMes = recibosMes.reduce(
-        (acumulado, recibo) => {
-            const monto = redondearMonto(
-                recibo.monto_cordobas ??
-                recibo.monto_pagado ??
-                0
-            );
-
-            return acumulado + monto;
-        },
-        0
+    const totalMes = Number(
+        resumen.ingresos_mes || 0
     );
-    
+
+    const recibosMes = Number(
+        resumen.recibos_mes || 0
+    );
+
     const formatearFecha = (fecha) => {
         if (!fecha) return "N/A";
 
@@ -189,37 +149,6 @@ function RecibosPage() {
         if (tipo === "beneficio") return "Beneficio";
         if (tipo === "anticipo") return "Anticipo";
         return "Pendiente";
-    };
-
-    // Función para obtener la clase CSS del estado
-    const obtenerClaseEstado = (r) => {
-        const tipo = r.tipo_pago || "";
-        if (tipo === "completo") return "bg-green-100 text-green-700";
-        if (tipo === "beneficio") return "bg-purple-100 text-purple-700";
-        if (tipo === "anticipo") return "bg-yellow-100 text-yellow-700";
-        return "bg-gray-100 text-gray-700";
-    };
-
-    const exportarAExcel = () => {
-        const datosExcel = filtrados.map(recibo => ({
-            'N° Rec/Fac': recibo.numero_recibo || 'N/A',
-            'Fecha': formatearFecha(recibo.fecha_pago),
-            'Estudiante': recibo.estudiante_nombre || `${recibo.matricula_data?.estudiante_nombre || ''} ${recibo.matricula_data?.estudiante_apellido || ''}`.trim(),
-            'Cédula': recibo.estudiante_cedula || recibo.matricula_data?.estudiante_cedula || 'N/A',
-            'Tipo de Pago': obtenerEstado(recibo),
-            'Monto (C$)': redondearMonto(
-                recibo.monto_pagado ??
-                recibo.monto_cordobas ??
-                0
-            ),
-            'Método de Pago': recibo.metodo_pago || 'Efectivo',
-            'Observaciones': recibo.observaciones || ''
-        }));
-
-        const ws = XLSX.utils.json_to_sheet(datosExcel);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'Recibos');
-        XLSX.writeFile(wb, `recibos_${new Date().toISOString().slice(0, 10)}.xlsx`);
     };
 
     return (
@@ -255,7 +184,7 @@ function RecibosPage() {
                                 </p>
 
                                 <h2 className="mt-2 text-2xl font-black text-emerald-600">
-                                    C${redondearMonto(totalMes).toLocaleString("es-NI")}
+                                    C${formatearDinero(totalMes)}
                                 </h2>
 
                                 <p className="mt-2 text-sm font-medium text-slate-500">
@@ -283,11 +212,11 @@ function RecibosPage() {
                                 </p>
 
                                 <h2 className="mt-2 text-2xl font-black text-emerald-600">
-                                    {recibosMes.length}
+                                    {recibosMes}
                                 </h2>
 
                                 <p className="mt-2 text-sm font-medium text-slate-500">
-                                    Total: C${redondearMonto(totalMes).toLocaleString("es-NI")}
+                                    Total: C${formatearDinero(totalMes)}
                                 </p>
                             </div>
                         </div>
@@ -311,7 +240,7 @@ function RecibosPage() {
                                 </p>
 
                                 <h2 className="mt-2 text-2xl font-black text-emerald-600">
-                                    C${redondearMonto(totalIngresos).toLocaleString("es-NI")}
+                                    C${formatearDinero(totalIngresos)}
                                 </h2>
 
                                 <p className="mt-2 text-sm font-medium text-slate-500">
@@ -343,8 +272,8 @@ function RecibosPage() {
 
                 <button
                     onClick={() => {
-                        setEditData(null);
-                        setShowModal(true);
+                    setEditData(null);
+                    setShowModal(true);
                     }}
                     className="group inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-8 text-sm font-black text-white shadow-lg shadow-emerald-600/25 transition-all duration-300 hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-emerald-600/35 sm:w-auto"
                 >
@@ -361,7 +290,7 @@ function RecibosPage() {
                     </div>
                 ) : (
                     <div className="overflow-x-auto">
-                        <table className="w-full min-w-[1100px] text-sm">
+                        <table className="w-full min-w-[980px] text-sm">
                             <thead className="bg-slate-50/95">
                                 <tr className="border-b border-slate-100">
                                     <th className="px-5 py-4 text-left text-xs font-black uppercase tracking-wide text-slate-500">
@@ -385,10 +314,6 @@ function RecibosPage() {
                                     </th>
 
                                     <th className="px-5 py-4 text-left text-xs font-black uppercase tracking-wide text-slate-500">
-                                        Método
-                                    </th>
-
-                                    <th className="px-5 py-4 text-left text-xs font-black uppercase tracking-wide text-slate-500">
                                         Tipo pago
                                     </th>
 
@@ -398,11 +323,19 @@ function RecibosPage() {
                                 </tr>
                             </thead>
 
+                            <Paginacion
+                                pagina={pagina}
+                                total={totalRegistros}
+                                porPagina={REGISTROS_POR_PAGINA}
+                                cargando={loading}
+                                onChange={setPagina}
+                            />
+
                             <tbody className="divide-y divide-slate-100">
                                 {filtrados.length === 0 ? (
                                     <tr>
                                         <td
-                                            colSpan="8"
+                                            colSpan="7"
                                             className="p-10 text-center font-semibold text-slate-400"
                                         >
                                             No se encontraron recibos
@@ -435,17 +368,11 @@ function RecibosPage() {
                                             </td>
 
                                             <td className="px-5 py-4 whitespace-nowrap font-black text-emerald-600">
-                                                C${redondearMonto(
+                                                C${formatearDinero(
                                                     r.monto_pagado ??
                                                     r.monto_cordobas ??
                                                     0
-                                                ).toLocaleString("es-NI")}
-                                            </td>
-
-                                            <td className="px-5 py-4">
-                                                <span className="inline-flex rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-black capitalize text-emerald-700 ring-1 ring-emerald-100">
-                                                    {r.metodo_pago || "Efectivo"}
-                                                </span>
+                                                )}
                                             </td>
 
                                             <td className="px-5 py-4">
@@ -463,30 +390,18 @@ function RecibosPage() {
                                                     {obtenerEstado(r)}
                                                 </span>
                                             </td>
-
-                                            <td className="px-5 py-4">
-                                                <div className="flex items-center justify-center gap-2">
-                                                    <button
-                                                        onClick={() => {
-                                                            setEditData(r);
-                                                            setShowModal(true);
-                                                        }}
-                                                        className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-slate-700 ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:bg-blue-50 hover:text-blue-600 hover:ring-blue-100"
-                                                        title="Editar"
-                                                    >
-                                                        <CiEdit size={20} />
-                                                    </button>
-
-                                                    {/*<button
-                                                        onClick={() => eliminarRecibo(r.id)}
-                                                        className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-red-50 text-red-500 ring-1 ring-red-100 transition hover:-translate-y-0.5 hover:bg-red-100 hover:text-red-700"
-                                                        title="Eliminar recibo"
-                                                    >
-                                                        <RiDeleteBinLine size={19} />
-                                                    </button>
-                                                    */}
-                                                    
-                                                </div>
+                                            <td className="px-5 py-4 text-center">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setEditData(r);
+                                                        setShowModal(true);
+                                                    }}
+                                                    className="inline-flex items-center justify-center rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:bg-slate-100"
+                                                    title="Editar recibo"
+                                                >
+                                                    <CiEdit className="h-5 w-5" />
+                                                </button>
                                             </td>
                                         </tr>
                                     ))
@@ -494,17 +409,23 @@ function RecibosPage() {
                             </tbody>
                         </table>
                     </div>
+                    
                 )}
             </div>
 
-            {/* Modal para crear/editar recibo */}
+            {/* Modal para crear recibo */}
             {showModal && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
                         <div className="flex justify-between items-center p-4 border-b sticky top-0 bg-white">
-                            <h2 className="text-xl font-bold">{editData ? "Editar Recibo" : "Nuevo Recibo"}</h2>
+                            <h2 className="text-xl font-bold">
+                                {editData ? "Editar Recibo" : "Nuevo Recibo"}
+                            </h2>
                             <button 
-                                onClick={() => { setShowModal(false); setEditData(null); }} 
+                                onClick={() => {
+                                    setShowModal(false);
+                                    setEditData(null);
+                                }}
                                 className="text-gray-500 hover:text-red-500 text-2xl"
                             >
                                 <FiX className="hover:cursor-pointer hover:bg-red-100 rounded-full h-10 w-10" />
@@ -513,14 +434,14 @@ function RecibosPage() {
                         
                         <div className="p-6">
                             <RecibosForm
-                                key={editData?.id || 'new'}
                                 initialData={editData}
-                                onSave={() => { 
-                                    fetchRecibos(); 
-                                    setShowModal(false); 
+                                onSave={() => {
+                                    setShowModal(false);
                                     setEditData(null); 
+                                    fetchRecibos();
+                                    fetchResumen();
                                 }}
-                            />
+                                />
                         </div>
                     </div>
                 </div>

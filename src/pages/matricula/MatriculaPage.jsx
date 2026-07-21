@@ -9,6 +9,26 @@ import { IoLogoWhatsapp } from "react-icons/io5";
 import Swal from "sweetalert2";
 import api from "../../api/axios";
 import MatriculaForm from "../../components/matriculaForm";
+import Paginacion from "../../components/Paginacion";
+
+const escaparHtml = (valor) => {
+    return String(valor ?? "").replace(
+        /[&<>"']/g,
+        (caracter) => {
+            const equivalencias = {
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                '"': "&quot;",
+                "'": "&#039;",
+            };
+
+            return equivalencias[caracter];
+        }
+    );
+};
+
+const REGISTROS_POR_PAGINA = 25;
 
 function MatriculaPage() {
     const [showModal, setShowModal] = useState(false);
@@ -16,12 +36,10 @@ function MatriculaPage() {
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [editData, setEditData] = useState(null);
-
     const closeModal = () => {
         setEditData(null);
         setShowModal(false);
     };
-
     const getNombre = (item) => item.estudiante_nombre || "";
     const getCedula = (item) => item.estudiante_cedula || "";
     const getTelefono = (item) => item.estudiante_telefono || "";
@@ -52,76 +70,69 @@ function MatriculaPage() {
 
         return `${day}/${month}/${year}`;
     };
+    const [pagina, setPagina] = useState(1);
+    const [totalRegistros, setTotalRegistros] = useState(0);
+
+    const [resumen, setResumen] = useState({
+        total: 0,
+        matriculados: 0,
+        pendientes: 0,
+        finalizados: 0,
+    });
 
     const fetchMatriculas = async () => {
         try {
             setLoading(true);
 
-            const response = await api.get("/matricula/");
-            const result = response.data;
-
-            const matriculas = Array.isArray(result) ? result : result.results || [];
-
-            console.log("📊 MATRÍCULAS CARGADAS:");
-            matriculas.forEach((mat) => {
-                console.log(`  - ID ${mat.id}: ${mat.estudiante_nombre} → ESTADO: ${mat.estado}`);
+            const response = await api.get("/matricula/", {
+                params: {
+                    page: pagina,
+                    page_size: REGISTROS_POR_PAGINA,
+                    buscar: search.trim() || undefined,
+                },
             });
 
-            setData(matriculas);
+            const resultado = response.data;
+
+            if (Array.isArray(resultado)) {
+                setData(resultado);
+                setTotalRegistros(resultado.length);
+            } else {
+                setData(resultado.results || []);
+                setTotalRegistros(resultado.count || 0);
+            }
         } catch (error) {
-            console.error("Error al cargar matrículas:", error);
+            console.error(
+                "Error al cargar matrículas:",
+                error
+            );
 
             const mensaje =
                 error.response?.data?.detail ||
-                error.message ||
+                error.response?.data?.error ||
                 "No se pudieron cargar las matrículas.";
 
-            Swal.fire("Error", "No se pudieron cargar las matrículas: " + mensaje, "error");
+            Swal.fire(
+                "Error",
+                mensaje,
+                "error"
+            );
         } finally {
             setLoading(false);
         }
     };
 
-    const eliminarMatricula = async (id) => {
-        const result = await Swal.fire({
-            title: "¿Estás seguro?",
-            text: "¡No podrás revertir esta acción!",
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonColor: "#3085d6",
-            cancelButtonColor: "#d33",
-            confirmButtonText: "Sí, eliminar",
-            cancelButtonText: "Cancelar",
-        });
-
-        if (!result.isConfirmed) return;
-
-        Swal.fire({
-            title: "Eliminando...",
-            text: "Por favor espera",
-            allowOutsideClick: false,
-            didOpen: () => {
-                Swal.showLoading();
-            },
-        });
-
+    const fetchResumen = async () => {
         try {
-            await api.delete(`/matricula/${id}/`);
-
-            setData((prev) => prev.filter((item) => item.id !== id));
-
-            Swal.fire(
-                "¡Eliminado!",
-                "La matrícula ha sido eliminada correctamente.",
-                "success"
+            const response = await api.get(
+                "/matricula/resumen/"
             );
-        } catch (error) {
-            console.error("Error eliminando:", error);
 
-            Swal.fire(
-                "Error",
-                "No se pudo eliminar la matrícula. Puede tener datos relacionados.",
-                "error"
+            setResumen(response.data);
+        } catch (error) {
+            console.error(
+                "Error cargando resumen de matrículas:",
+                error
             );
         }
     };
@@ -129,6 +140,18 @@ function MatriculaPage() {
     const imprimirMatriculaIndividual = (matricula) => {
         const baseUrl = window.location.origin;
         const ventanaImpresion = window.open("", "_blank");
+
+        if (!ventanaImpresion) {
+            Swal.fire(
+                "Ventana bloqueada",
+                (
+                    "El navegador bloqueó la ventana de impresión. "
+                    + "Permita las ventanas emergentes e inténtelo nuevamente."
+                ),
+                "warning"
+            );
+            return;
+        }
 
         ventanaImpresion.document.write(`
             <html>
@@ -138,8 +161,8 @@ function MatriculaPage() {
 
                         body {
                             font-family: Arial, sans-serif;
-                            font-size: 13px;
-                            line-height: 1.4;
+                            font-size: 14x;
+                            line-height: 1.3;
                             color: #000;
                         }
 
@@ -164,10 +187,39 @@ function MatriculaPage() {
                         }
 
                         .titulo {
-                            font-weight: bold;
-                            text-decoration: underline;
+                            width: 100%;
                             margin-top: 20px;
                             margin-bottom: 15px;
+                            text-align: center;
+                            font-weight: bold;
+                        }
+
+                        .texto-titulo-subrayado {
+                            display: inline;
+                            text-decoration: underline;
+                            text-decoration-thickness: 1px;
+                            text-underline-offset: 3px;
+                        }
+
+                        .titulo-linea-final {
+                            position: relative;
+                            width: 100%;
+                            min-height: 22px;
+                            margin-top: 3px;
+                            text-align: center;
+                        }
+
+                        .titulo-responsable {
+                            display: inline-block;
+                        }
+
+                        .fecha-matricula {
+                            position: absolute;
+                            top: 0;
+                            right: 5px;
+                            font-weight: normal;
+                            text-decoration: none;
+                            white-space: nowrap;
                         }
 
                         .form-row {
@@ -215,28 +267,47 @@ function MatriculaPage() {
                     </div>
 
                     <div class="titulo">
-                        HOJA DE MATRÍCULA PARA CURSO DE: EDUCACIÓN VIAL Y MANEJO RESPONSABLE.
-                        <br/>
-                        Fecha: ${new Date(getFechaMatricula(matricula)).toLocaleDateString("es-NI")}
+                        <div>
+                            <span class="texto-titulo-subrayado">
+                                HOJA DE MATRÍCULA PARA EL CURSO DE: EDUCACIÓN VIAL Y MANEJO
+                            </span>
+                        </div>
+
+                        <div class="titulo-linea-final">
+                            <span class="titulo-responsable">
+                                <span class="texto-titulo-subrayado">
+                                    RESPONSABLE.
+                                </span>
+                            </span>
+
+                            <span class="fecha-matricula">
+                                Fecha: ${escaparHtml(
+                                    new Date(
+                                        getFechaMatricula(matricula)
+                                    ).toLocaleDateString("es-NI")
+                                )}
+                            </span>
+                        </div>
                     </div>
 
                     <br/>
 
                     <div class="form-row">
                         <span class="label">Nombres y apellidos:</span>
-                        ${getNombre(matricula)}
+                        ${escaparHtml(getNombre(matricula))}
                     </div>
 
                     <br/><br/>
 
                     <div style="display: flex; gap: 20px;">
                         <div class="form-row" style="width: 30%">
-                            <span class="label">Sexo:</span> ${getSexo(matricula)}
+                            <span class="label">Sexo:</span> ${escaparHtml(getSexo(matricula))}
                         </div>
 
                         <div class="form-row">
                             <span class="label">Nacionalidad / Fecha de nacimiento:</span>
-                            ${getNacionalidad(matricula)} / ${getFechaNacimiento(matricula)}
+                            ${escaparHtml(getNacionalidad(matricula))} /
+                            ${escaparHtml(getFechaNacimiento(matricula))}
                         </div>
                     </div>
 
@@ -245,12 +316,12 @@ function MatriculaPage() {
                     <div style="display: flex; gap: 20px;">
                         <div class="form-row" style="width: 30%">
                             <span class="label">Edad:</span>
-                            <span class="value">${getEdad(matricula)}</span>
+                            <span class="value">${escaparHtml(getEdad(matricula))}
                         </div>
 
                         <div class="form-row">
                             <span class="label">Número de cédula:</span>
-                            <span class="value">${getCedula(matricula)}</span>
+                            <span class="value">${escaparHtml(getCedula(matricula))}
 
                         </div>
                     </div>
@@ -259,14 +330,14 @@ function MatriculaPage() {
 
                     <div class="form-row">
                         <span class="label">Dirección:</span>
-                        <span class="value">${getDireccion(matricula)}</span>
+                        <span class="value">${escaparHtml(getDireccion(matricula))}
                     </div>
 
                     <br/><br/>
 
                     <div class="form-row">
                         <span class="label">Correo electrónico:</span>
-                        <span class="value">${getCorreo(matricula)}</span>
+                        <span class="value">${escaparHtml(getCorreo(matricula))}
                     </div>
 
                     <br/><br/>
@@ -274,13 +345,13 @@ function MatriculaPage() {
                     <div style="display: flex; gap: 20px;">
                         <div class="form-row">
                             <span class="label">Teléfono móvil:</span>
-                            <span class="value">${getTelefono(matricula)}</span>
+                            <span class="value">${escaparHtml(getTelefono(matricula))}
                            
                         </div>
 
                         <div class="form-row">
-                            <span class="label">Teléfono emergencia:</span>
-                            <span class="value">${getTelefonoEmergencia(matricula)}</span>
+                        <span class="label">Nivel Académico:</span>
+                            <span class="value">${escaparHtml(getNivelEducativo(matricula))}</span>
                         </div>
                     </div>
 
@@ -288,13 +359,13 @@ function MatriculaPage() {
 
                     <div style="display: flex; gap: 10px;">
                         <div class="form-row">
-                        <span class="label">Nivel Académico:</span>
-                            <span class="value">${getNivelEducativo(matricula)}</span>
+                            <span class="label">Contacto emergencia:</span>
+                            <span class="value">${escaparHtml(getNombreEmergencia(matricula))}</span>
                         </div>
 
                         <div class="form-row">
-                            <span class="label">Contacto emergencia:</span>
-                            <span class="value">${getNombreEmergencia(matricula)}</span>
+                            <span class="label">Teléfono emergencia:</span>
+                            <span class="value">${escaparHtml(getTelefonoEmergencia(matricula))}
                         </div>
                     </div>
 
@@ -303,7 +374,12 @@ function MatriculaPage() {
                     <div style="display: flex; gap: 10px;">
                         <div class="form-row">
                             <span class="label">Modalidad:</span>
-                            <span class="value">${getModalidad(matricula)}</span>
+                            <span class="value">${escaparHtml(getModalidad(matricula))}</span>
+                        </div>
+
+                        <div class="form-row">
+                            <span class="label">Tipo de curso:</span>
+                            <span class="value">${escaparHtml(getCurso(matricula))}</span>
                         </div>
                     </div>
 
@@ -312,17 +388,12 @@ function MatriculaPage() {
                     <div style="display: flex; gap: 10px;">
                         <div class="form-row">
                             <span class="label">Horario:</span>
-                            <span class="value">${matricula.horario || ""}</span>
-                        </div>
-
-                        <div class="form-row">
-                            <span class="label">Tipo de curso:</span>
-                            <span class="value">${getCurso(matricula)}</span>
+                            <span class="value">${escaparHtml(matricula.horario || "")}</span>
                         </div>
 
                         <div class="form-row">
                             <span class="label">Categoría:</span>
-                            <span class="value">${getCategoria(matricula)}</span>
+                            <span class="value">${escaparHtml(getCategoria(matricula))}</span>
                         </div>
                     </div>
 
@@ -330,10 +401,8 @@ function MatriculaPage() {
 
                     <div class="form-row">
                         <span class="label">Observación:</span>
-                        <span class="value">${matricula.observaciones || ""}</span>
+                        <span class="value">${escaparHtml(matricula.observaciones || "")}</span>
                     </div>
-
-                    <br/><br/><br/><br/>
 
                     <div style="margin-top: 70px; text-align: center;">
                         <div
@@ -513,31 +582,30 @@ function MatriculaPage() {
     };
 
     useEffect(() => {
-        fetchMatriculas();
+        const temporizador = setTimeout(() => {
+            fetchMatriculas();
+        }, 350);
+
+        return () => clearTimeout(temporizador);
+    }, [pagina, search]);
+
+    useEffect(() => {
+        setPagina(1);
+    }, [search]);
+
+    useEffect(() => {
+        fetchResumen();
     }, []);
 
-    const filteredData = data.filter((item) => {
-        const texto = `
-            ${getNombre(item)}
-            ${getCedula(item)}
-            ${getTelefono(item)}
-            ${getCurso(item)}
-            ${getCategoria(item)}
-            ${item.estado || ""}
-        `.toLowerCase();
+    const totalMatriculas = Number(
+        resumen.total || 0
+    );
 
-        return texto.includes(search.toLowerCase());
-    });
+    const totalMatriculados = Number(
+        resumen.matriculados || 0
+    );
 
-    const displayData = filteredData;
-
-    const totalMatriculas = data.length;
-
-    const totalMatriculados = data.filter(
-        (item) => String(item.estado || "").toLowerCase() === "matriculado"
-    ).length;
-
-    const totalResultados = displayData.length;
+    const totalResultados = totalRegistros;
 
     return (
         <div className="w-full max-w-full min-w-0 overflow-hidden bg-[#f6f8fc] px-4 py-5">
@@ -551,7 +619,6 @@ function MatriculaPage() {
                         <h1 className="text-4xl font-black tracking-tight text-slate-900">
                             Matrículas
                         </h1>
-
                         <p className="mt-2 max-w-3xl text-base text-slate-500">
                             Registro y gestión de matrículas vinculadas a estudiantes ya registrados.
                         </p>
@@ -715,8 +782,8 @@ function MatriculaPage() {
                                             Cargando matrículas...
                                         </td>
                                     </tr>
-                                ) : displayData.length > 0 ? (
-                                    displayData.map((item) => {
+                                ) : data.length > 0 ? (
+                                    data.map((item) => {
                                         const estado = String(item.estado || "").toLowerCase();
 
                                         return (
@@ -820,7 +887,6 @@ function MatriculaPage() {
 
                                                         <button
                                                             onClick={() => {
-                                                                console.log("MATRÍCULA A IMPRIMIR:", item);
                                                                 imprimirMatriculaIndividual(item);
                                                             }}
                                                             className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-50 text-slate-600 ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:bg-slate-100 hover:cursor-pointer"
@@ -843,6 +909,14 @@ function MatriculaPage() {
                             </tbody>
                         </table>
                     </div>
+
+                    <Paginacion
+                        pagina={pagina}
+                        total={totalRegistros}
+                        porPagina={REGISTROS_POR_PAGINA}
+                        cargando={loading}
+                        onChange={setPagina}
+                    />
                 </div>
             </div>
             
@@ -874,6 +948,7 @@ function MatriculaPage() {
                                 initialData={editData}
                                 onSave={() => {
                                     fetchMatriculas();
+                                    fetchResumen();
                                     closeModal();
                                 }}
                             />

@@ -21,17 +21,37 @@ export default function ModalResultadoExamen({
     return null;
   }
 
+  const examenPendiente =
+    String(cita.estado || "").toLowerCase() === "pendiente";
+
   const registrarResultado = async (resultado) => {
+    if (!examenPendiente) {
+      setError(
+        "Este examen ya fue procesado y no puede modificarse nuevamente."
+      );
+      return;
+    }
+
     setError("");
     setProcesando(true);
 
     try {
-      await registrarResultadoExamen(
+      const respuesta = await registrarResultadoExamen(
         cita.id,
         resultado
       );
 
-      onActualizado?.();
+      const estadoActualizado =
+        resultado === "cancelado"
+          ? "cancelada"
+          : "completada";
+
+      onActualizado?.({
+        ...cita,
+        ...(respuesta?.calendario || {}),
+        estado: respuesta?.calendario?.estado || estadoActualizado,
+      });
+
       onClose();
     } catch (err) {
       setError(
@@ -109,35 +129,35 @@ export default function ModalResultadoExamen({
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <button
-              type="button"
-              disabled={procesando}
-              onClick={() =>
-                registrarResultado("asistieron")
-              }
+            type="button"
+            disabled={procesando || !examenPendiente}
+            onClick={() =>
+              registrarResultado("asistieron")
+            }
               className="flex items-center justify-center gap-2 rounded-2xl bg-green-600 px-4 py-3 font-bold text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <CheckCircle2 className="h-5 w-5" />
-              Asistieron
+              Aprobo
             </button>
 
             <button
               type="button"
-              disabled={procesando}
+              disabled={procesando || !examenPendiente}
               onClick={() =>
                 registrarResultado("cancelado")
               }
               className="flex items-center justify-center gap-2 rounded-2xl bg-red-600 px-4 py-3 font-bold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Ban className="h-5 w-5" />
-              Cancelado
+              Reprogramar
             </button>
           </div>
 
           <p className="text-xs leading-5 text-gray-400">
-            Al marcar “Asistieron”, la matrícula se finalizará
-            y el usuario del estudiante será desactivado. Al
-            marcar “Cancelado”, podrá volver a programarse
-            mientras no haya alcanzado las tres asignaciones.
+            Al marcar “Aprobo” o “Reprogramar”, este resultado
+            quedará cerrado y no podrá modificarse nuevamente.
+            Si se marca “Reprogramar”, el estudiante podrá volver
+            a programarse mientras no alcance las tres asignaciones.
           </p>
         </div>
       </div>

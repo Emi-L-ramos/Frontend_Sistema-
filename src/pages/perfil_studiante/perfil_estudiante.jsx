@@ -13,6 +13,7 @@ function PerfilEstudiante() {
     const [rol, setRol] = useState("");
     const [miPerfil, setMiPerfil] = useState(null);
     const [instructor, setInstructor] = useState(null);
+    const [matriculaActiva, setMatriculaActiva] = useState(false);
     const [instructores, setInstructores] = useState([]);
     const [estudiantes, setEstudiantes] = useState([]);
     const [busqueda, setBusqueda] = useState("");
@@ -31,6 +32,7 @@ function PerfilEstudiante() {
             setRol((data.rol || "").toLowerCase());
             setMiPerfil(data.mi_perfil || null);
             setInstructor(data.instructor || null);
+            setMatriculaActiva(Boolean(data.matricula_activa));
             setInstructores(data.instructores || []);
             setEstudiantes(data.estudiantes || []);
         } catch (error) {
@@ -38,6 +40,7 @@ function PerfilEstudiante() {
             setRol("");
             setMiPerfil(null);
             setInstructor(null);
+            setMatriculaActiva(false);
             setInstructores([]);
             setEstudiantes([]);
         } finally {
@@ -342,16 +345,22 @@ function PerfilEstudiante() {
                         />
                     )}
 
-                    {instructor && (
+                    {matriculaActiva && instructor && (
                         <PerfilCard
                             perfil={instructor}
                             tipo="instructor"
                         />
                     )}
 
-                    {!instructor && (
+                    {matriculaActiva && !instructor && (
                         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 text-gray-400">
                             Todavía no tienes instructor asignado.
+                        </div>
+                    )}
+
+                    {!matriculaActiva && (
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 text-gray-500">
+                            Tu matrícula ya fue finalizada. Si realizas una nueva matrícula, volverás a ver aquí tu información activa de clase.
                         </div>
                     )}
                 </div>

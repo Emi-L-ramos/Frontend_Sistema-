@@ -12,9 +12,12 @@ const getHeaders = () => {
 // ============ INSTRUCTORES ============
 export const listarInstructores = async () => {
   try {
-    const response = await fetch(`${API_URL}/instructores/`, {
-      headers: getHeaders()
-    });
+    const response = await fetch(
+      `${API_URL}/instructores/?activo=true`,
+      {
+        headers: getHeaders(),
+      }
+    );
     
     if (!response.ok) {
       throw new Error("Error al cargar instructores");
