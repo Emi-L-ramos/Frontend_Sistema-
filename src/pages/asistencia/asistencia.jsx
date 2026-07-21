@@ -370,8 +370,11 @@ export default function Asistencia({ userRole }) {
 
   useEffect(() => {
     cargar();
-    cargarResumenKm();
   }, [fechaInicio, fechaFin]);
+
+  useEffect(() => {
+    cargarResumenKm();
+  }, []);
 
   const encuentrosDisponibles = useMemo(() => {
     const numeros = new Set();
