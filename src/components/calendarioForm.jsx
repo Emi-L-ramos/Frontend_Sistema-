@@ -913,7 +913,9 @@ try {
                         </div>
                         <div className="text-right">
                           <p className="text-xs text-gray-500">Horario</p>
-                          <p className="text-sm font-medium text-blue-600">{horarioClase}</p>
+                          <p className="text-sm font-medium text-blue-600">
+                            {estudianteSeleccionado?.horario || "No definido"}
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -934,7 +936,12 @@ try {
                           : "Clases prácticas automáticas"}
                       </span>
                     </div>
-                  <div className="flex items-center gap-1"><div className="w-1.5 h-1.5 bg-purple-500 rounded-full"></div><span>Duración: {horarioClase}</span></div>
+                  <div className="flex items-center gap-1">
+                    <div className="w-1.5 h-1.5 bg-purple-500 rounded-full"></div>
+                    <span>
+                      Duración diaria: {horasPorDia} {horasPorDia === 1 ? "hora" : "horas"}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>

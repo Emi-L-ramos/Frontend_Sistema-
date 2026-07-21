@@ -313,9 +313,20 @@ function MatriculaForm({ initialData, onSave, onError }) {
         } catch (error) {
             console.error("Error:", error);
 
+            const respuesta = error.response?.data;
+
+            const mensajeServidor =
+                Array.isArray(respuesta?.estudiante)
+                    ? respuesta.estudiante[0]
+                    : respuesta?.estudiante ||
+                      respuesta?.error ||
+                      respuesta?.detail ||
+                      error.message ||
+                      "Error de conexión con el servidor.";
+
             Swal.fire(
                 "Error",
-                error.message || "Error de conexión con el servidor.",
+                mensajeServidor,
                 "error"
             );
 
