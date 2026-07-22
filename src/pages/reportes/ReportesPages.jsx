@@ -302,14 +302,41 @@ function ReportesPages() {
                 recibo.matricula_data?.estudiante_cedula ||
                 "N/A",
             "Tipo de Pago": obtenerEstado(recibo),
-            "Monto (C$)": parseFloat(
-                recibo.monto_pagado || recibo.monto_cordobas || 0
-            ).toFixed(2),
+            "Monto (C$)": Number(
+                recibo.monto_pagado ??
+                recibo.monto_cordobas ??
+                0
+            ),
             "Método de Pago": recibo.metodo_pago || "Efectivo",
             Observaciones: recibo.observaciones || "",
         }));
 
         const ws = XLSX.utils.json_to_sheet(datosExcel);
+
+        const rangoHoja = XLSX.utils.decode_range(
+            ws["!ref"]
+        );
+
+        for (
+            let fila = 1;
+            fila <= rangoHoja.e.r;
+            fila += 1
+        ) {
+            const referenciaMonto = (
+                XLSX.utils.encode_cell({
+                    r: fila,
+                    c: 5,
+                })
+            );
+
+            const celdaMonto = ws[referenciaMonto];
+
+            if (celdaMonto) {
+                celdaMonto.t = "n";
+                celdaMonto.z = '"C$" #,##0.00';
+            }
+        }
+
         const wb = XLSX.utils.book_new();
 
         XLSX.utils.book_append_sheet(wb, ws, "Recibos");
