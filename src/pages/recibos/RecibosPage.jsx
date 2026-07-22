@@ -289,7 +289,8 @@ function RecibosPage() {
                         Cargando recibos...
                     </div>
                 ) : (
-                    <div className="overflow-x-auto">
+                    <>
+                        <div className="overflow-x-auto">
                         <table className="w-full min-w-[980px] text-sm">
                             <thead className="bg-slate-50/95">
                                 <tr className="border-b border-slate-100">
@@ -322,14 +323,6 @@ function RecibosPage() {
                                     </th>
                                 </tr>
                             </thead>
-
-                            <Paginacion
-                                pagina={pagina}
-                                total={totalRegistros}
-                                porPagina={REGISTROS_POR_PAGINA}
-                                cargando={loading}
-                                onChange={setPagina}
-                            />
 
                             <tbody className="divide-y divide-slate-100">
                                 {filtrados.length === 0 ? (
@@ -409,7 +402,15 @@ function RecibosPage() {
                             </tbody>
                         </table>
                     </div>
-                    
+
+                    <Paginacion
+                        pagina={pagina}
+                        total={totalRegistros}
+                        porPagina={REGISTROS_POR_PAGINA}
+                        cargando={loading}
+                        onChange={setPagina}
+                    />
+                    </>
                 )}
             </div>
 

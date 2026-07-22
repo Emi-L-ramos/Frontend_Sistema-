@@ -401,7 +401,7 @@ const cargarNotificaciones = async () => {
           <div className="relative z-10 flex items-center justify-between gap-4">
             <div>
               <p className="text-base font-bold text-slate-600">
-                Estudiantes Matriculados
+                Matrículas registradas
               </p>
 
               <h2 className="mt-4 text-4xl font-black text-blue-600">
@@ -411,7 +411,7 @@ const cargarNotificaciones = async () => {
               <p className="mt-3 text-sm font-medium text-slate-500">
                 {cargando
                   ? ""
-                  : `Total histórico: ${resumen?.total_matriculados ?? 0}`}
+                  : `Total histórico de matrículas: ${resumen?.total_matriculados ?? 0}`}
               </p>
             </div>
 

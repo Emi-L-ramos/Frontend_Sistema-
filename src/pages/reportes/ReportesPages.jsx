@@ -58,7 +58,23 @@ function ReportesPages() {
     const getCedula = (item) => item.estudiante_cedula || "";
     const getTelefono = (item) => item.estudiante_telefono || "";
     const getCurso = (item) => item.tipo_curso || "";
-    const getCategoria = (item) => item.categoria || "";
+    const getCategoria = (item) =>
+        item.categoria_nombre ||
+        item.categoria?.nombre ||
+        (
+            typeof item.categoria === "string"
+                ? item.categoria
+                : ""
+        );
+    const getEstadoMatricula = (item) => {
+        const estados = {
+            pendiente: "Pendiente",
+            matriculado: "Matriculado",
+            finalizado: "Finalizado",
+        };
+
+        return estados[item.estado] || item.estado || "";
+    };
     const getFechaMatricula = (item) => item.fecha_registro || item.fecha_matricula || "";
     const getFechaRecibo = (recibo) =>
         recibo.fecha_pago ||
@@ -412,15 +428,7 @@ function ReportesPages() {
                                         <td>${escaparHtml(getTelefono(item))}</td>
                                         <td>${escaparHtml(getCategoria(item))}</td>
                                         <td>${escaparHtml(getCurso(item))}</td>
-                                        <td>${
-                                            item.estado === "matriculado"
-                                                ? "Matriculado"
-                                                : item.estado === "cancelado"
-                                                ? "Cancelado"
-                                                : item.estado === "aprobado"
-                                                ? "Aprobado"
-                                                : "Pendiente"
-                                        }</td>
+                                        <td>${escaparHtml(getEstadoMatricula(item))}</td>
                                     </tr>
                                 `
                                 )
@@ -523,15 +531,7 @@ function ReportesPages() {
                                         <td>${escaparHtml(getEdad(item))}</td>
                                         <td>${escaparHtml(getCategoria(item))}</td>
                                         <td>${escaparHtml(getCurso(item))}</td>
-                                        <td>${
-                                            item.estado === "matriculado"
-                                                ? "Matriculado"
-                                                : item.estado === "cancelado"
-                                                ? "Cancelado"
-                                                : item.estado === "aprobado"
-                                                ? "Aprobado"
-                                                : "Pendiente"
-                                        }</td>
+                                        <td>${escaparHtml(getEstadoMatricula(item))}</td>
                                     </tr>
                                 `
                                 )
