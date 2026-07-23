@@ -44,6 +44,36 @@ function buildMonthCells(year, month) {
   return cells;
 }
 
+function normalizarBusqueda(valor) {
+  return String(valor ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+function filtrarPorEstudiante(lista, busqueda) {
+  const terminos = normalizarBusqueda(busqueda)
+    .split(/\s+/)
+    .filter(Boolean);
+
+  if (terminos.length === 0) {
+    return lista;
+  }
+
+  return lista.filter((cita) => {
+    const contenido = normalizarBusqueda(
+      `${cita.estudiante_nombre ?? ""} ${
+        cita.estudiante_cedula ?? ""
+      }`
+    );
+
+    return terminos.every((termino) =>
+      contenido.includes(termino)
+    );
+  });
+}
+
 export default function Calendario() {
   const { user } = useAuth();
 
@@ -63,6 +93,7 @@ export default function Calendario() {
   const [vy, setVy] = useState(hoy.getFullYear());
   const [vm, setVm] = useState(hoy.getMonth());
   const [filtroInstructor, setFiltroInstructor] = useState("all");
+  const [busquedaEstudiante, setBusquedaEstudiante] = useState("");
   const [instructores, setInstructores] = useState([]);
   const [citas, setCitas] = useState([]);
   const [hoyCitas, setHoyCitas] = useState([]);
@@ -130,9 +161,24 @@ export default function Calendario() {
   }, [esInstructor]);
 
   const cells = useMemo(() => buildMonthCells(vy, vm), [vy, vm]);
+  const citasFiltradas = useMemo(
+    () => filtrarPorEstudiante(
+      citas,
+      busquedaEstudiante
+    ),
+    [citas, busquedaEstudiante]
+  );
+
+  const hoyCitasFiltradas = useMemo(
+    () => filtrarPorEstudiante(
+      hoyCitas,
+      busquedaEstudiante
+    ),
+    [hoyCitas, busquedaEstudiante]
+  );
 
   const citasPorFecha = useMemo(() => {
-    return citas.reduce(
+      return citasFiltradas.reduce(
       (resultado, cita) => {
         const fecha = cita.fecha;
 
@@ -146,7 +192,7 @@ export default function Calendario() {
       },
       {}
     );
-  }, [citas]);
+  }, [citasFiltradas]);
 
   const goPrev = () => {
     if (vm === 0) {
@@ -166,7 +212,7 @@ export default function Calendario() {
     }
   };
 
-  const clasesMes = [...citas].sort((a, b) =>
+  const clasesMes = [...citasFiltradas].sort((a, b) =>
     a.fecha === b.fecha
       ? (a.hora_inicio || "").localeCompare(b.hora_inicio || "")
       : a.fecha.localeCompare(b.fecha)
@@ -178,7 +224,7 @@ export default function Calendario() {
   en7Dias.setDate(hoy.getDate() + 7);
   const en7DiasStr = en7Dias.toISOString().slice(0, 10);
 
-  const examenesProximos = citas
+  const examenesProximos = citasFiltradas
     .filter(
       (c) =>
         c.es_examen &&
@@ -189,19 +235,21 @@ export default function Calendario() {
     .sort((a, b) => a.fecha.localeCompare(b.fecha));
 
   const citasDelDiaSeleccionado = diaSeleccionado
-    ? citas.filter((a) => a.fecha === diaSeleccionado)
+    ? citasFiltradas.filter(
+        (a) => a.fecha === diaSeleccionado
+      )
     : [];
 
   const asignacionesPanelAdmin = diaSeleccionado
     ? citasDelDiaSeleccionado
-    : hoyCitas;
+    : hoyCitasFiltradas;
 
-  const totalAsignacionesMes = citas.length;
+  const totalAsignacionesMes = citasFiltradas.length;
 
-  const totalAsignacionesHoy = hoyCitas.length;
+  const totalAsignacionesHoy = hoyCitasFiltradas.length;
 
   const instructoresConAsignaciones = new Set(
-    citas
+    citasFiltradas
       .map((c) => c.instructor)
       .filter(Boolean)
   ).size;
@@ -1234,7 +1282,7 @@ export default function Calendario() {
           </div>
         )}
 
-        <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-center">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <label className="inline-flex items-center gap-2 text-sm font-bold text-slate-500">
               <FaFilter className="text-blue-500" />
@@ -1243,19 +1291,57 @@ export default function Calendario() {
 
             <select
               value={filtroInstructor}
-              onChange={(e) => setFiltroInstructor(e.target.value)}
+              onChange={(e) =>
+                setFiltroInstructor(e.target.value)
+              }
               className="h-12 min-w-[280px] rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
             >
-              <option value="all">Todos los instructores</option>
+              <option value="all">
+                Todos los instructores
+              </option>
 
               {instructores.map((i) => (
                 <option key={i.id} value={i.id}>
                   {i.nombre_completo ||
-                    `${i.nombre || ""} ${i.apellido || ""}`.trim() ||
+                    `${i.nombre || ""} ${
+                      i.apellido || ""
+                    }`.trim() ||
                     `Instructor ${i.id}`}
                 </option>
               ))}
             </select>
+          </div>
+
+          <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center">
+            <label className="inline-flex items-center gap-2 text-sm font-bold text-slate-500">
+              <FaUserAlt className="text-blue-500" />
+              Buscar estudiante
+            </label>
+
+            <div className="relative w-full max-w-[380px]">
+              <input
+                type="search"
+                value={busquedaEstudiante}
+                onChange={(e) =>
+                  setBusquedaEstudiante(e.target.value)
+                }
+                placeholder="Nombre o cédula"
+                className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 pr-11 text-sm font-semibold text-slate-700 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+              />
+
+              {busquedaEstudiante && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setBusquedaEstudiante("")
+                  }
+                  className="absolute right-3 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-slate-100 text-lg font-bold text-slate-500 hover:bg-slate-200"
+                  aria-label="Limpiar búsqueda"
+                >
+                  ×
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -1325,7 +1411,7 @@ export default function Calendario() {
                       />
                     );
                   }
-                  const dia = citas.filter((a) => a.fecha === c.dateStr);
+                  const dia = citasPorFecha[c.dateStr] || [];
                   const visibles = dia.slice(0, 2);
                   const extra = dia.length - visibles.length;
                   const esHoy = c.dateStr === hoyStr;
