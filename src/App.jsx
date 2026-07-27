@@ -91,7 +91,7 @@ function App() {
                         <Route
                             path="/dashboard/plan-estudio"
                             element={
-                                <ProtectedRoute rolesPermitidos={["admin"]}>
+                                <ProtectedRoute>
                                     <Dashboard />
                                 </ProtectedRoute>
                             }
