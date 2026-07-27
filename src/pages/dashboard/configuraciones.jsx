@@ -844,16 +844,6 @@ function Configuraciones() {
                         {seccion.subtitulo}
                       </p>
                     </div>
-
-                    <span
-                      className={`min-w-7 h-7 px-2 rounded-full text-xs font-black flex items-center justify-center ${
-                        activo
-                          ? "bg-white/20 text-white"
-                          : "bg-slate-100 text-slate-500"
-                      }`}
-                    >
-                      {total}
-                    </span>
                   </button>
                 );
               })}

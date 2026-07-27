@@ -33,6 +33,7 @@ import {
   FaSearch,
   FaCalendarAlt,
 } from "react-icons/fa";
+import Swal from "sweetalert2";
 
 const obtenerFechaHoy = () => {
   const hoy = new Date();
@@ -328,6 +329,30 @@ export default function Asistencia({ userRole }) {
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState("");
 
+  const mostrarValidacion = (mensaje) => {
+    setError(mensaje);
+
+    void Swal.fire({
+      icon: "warning",
+      title: "Revisa la información",
+      text: mensaje,
+      confirmButtonText: "Entendido",
+      confirmButtonColor: "#2563eb",
+    });
+  };
+
+  const mostrarErrorOperacion = (titulo, mensaje) => {
+    setError(mensaje);
+
+    void Swal.fire({
+      icon: "error",
+      title: titulo,
+      text: mensaje,
+      confirmButtonText: "Entendido",
+      confirmButtonColor: "#dc2626",
+    });
+  };
+
   const cargar = async (
     mostrarIndicador = true
   ) => {
@@ -515,13 +540,58 @@ const obtenerDetalleKilometraje = (estudiante) => {
 
       return true;
     } catch (e) {
-      setError(
+      const mensaje =
         e?.response?.data?.error ||
-          e?.message ||
-          "No se pudo marcar la asistencia"
+        e?.message ||
+        "No se pudo marcar la asistencia";
+
+      mostrarErrorOperacion(
+        "No se pudo registrar la asistencia",
+        mensaje
       );
 
       return false;
+    }
+  };
+
+  const confirmarInasistencia = async (data) => {
+    if (!data?.id || guardando) return;
+
+    const confirmacion = await Swal.fire({
+      icon: "warning",
+      title: "¿Marcar como inasistencia?",
+      text: "El estudiante quedará registrado como ausente en este encuentro.",
+      showCancelButton: true,
+      confirmButtonText: "Sí, marcar inasistencia",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#dc2626",
+      cancelButtonColor: "#64748b",
+      reverseButtons: true,
+      focusCancel: true,
+    });
+
+    if (!confirmacion.isConfirmed) return;
+
+    setGuardando(true);
+
+    try {
+      const guardado = await handleMarcar(
+        data.id,
+        "falto"
+      );
+
+      if (!guardado) return;
+
+      void Swal.fire({
+        icon: "success",
+        title: "Inasistencia registrada",
+        text: "El estudiante fue marcado como ausente correctamente.",
+        showConfirmButton: false,
+        timer: 1800,
+        timerProgressBar: true,
+      });
+    } finally {
+      setGuardando(false);
     }
   };
 
@@ -529,7 +599,7 @@ const obtenerDetalleKilometraje = (estudiante) => {
     if (!modalKmInicio || guardando) return;
 
     if (kmInicial === "") {
-      setError(
+      mostrarValidacion(
         "Debe ingresar el km inicial."
       );
       return;
@@ -538,7 +608,7 @@ const obtenerDetalleKilometraje = (estudiante) => {
     const inicial = Number(kmInicial);
 
     if (!Number.isFinite(inicial)) {
-      setError(
+      mostrarValidacion(
         "El km inicial debe ser numérico."
       );
       return;
@@ -557,6 +627,15 @@ const obtenerDetalleKilometraje = (estudiante) => {
 
       setModalKmInicio(null);
       setKmInicial("");
+
+      void Swal.fire({
+        icon: "success",
+        title: "Kilometraje inicial guardado",
+        text: "El kilometraje inicial se registró correctamente.",
+        showConfirmButton: false,
+        timer: 1800,
+        timerProgressBar: true,
+      });
     } finally {
       setGuardando(false);
     }
@@ -572,7 +651,7 @@ const obtenerDetalleKilometraje = (estudiante) => {
     if (!modalKmFinal || guardando) return;
 
     if (kmFinal === "") {
-      setError(
+      mostrarValidacion(
         "Debe ingresar el km final."
       );
       return;
@@ -584,14 +663,14 @@ const obtenerDetalleKilometraje = (estudiante) => {
     );
 
     if (!Number.isFinite(final)) {
-      setError(
+      mostrarValidacion(
         "El km final debe ser numérico."
       );
       return;
     }
 
     if (final < inicial) {
-      setError(
+      mostrarValidacion(
         "El km final no puede ser menor "
         + "al inicial."
       );
@@ -612,17 +691,29 @@ const obtenerDetalleKilometraje = (estudiante) => {
       setModalKmFinal(null);
       setKmFinal("");
 
+      void Swal.fire({
+        icon: "success",
+        title: "Kilometraje final guardado",
+        text: "El kilometraje final se registró correctamente.",
+        showConfirmButton: false,
+        timer: 1800,
+        timerProgressBar: true,
+      });
+
       // Después actualiza en segundo plano.
       void Promise.all([
         cargar(false),
         cargarResumenKm(),
       ]);
     } catch (e) {
-      setError(
+      const mensaje =
         e?.response?.data?.error ||
-          e?.message ||
-          "No se pudo finalizar "
-            + "el kilometraje"
+        e?.message ||
+        "No se pudo finalizar el kilometraje";
+
+      mostrarErrorOperacion(
+        "No se pudo guardar",
+        mensaje
       );
     } finally {
       setGuardando(false);
@@ -630,17 +721,21 @@ const obtenerDetalleKilometraje = (estudiante) => {
   };
 
   const confirmarEditarKm = async () => {
-    if (!modalEditarKm) return;
+    if (!modalEditarKm || guardando) return;
 
     if (kmInicial === "") {
-      setError("Debe ingresar el km inicial.");
+      mostrarValidacion(
+        "Debe ingresar el km inicial."
+      );
       return;
     }
 
     const inicial = Number(kmInicial);
 
     if (Number.isNaN(inicial)) {
-      setError("El km inicial debe ser numérico.");
+      mostrarValidacion(
+        "El km inicial debe ser numérico."
+      );
       return;
     }
 
@@ -650,15 +745,22 @@ const obtenerDetalleKilometraje = (estudiante) => {
       final = Number(kmFinal);
 
       if (Number.isNaN(final)) {
-        setError("El km final debe ser numérico.");
+        mostrarValidacion(
+          "El km final debe ser numérico."
+        );
         return;
       }
 
       if (final < inicial) {
-        setError("El km final no puede ser menor al inicial.");
+        mostrarValidacion(
+          "El km final no puede ser menor al inicial."
+        );
         return;
       }
     }
+
+    setGuardando(true);
+    setError("");
 
     try {
       await editarKilometraje({
@@ -667,18 +769,35 @@ const obtenerDetalleKilometraje = (estudiante) => {
         km_final: final,
       });
 
-      await cargar();
-      await cargarResumenKm();
-
       setModalEditarKm(null);
       setKmInicial("");
       setKmFinal("");
+
+      void Swal.fire({
+        icon: "success",
+        title: "Kilometraje actualizado",
+        text: "Los datos del kilometraje se actualizaron correctamente.",
+        showConfirmButton: false,
+        timer: 1800,
+        timerProgressBar: true,
+      });
+
+      void Promise.all([
+        cargar(false),
+        cargarResumenKm(),
+      ]);
     } catch (e) {
-      setError(
+      const mensaje =
         e?.response?.data?.error ||
-          e?.message ||
-          "No se pudo editar el kilometraje"
+        e?.message ||
+        "No se pudo editar el kilometraje";
+
+      mostrarErrorOperacion(
+        "No se pudo actualizar",
+        mensaje
       );
+    } finally {
+      setGuardando(false);
     }
   };
 
@@ -852,9 +971,10 @@ const obtenerDetalleKilometraje = (estudiante) => {
               title="Marcar ausente"
               onClick={(e) => {
                 e.stopPropagation();
-                handleMarcar(data.id, "falto");
+                confirmarInasistencia(data);
               }}
-              className="hover:scale-110 transition-transform cursor-pointer"
+              disabled={guardando}
+              className="hover:scale-110 transition-transform cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
             >
               <XCircle className="w-6 h-6 text-gray-300 hover:text-red-500" />
             </button>
@@ -1626,9 +1746,12 @@ const totalClasesKmSeleccionado = detalleKmSeleccionado.filter((item) => {
               <button
                 type="button"
                 onClick={confirmarEditarKm}
-                className="flex-1 bg-orange-500 hover:bg-orange-600 text-white rounded-xl py-2.5 text-sm font-semibold"
+                disabled={guardando}
+                className="flex-1 bg-orange-500 hover:bg-orange-600 text-white rounded-xl py-2.5 text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Guardar cambios
+                {guardando
+                  ? "Guardando..."
+                  : "Guardar cambios"}
               </button>
             </div>
           </div>

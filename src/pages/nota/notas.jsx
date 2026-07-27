@@ -1,4 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import {
   Search,
   Plus,
@@ -9,10 +16,12 @@ import {
   ClipboardCheck,
   TrendingUp,
   CheckCircle2,
+  LoaderCircle,
 } from "lucide-react";
 import axios from "../../api/axios";
 import Paginacion from "../../components/Paginacion";
-import NotasForm from "./NotasForm";
+
+const NotasForm = lazy(() => import("./NotasForm"));
 
 const REGISTROS_POR_PAGINA = 25;
 
@@ -27,6 +36,7 @@ const RESUMEN_INICIAL = {
 function NotasPages({ userRole }) {
   const [notas, setNotas] = useState([]);
   const [busqueda, setBusqueda] = useState("");
+  const [busquedaAplicada, setBusquedaAplicada] = useState("");
   const [filtroTipo, setFiltroTipo] = useState("Todas");
   const [modalAbierto, setModalAbierto] = useState(false);
 
@@ -34,18 +44,12 @@ function NotasPages({ userRole }) {
   const [totalRegistros, setTotalRegistros] = useState(0);
   const [cargando, setCargando] = useState(false);
   const [resumen, setResumen] = useState(RESUMEN_INICIAL);
+  const solicitudActual = useRef(0);
 
   const rol = userRole?.toLowerCase();
 
-  useEffect(() => {
-    const temporizador = setTimeout(() => {
-      obtenerNotas();
-    }, 350);
-
-    return () => clearTimeout(temporizador);
-  }, [pagina, busqueda, filtroTipo]);
-
-  const obtenerNotas = async () => {
+  const obtenerNotas = useCallback(async ({ signal } = {}) => {
+    const numeroSolicitud = ++solicitudActual.current;
     setCargando(true);
 
     try {
@@ -55,15 +59,20 @@ function NotasPages({ userRole }) {
           params: {
             page: pagina,
             page_size: REGISTROS_POR_PAGINA,
-            ...(busqueda.trim() && {
-              buscar: busqueda.trim(),
+            ...(busquedaAplicada && {
+              buscar: busquedaAplicada,
             }),
             ...(filtroTipo !== "Todas" && {
               tipo_curso: filtroTipo,
             }),
           },
+          signal,
         }
       );
+
+      if (numeroSolicitud !== solicitudActual.current) {
+        return;
+      }
 
       setNotas(response.data.results || []);
       setTotalRegistros(response.data.count || 0);
@@ -71,18 +80,56 @@ function NotasPages({ userRole }) {
         response.data.resumen || RESUMEN_INICIAL
       );
     } catch (error) {
+      if (
+        error?.code === "ERR_CANCELED"
+        || error?.name === "CanceledError"
+      ) {
+        return;
+      }
+
       console.error(
         "Error cargando notas:",
         error
       );
 
-      setNotas([]);
-      setTotalRegistros(0);
-      setResumen(RESUMEN_INICIAL);
+      if (numeroSolicitud === solicitudActual.current) {
+        setNotas([]);
+        setTotalRegistros(0);
+        setResumen(RESUMEN_INICIAL);
+      }
     } finally {
-      setCargando(false);
+      if (numeroSolicitud === solicitudActual.current) {
+        setCargando(false);
+      }
     }
-  };
+  }, [pagina, busquedaAplicada, filtroTipo]);
+
+  useEffect(() => {
+    const valor = busqueda.trim();
+
+    if (!valor) {
+      setPagina(1);
+      setBusquedaAplicada("");
+      return undefined;
+    }
+
+    const temporizador = setTimeout(() => {
+      setPagina(1);
+      setBusquedaAplicada(valor);
+    }, 300);
+
+    return () => clearTimeout(temporizador);
+  }, [busqueda]);
+
+  useEffect(() => {
+    const controlador = new AbortController();
+
+    obtenerNotas({
+      signal: controlador.signal,
+    });
+
+    return () => controlador.abort();
+  }, [obtenerNotas]);
 
   return (
     <div className="min-h-screen bg-[#f7f9fd] px-4 py-5 md:px-6 lg:px-8">
@@ -132,10 +179,8 @@ function NotasPages({ userRole }) {
                     type="text"
                     placeholder="Buscar por estudiante, cédula, instructor o plan..."
                     className="h-full w-full bg-transparent pl-3 text-sm font-medium text-slate-700 outline-none placeholder:text-slate-400"
-                    onChange={(e) => {
-                      setBusqueda(e.target.value);
-                      setPagina(1);
-                    }}
+                    value={busqueda}
+                    onChange={(e) => setBusqueda(e.target.value)}
                   />
                 </div>
               )}
@@ -157,6 +202,7 @@ function NotasPages({ userRole }) {
 
             {rol === "instructor" && (
               <button
+                type="button"
                 onClick={() => setModalAbierto(true)}
                 className="inline-flex h-14 items-center justify-center gap-2 rounded-2xl bg-blue-600 px-6 text-sm font-black text-white shadow-sm transition hover:bg-blue-700"
               >
@@ -165,19 +211,32 @@ function NotasPages({ userRole }) {
               </button>
             )}
           </div>
+
+          {cargando && notas.length > 0 && (
+            <div className="mt-3 flex items-center justify-end gap-2 text-xs font-bold text-blue-600">
+              <LoaderCircle size={15} className="animate-spin" />
+              Actualizando resultados...
+            </div>
+          )}
         </div>
         )}
 
-        {rol === "admin" && (
-          <TablaAdmin notas={notas} />
-        )}
+        {cargando && notas.length === 0 ? (
+          <EsqueletoTabla />
+        ) : (
+          <>
+            {rol === "admin" && (
+              <TablaAdmin notas={notas} />
+            )}
 
-        {rol === "instructor" && (
-          <TablaInstructor notas={notas} />
-        )}
+            {rol === "instructor" && (
+              <TablaInstructor notas={notas} />
+            )}
 
-        {rol === "estudiante" && (
-          <TablaEstudiante notas={notas} />
+            {rol === "estudiante" && (
+              <TablaEstudiante notas={notas} />
+            )}
+          </>
         )}
 
         {totalRegistros > REGISTROS_POR_PAGINA && (
@@ -192,17 +251,33 @@ function NotasPages({ userRole }) {
           </div>
         )}
 
-        <NotasForm
-          open={modalAbierto}
-          onClose={() => setModalAbierto(false)}
-          onNotaGuardada={() => {
-            if (pagina === 1) {
-              obtenerNotas();
-            } else {
-              setPagina(1);
+        {modalAbierto && (
+          <Suspense
+            fallback={
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 backdrop-blur-sm">
+                <div className="flex items-center gap-3 rounded-2xl bg-white px-6 py-5 font-bold text-slate-700 shadow-xl">
+                  <LoaderCircle
+                    size={22}
+                    className="animate-spin text-blue-600"
+                  />
+                  Cargando formulario...
+                </div>
+              </div>
             }
-          }}
-        />
+          >
+            <NotasForm
+              open={modalAbierto}
+              onClose={() => setModalAbierto(false)}
+              onNotaGuardada={() => {
+                if (pagina === 1) {
+                  obtenerNotas();
+                } else {
+                  setPagina(1);
+                }
+              }}
+            />
+          </Suspense>
+        )}
       </div>
     </div>
   );  
@@ -611,6 +686,37 @@ function MensajeVacio() {
   return (
     <div className="text-center py-10 text-slate-500">
       No se encontraron notas registradas.
+    </div>
+  );
+}
+
+function EsqueletoTabla() {
+  return (
+    <div
+      className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-sm"
+      aria-label="Cargando notas"
+    >
+      <div className="border-b border-slate-200 px-6 py-5">
+        <div className="h-4 w-52 animate-pulse rounded-full bg-slate-200" />
+      </div>
+
+      <div className="divide-y divide-slate-100">
+        {[1, 2, 3, 4, 5].map((fila) => (
+          <div
+            key={fila}
+            className="grid animate-pulse grid-cols-2 gap-5 px-6 py-6 md:grid-cols-4 xl:grid-cols-6"
+          >
+            {[1, 2, 3, 4, 5, 6].map((columna) => (
+              <div
+                key={columna}
+                className={`h-4 rounded-full bg-slate-100 ${
+                  columna % 2 === 0 ? "w-20" : "w-28"
+                }`}
+              />
+            ))}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

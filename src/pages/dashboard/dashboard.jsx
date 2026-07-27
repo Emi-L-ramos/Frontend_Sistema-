@@ -15,7 +15,10 @@ import { IoSchoolOutline } from "react-icons/io5";
 import { FaUsers } from "react-icons/fa";
 import { PiStudent } from "react-icons/pi";
 import { FaSquarePollVertical } from "react-icons/fa6";
-import { useNavigate } from "react-router-dom";
+import {
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
 import Swal from "sweetalert2";
 import axios from "../../api/axios";
 import { BsThreeDotsVertical } from "react-icons/bs";
@@ -113,9 +116,14 @@ function Dashboard() {
     esRol,
   } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const [activeTab, setActiveTab] = useState(() =>
+    location.pathname === "/dashboard/plan-estudio"
+      ? "plan_studio"
+      : "dashboard"
+  );
   const [menuUsuarioAbierto, setMenuUsuarioAbierto] = useState(false);
 
   const rol = String(user?.rol || "")
@@ -130,6 +138,17 @@ function Dashboard() {
 
   const esInstructor = esRol("instructor");
   const esEstudiante = esRol("estudiante");
+
+  useEffect(() => {
+    if (location.pathname === "/dashboard/plan-estudio") {
+      setActiveTab("plan_studio");
+      return;
+    }
+
+    if (location.pathname === "/dashboard") {
+      setActiveTab("dashboard");
+    }
+  }, [location.pathname]);
 
   useEffect(() => {
     if (esAdmin) {
@@ -409,6 +428,7 @@ function Dashboard() {
             onClick={() => {
               setActiveTab("dashboard");
               setIsSidebarOpen(false);
+              navigate("/dashboard");
             }}
             className={`w-full flex items-center p-3 space-x-3 rounded-xl transition hover:cursor-pointer ${
               activeTab === "dashboard"
@@ -564,6 +584,7 @@ function Dashboard() {
             onClick={() => {
               setActiveTab("plan_studio");
               setIsSidebarOpen(false);
+              navigate("/dashboard/plan-estudio");
             }}
             className={`w-full flex items-center p-3 space-x-3 rounded-xl transition hover:cursor-pointer ${
               activeTab === "plan_studio"
