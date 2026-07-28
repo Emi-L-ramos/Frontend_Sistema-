@@ -412,361 +412,401 @@ function ReportesPages() {
     })();
 
     const exportarRecibosExcel = () => {
-    const recibosFiltrados =
-        recibosFiltradosPorFecha;
+        const recibosFiltrados =
+            recibosFiltradosPorFecha;
 
-    if (recibosFiltrados.length === 0) {
-        Swal.fire(
-            "Sin datos",
-            "No hay recibos para exportar en ese rango.",
-            "info"
-        );
-        return;
-    }
-
-    const datosExcel = recibosFiltrados.map(
-        (recibo) => {
-            const esBeneficio =
-                String(
-                    recibo.tipo_pago || ""
-                ).toLowerCase() === "beneficio";
-
-            const montoPagado = Number(
-                recibo.monto_pagado ??
-                recibo.monto_cordobas ??
-                0
+        if (recibosFiltrados.length === 0) {
+            Swal.fire(
+                "Sin datos",
+                "No hay recibos para exportar en ese rango.",
+                "info"
             );
-
-            const porPagar =
-                String(recibo.tipo_pago || "")
-                    .trim()
-                    .toLowerCase() === "anticipo"
-                    ? Number(recibo.por_pagar ?? 0)
-                    : 0;
-
-            const totalCurso = Number(
-                recibo.monto_total_curso ?? 0
-            );
-
-            return {
-                "N° Recibo/Factura":
-                    recibo.numero_recibo || "N/A",
-
-                Fecha:
-                    formatearFecha(
-                        getFechaRecibo(recibo)
-                    ),
-
-                Estudiante:
-                    recibo.estudiante_nombre ||
-                    recibo.matricula_data
-                        ?.estudiante_nombre ||
-                    "N/A",
-
-                Cédula:
-                    recibo.estudiante_cedula ||
-                    recibo.matricula_data
-                        ?.estudiante_cedula ||
-                    "N/A",
-
-                "Tipo de Pago":
-                    obtenerEstado(recibo),
-
-                "Monto (C$)":
-                    montoPagado,
-
-                "Por Pagar (C$)":
-                    porPagar,
-
-                "Total del curso (C$)":
-                    totalCurso,
-
-                "Método de Pago":
-                    recibo.metodo_pago ||
-                    "Efectivo",
-
-                Observaciones:
-                    recibo.observaciones || "",
-            };
+            return;
         }
-    );
 
-    const cantidadRecibos =
-        datosExcel.length;
+        const datosExcel = recibosFiltrados.map(
+            (recibo) => {
+                const esBeneficio =
+                    String(
+                        recibo.tipo_pago || ""
+                    ).toLowerCase() === "beneficio";
 
-    const totalesMoneda = {
-        F: datosExcel.reduce(
-            (total, fila) => (
-                total +
-                Number(
-                    fila["Monto (C$)"] || 0
-                )
-            ),
-            0
-        ),
+                const montoPagado = Number(
+                    recibo.monto_pagado ??
+                    recibo.monto_cordobas ??
+                    0
+                );
 
-        G: datosExcel.reduce(
-            (total, fila) => (
-                total +
-                Number(
-                    fila["Por Pagar (C$)"] || 0
-                )
-            ),
-            0
-        ),
+                const porPagar =
+                    String(recibo.tipo_pago || "")
+                        .trim()
+                        .toLowerCase() === "anticipo"
+                        ? Number(recibo.por_pagar ?? 0)
+                        : 0;
 
-        H: datosExcel.reduce(
-            (total, fila) => (
-                total +
-                Number(
-                    fila[
-                        "Total del curso (C$)"
-                    ] || 0
-                )
-            ),
-            0
-        ),
-    };
+                const totalCurso = Number(
+                    recibo.monto_total_curso ?? 0
+                );
 
-    datosExcel.push({
-        "N° Recibo/Factura": "TOTALES",
-        Fecha: "",
-        Estudiante: "",
-        Cédula: "",
-        "Tipo de Pago": "",
-        "Monto (C$)": totalesMoneda.F,
-        "Por Pagar (C$)": totalesMoneda.G,
-        "Total del curso (C$)":
-            totalesMoneda.H,
-        "Método de Pago": "",
-        Observaciones: "",
-    });
+                return {
+                    "N° Recibo/Factura":
+                        recibo.numero_recibo || "N/A",
 
-    const ws =
-        XLSX.utils.json_to_sheet(
-            datosExcel
-        );
+                    Fecha:
+                        formatearFecha(
+                            getFechaRecibo(recibo)
+                        ),
 
-    const filaTotalExcel =
-        cantidadRecibos + 2;
+                    Estudiante:
+                        recibo.estudiante_nombre ||
+                        recibo.matricula_data
+                            ?.estudiante_nombre ||
+                        "N/A",
 
-    const ultimaFilaDatos =
-        cantidadRecibos + 1;
+                    Cédula:
+                        recibo.estudiante_cedula ||
+                        recibo.matricula_data
+                            ?.estudiante_cedula ||
+                        "N/A",
 
-    ["F", "G", "H"].forEach(
-        (columna) => {
-            ws[
-                `${columna}${filaTotalExcel}`
-            ] = {
-                t: "n",
-                f: (
-                    `SUM(${columna}2:` +
-                    `${columna}${ultimaFilaDatos})`
-                ),
-                v: totalesMoneda[columna],
-                z: '"C$" #,##0.00',
-            };
-        }
-    );
+                    "Tipo de Pago":
+                        obtenerEstado(recibo),
 
-    const rangoHoja =
-        XLSX.utils.decode_range(
-            ws["!ref"]
-        );
+                    "Monto (C$)":
+                        montoPagado,
 
-    for (
-        let fila = 1;
-        fila <= rangoHoja.e.r;
-        fila += 1
-    ) {
-        [5, 6, 7].forEach(
-            (columna) => {
-                const referencia =
-                    XLSX.utils.encode_cell({
-                        r: fila,
-                        c: columna,
-                    });
+                    "Por Pagar (C$)":
+                        porPagar,
 
-                const celda =
-                    ws[referencia];
+                    "Total del curso (C$)":
+                        totalCurso,
 
-                if (celda) {
-                    celda.t = "n";
-                    celda.z =
-                        '"C$" #,##0.00';
-                }
+                    "Método de Pago":
+                        recibo.metodo_pago ||
+                        "Efectivo",
+
+                    Observaciones:
+                        recibo.observaciones || "",
+                };
             }
         );
-    }
 
-    ws["!cols"] = [
-        { wch: 20 },
-        { wch: 14 },
-        { wch: 38 },
-        { wch: 22 },
-        { wch: 17 },
-        { wch: 16 },
-        { wch: 18 },
-        { wch: 22 },
-        { wch: 18 },
-        { wch: 35 },
-    ];
+        const cantidadRecibos =
+            datosExcel.length;
 
-    const wb =
-        XLSX.utils.book_new();
+        const totalesMoneda = {
+            F: datosExcel.reduce(
+                (total, fila) => (
+                    total +
+                    Number(
+                        fila["Monto (C$)"] || 0
+                    )
+                ),
+                0
+            ),
 
-    XLSX.utils.book_append_sheet(
-        wb,
-        ws,
-        "Recibos"
-    );
+            G: datosExcel.reduce(
+                (total, fila) => (
+                    total +
+                    Number(
+                        fila["Por Pagar (C$)"] || 0
+                    )
+                ),
+                0
+            ),
 
-    const horaArchivo = new Date()
-        .toISOString()
-        .replaceAll(":", "-")
-        .slice(0, 19);
+            H: datosExcel.reduce(
+                (total, fila) => (
+                    total +
+                    Number(
+                        fila[
+                            "Total del curso (C$)"
+                        ] || 0
+                    )
+                ),
+                0
+            ),
+        };
 
-    Swal.fire(
-        "Excel generado",
-        (
-            `Se exportaron ` +
-            `${recibosFiltrados.length} ` +
-            `recibo(s).`
-        ),
-        "success"
-    );
+        datosExcel.push({
+            "N° Recibo/Factura": "TOTALES",
+            Fecha: "",
+            Estudiante: "",
+            Cédula: "",
+            "Tipo de Pago": "",
+            "Monto (C$)": totalesMoneda.F,
+            "Por Pagar (C$)": totalesMoneda.G,
+            "Total del curso (C$)":
+                totalesMoneda.H,
+            "Método de Pago": "",
+            Observaciones: "",
+        });
 
-    XLSX.writeFile(
-        wb,
-        (
-            `recibos_` +
-            `${fechaReciboDesde || "inicio"}_` +
-            `${fechaReciboHasta || "fin"}_` +
-            `${horaArchivo}.xlsx`
-        )
-    );
-};
+        const ws =
+            XLSX.utils.json_to_sheet(
+                datosExcel
+            );
 
-    const imprimirPorEdades = () => {
-        const datosAImprimir = datosPorEdad;
+        const filaTotalExcel =
+            cantidadRecibos + 2;
 
-        if (datosAImprimir.length === 0) {
-            Swal.fire("Sin registros", "No se encontraron matrículas con ese filtro de edad.", "info");
-            return;
+        const ultimaFilaDatos =
+            cantidadRecibos + 1;
+
+        ["F", "G", "H"].forEach(
+            (columna) => {
+                ws[
+                    `${columna}${filaTotalExcel}`
+                ] = {
+                    t: "n",
+                    f: (
+                        `SUM(${columna}2:` +
+                        `${columna}${ultimaFilaDatos})`
+                    ),
+                    v: totalesMoneda[columna],
+                    z: '"C$" #,##0.00',
+                };
+            }
+        );
+
+        const rangoHoja =
+            XLSX.utils.decode_range(
+                ws["!ref"]
+            );
+
+        for (
+            let fila = 1;
+            fila <= rangoHoja.e.r;
+            fila += 1
+        ) {
+            [5, 6, 7].forEach(
+                (columna) => {
+                    const referencia =
+                        XLSX.utils.encode_cell({
+                            r: fila,
+                            c: columna,
+                        });
+
+                    const celda =
+                        ws[referencia];
+
+                    if (celda) {
+                        celda.t = "n";
+                        celda.z =
+                            '"C$" #,##0.00';
+                    }
+                }
+            );
         }
 
-        const ventanaImpresion = window.open("", "_blank");
+        ws["!cols"] = [
+            { wch: 20 },
+            { wch: 14 },
+            { wch: 38 },
+            { wch: 22 },
+            { wch: 17 },
+            { wch: 16 },
+            { wch: 18 },
+            { wch: 22 },
+            { wch: 18 },
+            { wch: 35 },
+        ];
 
-        if (!ventanaImpresion) {
+        const wb =
+            XLSX.utils.book_new();
+
+        XLSX.utils.book_append_sheet(
+            wb,
+            ws,
+            "Recibos"
+        );
+
+        const horaArchivo = new Date()
+            .toISOString()
+            .replaceAll(":", "-")
+            .slice(0, 19);
+
+        Swal.fire(
+            "Excel generado",
+            (
+                `Se exportaron ` +
+                `${recibosFiltrados.length} ` +
+                `recibo(s).`
+            ),
+            "success"
+        );
+
+        XLSX.writeFile(
+            wb,
+            (
+                `recibos_` +
+                `${fechaReciboDesde || "inicio"}_` +
+                `${fechaReciboHasta || "fin"}_` +
+                `${horaArchivo}.xlsx`
+            )
+        );
+    };
+
+    const exportarPorEdadesExcel = () => {
+        const filtrados = datosPorEdad;
+
+        if (filtrados.length === 0) {
             Swal.fire(
-                "Ventana bloqueada",
-                (
-                    "El navegador bloqueó la ventana de impresión. "
-                    + "Permita las ventanas emergentes e inténtelo nuevamente."
-                ),
-                "warning"
+                "Sin registros",
+                "No se encontraron matrículas con ese filtro de edad.",
+                "info"
             );
             return;
         }
 
-        ventanaImpresion.document.write(`
-            <html>
-                <head>
-                    <title>Reporte de Matrículas por Edad</title>
-                    <style>
-                        body { font-family: Arial, sans-serif; margin: 20px; color: #111; }
-                        h1 { text-align: center; margin-bottom: 5px; }
-                        .subtitulo { text-align: center; color: #555; margin-bottom: 25px; }
-                        .datos { margin-bottom: 20px; font-size: 14px; }
-                        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 13px; }
-                        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-                        th { background-color: #16a34a; color: white; }
-                        .total { margin-top: 20px; font-weight: bold; text-align: right; }
-                    </style>
-                </head>
+        const etiquetasEdad = {
+            menores18: "Menores de 18 años",
+            "18a20": "18 a 20 años",
+            "21a25": "21 a 25 años",
+            "26a30": "26 a 30 años",
+            "31a35": "31 a 35 años",
+            "36a40": "36 a 40 años",
+            "41a45": "41 a 45 años",
+            "46a50": "46 a 50 años",
+            mayores50: "Mayores de 50 años",
+        };
 
-                <body>
-                    <h1>Reporte de Matrículas</h1>
-                    <div class="subtitulo">Reporte filtrado por edades</div>
+        const etiquetaFiltro =
+            etiquetasEdad[filtroEdad]
+            || "Todos los registros";
 
-                    <div class="datos">
-                        <p>
-                            <strong>Filtro de edad:</strong>
-                            ${
-                                filtroEdad === "menores18"
-                                    ? "Menores de 18 años"
-                                    : filtroEdad === "18a20"
-                                    ? "18 a 20 años"
-                                    : filtroEdad === "21a25"
-                                    ? "21 a 25 años"
-                                    : filtroEdad === "26a30"
-                                    ? "26 a 30 años"
-                                    : filtroEdad === "31a35"
-                                    ? "31 a 35 años"
-                                    : filtroEdad === "36a40"
-                                    ? "36 a 40 años"
-                                    : filtroEdad === "41a45"
-                                    ? "41 a 45 años"
-                                    : filtroEdad === "46a50"
-                                    ? "46 a 50 años"
-                                    : filtroEdad === "mayores50"
-                                    ? "Mayores de 50 años"
-                                    : "Todos los registros"
-                            }
-                        </p>
+        const encabezados = [
+            "Nombre",
+            "Cédula",
+            "Edad",
+            "Sexo",
+            "Teléfono",
+            "Categoría",
+            "Curso",
+            "Estado",
+        ];
 
-                        <p><strong>Fecha de generación:</strong> ${new Date().toLocaleString()}</p>
-                        <p><strong>Total de registros:</strong> ${datosAImprimir.length}</p>
-                    </div>
+        const filas = filtrados.map((item) => [
+            getNombre(item),
+            getCedula(item),
+            Number(getEdad(item) || 0),
+            getSexo(item),
+            getTelefono(item),
+            getCategoria(item),
+            getCurso(item),
+            getEstadoMatricula(item),
+        ]);
 
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Nombre</th>
-                                <th>Cédula</th>
-                                <th>Edad</th>
-                                <th>Sexo</th>
-                                <th>Teléfono</th>
-                                <th>Categoría</th>
-                                <th>Curso</th>
-                                <th>Estado</th>
-                            </tr>
-                        </thead>
+        const contenidoExcel = [
+            [
+                "REPORTE DE MATRÍCULAS POR EDADES",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+            ],
+            [
+                "Filtro de edad:",
+                etiquetaFiltro,
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+            ],
+            [
+                "Fecha de generación:",
+                new Date().toLocaleString("es-NI"),
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+            ],
+            [
+                "Total de registros:",
+                filtrados.length,
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+            ],
+            [],
+            encabezados,
+            ...filas,
+            [],
+            [
+                "TOTAL DE REGISTROS",
+                filtrados.length,
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+            ],
+        ];
 
-                        <tbody>
-                            ${datosAImprimir
-                                .map(
-                                    (item) => `
-                                    <tr>
-                                        <td>${escaparHtml(getNombre(item))}</td>
-                                        <td>${escaparHtml(getCedula(item))}</td>
-                                        <td>${escaparHtml(getEdad(item))}</td>
-                                        <td>${escaparHtml(getSexo(item))}</td>
-                                        <td>${escaparHtml(getTelefono(item))}</td>
-                                        <td>${escaparHtml(getCategoria(item))}</td>
-                                        <td>${escaparHtml(getCurso(item))}</td>
-                                        <td>${escaparHtml(getEstadoMatricula(item))}</td>
-                                    </tr>
-                                `
-                                )
-                                .join("")}
-                        </tbody>
-                    </table>
+        const hoja = XLSX.utils.aoa_to_sheet(
+            contenidoExcel
+        );
 
-                    <p class="total">Total: ${datosAImprimir.length} registros</p>
+        hoja["!merges"] = [
+            {
+                s: {
+                    r: 0,
+                    c: 0,
+                },
+                e: {
+                    r: 0,
+                    c: 7,
+                },
+            },
+        ];
 
-                    <script>
-                        window.onload = function() {
-                            setTimeout(() => {
-                                window.print();
-                            }, 500);
-                        };
-                    </script>
-                </body>
-            </html>
-        `);
+        hoja["!cols"] = [
+            { wch: 38 },
+            { wch: 22 },
+            { wch: 10 },
+            { wch: 14 },
+            { wch: 18 },
+            { wch: 24 },
+            { wch: 18 },
+            { wch: 18 },
+        ];
 
-        ventanaImpresion.document.close();
+        hoja["!autofilter"] = {
+            ref: `A6:H${filtrados.length + 6}`,
+        };
+
+        const libro = XLSX.utils.book_new();
+
+        XLSX.utils.book_append_sheet(
+            libro,
+            hoja,
+            "Matrículas por edad"
+        );
+
+        const nombreFiltro = filtroEdad
+            || "todas_las_edades";
+
+        XLSX.writeFile(
+            libro,
+            `reporte_matriculas_edades_${nombreFiltro}.xlsx`
+        );
+
+        Swal.fire(
+            "Excel generado",
+            `Se exportaron ${filtrados.length} matrícula(s) correctamente.`,
+            "success"
+        );
     };
 
     const exportarPorFechasWord = async () => {
@@ -2335,7 +2375,7 @@ function ReportesPages() {
                                 </div>
 
                                 <button
-                                    onClick={imprimirPorEdades}
+                                    onClick={exportarPorEdadesExcel}
                                     className="w-full h-12 rounded-2xl bg-green-600 text-white font-bold flex items-center justify-center gap-2 hover:bg-green-700 transition cursor-pointer"
                                 >
                                     <FiPrinter />
