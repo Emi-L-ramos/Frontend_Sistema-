@@ -13,6 +13,24 @@ import {
 } from "react-icons/fi";
 import Swal from "sweetalert2";
 import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
+import {
+    AlignmentType,
+    BorderStyle,
+    Document,
+    Footer,
+    Header,
+    ImageRun,
+    PageNumber,
+    Packer,
+    Paragraph,
+    Table,
+    TableCell,
+    TableRow,
+    TextRun,
+    VerticalAlign,
+    WidthType,
+} from "docx";
 import api from "../../api/axios";
 
 const escaparHtml = (valor) => {
@@ -30,6 +48,117 @@ const escaparHtml = (valor) => {
             return equivalencias[caracter];
         }
     );
+};
+
+const cargarImagenWord = async (ruta) => {
+    try {
+        const respuesta = await fetch(ruta);
+
+        if (!respuesta.ok) {
+            return null;
+        }
+
+        return new Uint8Array(
+            await respuesta.arrayBuffer()
+        );
+    } catch (error) {
+        console.warn(
+            "No se pudo cargar una imagen para Word:",
+            error
+        );
+
+        return null;
+    }
+};
+
+const bordesTablaWord = {
+    top: {
+        style: BorderStyle.SINGLE,
+        size: 6,
+        color: "000000",
+    },
+    bottom: {
+        style: BorderStyle.SINGLE,
+        size: 6,
+        color: "000000",
+    },
+    left: {
+        style: BorderStyle.SINGLE,
+        size: 6,
+        color: "000000",
+    },
+    right: {
+        style: BorderStyle.SINGLE,
+        size: 6,
+        color: "000000",
+    },
+};
+
+const sinBordesWord = {
+    top: {
+        style: BorderStyle.NONE,
+        size: 0,
+        color: "FFFFFF",
+    },
+    bottom: {
+        style: BorderStyle.NONE,
+        size: 0,
+        color: "FFFFFF",
+    },
+    left: {
+        style: BorderStyle.NONE,
+        size: 0,
+        color: "FFFFFF",
+    },
+    right: {
+        style: BorderStyle.NONE,
+        size: 0,
+        color: "FFFFFF",
+    },
+};
+
+const crearCeldaInformeWord = ({
+    texto,
+    ancho,
+    encabezado = false,
+    alineacion = AlignmentType.CENTER,
+}) => {
+    return new TableCell({
+        width: {
+            size: ancho,
+            type: WidthType.DXA,
+        },
+        borders: bordesTablaWord,
+        shading: encabezado
+            ? {
+                fill: "D9EAF7",
+            }
+            : undefined,
+        verticalAlign: VerticalAlign.CENTER,
+        margins: {
+            top: 80,
+            bottom: 80,
+            left: 80,
+            right: 80,
+        },
+        children: [
+            new Paragraph({
+                alignment: alineacion,
+                spacing: {
+                    before: 0,
+                    after: 0,
+                },
+                children: [
+                    new TextRun({
+                        text: String(texto ?? ""),
+                        bold: encabezado,
+                        font: "Arial",
+                        size: encabezado ? 16 : 15,
+                    }),
+                ],
+            }),
+        ],
+    });
 };
 
 function ReportesPages() {
@@ -283,237 +412,240 @@ function ReportesPages() {
     })();
 
     const exportarRecibosExcel = () => {
-        const recibosFiltrados =
-            recibosFiltradosPorFecha;
+    const recibosFiltrados =
+        recibosFiltradosPorFecha;
 
-        if (recibosFiltrados.length === 0) {
-            Swal.fire(
-                "Sin datos",
-                "No hay recibos para exportar en ese rango.",
-                "info"
-            );
-            return;
-        }
-
-        const datosExcel = recibosFiltrados.map(
-            (recibo) => {
-                const esBeneficio =
-                    String(
-                        recibo.tipo_pago || ""
-                    ).toLowerCase() === "beneficio";
-
-                const montoPagado = Number(
-                    recibo.monto_pagado ??
-                    recibo.monto_cordobas ??
-                    0
-                );
-
-                const porPagar = esBeneficio
-                    ? 0
-                    : Number(recibo.por_pagar ?? 0);
-
-                const totalCurso = Number(
-                    recibo.monto_total_curso ?? 0
-                );
-
-                return {
-                    "N° Recibo/Factura":
-                        recibo.numero_recibo || "N/A",
-
-                    Fecha:
-                        formatearFecha(
-                            getFechaRecibo(recibo)
-                        ),
-
-                    Estudiante:
-                        recibo.estudiante_nombre ||
-                        recibo.matricula_data
-                            ?.estudiante_nombre ||
-                        "N/A",
-
-                    Cédula:
-                        recibo.estudiante_cedula ||
-                        recibo.matricula_data
-                            ?.estudiante_cedula ||
-                        "N/A",
-
-                    "Tipo de Pago":
-                        obtenerEstado(recibo),
-
-                    "Monto (C$)":
-                        montoPagado,
-
-                    "Por Pagar (C$)":
-                        porPagar,
-
-                    "Total del curso (C$)":
-                        totalCurso,
-
-                    "Método de Pago":
-                        recibo.metodo_pago ||
-                        "Efectivo",
-
-                    Observaciones:
-                        recibo.observaciones || "",
-                };
-            }
-        );
-
-        const cantidadRecibos =
-            datosExcel.length;
-
-        const totalesMoneda = {
-            F: datosExcel.reduce(
-                (total, fila) => (
-                    total +
-                    Number(
-                        fila["Monto (C$)"] || 0
-                    )
-                ),
-                0
-            ),
-
-            G: datosExcel.reduce(
-                (total, fila) => (
-                    total +
-                    Number(
-                        fila["Por Pagar (C$)"] || 0
-                    )
-                ),
-                0
-            ),
-
-            H: datosExcel.reduce(
-                (total, fila) => (
-                    total +
-                    Number(
-                        fila[
-                            "Total del curso (C$)"
-                        ] || 0
-                    )
-                ),
-                0
-            ),
-        };
-
-        datosExcel.push({
-            "N° Recibo/Factura": "TOTALES",
-            Fecha: "",
-            Estudiante: "",
-            Cédula: "",
-            "Tipo de Pago": "",
-            "Monto (C$)": totalesMoneda.F,
-            "Por Pagar (C$)": totalesMoneda.G,
-            "Total del curso (C$)":
-                totalesMoneda.H,
-            "Método de Pago": "",
-            Observaciones: "",
-        });
-
-        const ws =
-            XLSX.utils.json_to_sheet(
-                datosExcel
-            );
-
-        const filaTotalExcel =
-            cantidadRecibos + 2;
-
-        const ultimaFilaDatos =
-            cantidadRecibos + 1;
-
-        ["F", "G", "H"].forEach(
-            (columna) => {
-                ws[
-                    `${columna}${filaTotalExcel}`
-                ] = {
-                    t: "n",
-                    f: (
-                        `SUM(${columna}2:` +
-                        `${columna}${ultimaFilaDatos})`
-                    ),
-                    v: totalesMoneda[columna],
-                    z: '"C$" #,##0.00',
-                };
-            }
-        );
-
-        const rangoHoja =
-            XLSX.utils.decode_range(
-                ws["!ref"]
-            );
-
-        for (
-            let fila = 1;
-            fila <= rangoHoja.e.r;
-            fila += 1
-        ) {
-            [5, 6, 7].forEach(
-                (columna) => {
-                    const referencia =
-                        XLSX.utils.encode_cell({
-                            r: fila,
-                            c: columna,
-                        });
-
-                    const celda =
-                        ws[referencia];
-
-                    if (celda) {
-                        celda.t = "n";
-                        celda.z =
-                            '"C$" #,##0.00';
-                    }
-                }
-            );
-        }
-
-        ws["!cols"] = [
-            { wch: 20 },
-            { wch: 14 },
-            { wch: 38 },
-            { wch: 22 },
-            { wch: 17 },
-            { wch: 16 },
-            { wch: 18 },
-            { wch: 22 },
-            { wch: 18 },
-            { wch: 35 },
-        ];
-
-        const wb =
-            XLSX.utils.book_new();
-
-        XLSX.utils.book_append_sheet(
-            wb,
-            ws,
-            "Recibos"
-        );
-
-        const horaArchivo = new Date()
-            .toISOString()
-            .replaceAll(":", "-")
-            .slice(0, 19);
-
+    if (recibosFiltrados.length === 0) {
         Swal.fire(
-            "Excel generado",
-            (
-                `Se exportaron ` +
-                `${recibosFiltrados.length} ` +
-                `recibo(s).`
+            "Sin datos",
+            "No hay recibos para exportar en ese rango.",
+            "info"
+        );
+        return;
+    }
+
+    const datosExcel = recibosFiltrados.map(
+        (recibo) => {
+            const esBeneficio =
+                String(
+                    recibo.tipo_pago || ""
+                ).toLowerCase() === "beneficio";
+
+            const montoPagado = Number(
+                recibo.monto_pagado ??
+                recibo.monto_cordobas ??
+                0
+            );
+
+            const porPagar =
+                String(recibo.tipo_pago || "")
+                    .trim()
+                    .toLowerCase() === "anticipo"
+                    ? Number(recibo.por_pagar ?? 0)
+                    : 0;
+
+            const totalCurso = Number(
+                recibo.monto_total_curso ?? 0
+            );
+
+            return {
+                "N° Recibo/Factura":
+                    recibo.numero_recibo || "N/A",
+
+                Fecha:
+                    formatearFecha(
+                        getFechaRecibo(recibo)
+                    ),
+
+                Estudiante:
+                    recibo.estudiante_nombre ||
+                    recibo.matricula_data
+                        ?.estudiante_nombre ||
+                    "N/A",
+
+                Cédula:
+                    recibo.estudiante_cedula ||
+                    recibo.matricula_data
+                        ?.estudiante_cedula ||
+                    "N/A",
+
+                "Tipo de Pago":
+                    obtenerEstado(recibo),
+
+                "Monto (C$)":
+                    montoPagado,
+
+                "Por Pagar (C$)":
+                    porPagar,
+
+                "Total del curso (C$)":
+                    totalCurso,
+
+                "Método de Pago":
+                    recibo.metodo_pago ||
+                    "Efectivo",
+
+                Observaciones:
+                    recibo.observaciones || "",
+            };
+        }
+    );
+
+    const cantidadRecibos =
+        datosExcel.length;
+
+    const totalesMoneda = {
+        F: datosExcel.reduce(
+            (total, fila) => (
+                total +
+                Number(
+                    fila["Monto (C$)"] || 0
+                )
             ),
-            "success"
+            0
+        ),
+
+        G: datosExcel.reduce(
+            (total, fila) => (
+                total +
+                Number(
+                    fila["Por Pagar (C$)"] || 0
+                )
+            ),
+            0
+        ),
+
+        H: datosExcel.reduce(
+            (total, fila) => (
+                total +
+                Number(
+                    fila[
+                        "Total del curso (C$)"
+                    ] || 0
+                )
+            ),
+            0
+        ),
+    };
+
+    datosExcel.push({
+        "N° Recibo/Factura": "TOTALES",
+        Fecha: "",
+        Estudiante: "",
+        Cédula: "",
+        "Tipo de Pago": "",
+        "Monto (C$)": totalesMoneda.F,
+        "Por Pagar (C$)": totalesMoneda.G,
+        "Total del curso (C$)":
+            totalesMoneda.H,
+        "Método de Pago": "",
+        Observaciones: "",
+    });
+
+    const ws =
+        XLSX.utils.json_to_sheet(
+            datosExcel
         );
 
-        XLSX.writeFile(
-            wb,
-            (
-                `recibos_` +
-                `${fechaReciboDesde || "inicio"}_` +
-                `${fechaReciboHasta || "fin"}_` +
-                `${horaArchivo}.xlsx`
-            )
+    const filaTotalExcel =
+        cantidadRecibos + 2;
+
+    const ultimaFilaDatos =
+        cantidadRecibos + 1;
+
+    ["F", "G", "H"].forEach(
+        (columna) => {
+            ws[
+                `${columna}${filaTotalExcel}`
+            ] = {
+                t: "n",
+                f: (
+                    `SUM(${columna}2:` +
+                    `${columna}${ultimaFilaDatos})`
+                ),
+                v: totalesMoneda[columna],
+                z: '"C$" #,##0.00',
+            };
+        }
+    );
+
+    const rangoHoja =
+        XLSX.utils.decode_range(
+            ws["!ref"]
         );
-    };
+
+    for (
+        let fila = 1;
+        fila <= rangoHoja.e.r;
+        fila += 1
+    ) {
+        [5, 6, 7].forEach(
+            (columna) => {
+                const referencia =
+                    XLSX.utils.encode_cell({
+                        r: fila,
+                        c: columna,
+                    });
+
+                const celda =
+                    ws[referencia];
+
+                if (celda) {
+                    celda.t = "n";
+                    celda.z =
+                        '"C$" #,##0.00';
+                }
+            }
+        );
+    }
+
+    ws["!cols"] = [
+        { wch: 20 },
+        { wch: 14 },
+        { wch: 38 },
+        { wch: 22 },
+        { wch: 17 },
+        { wch: 16 },
+        { wch: 18 },
+        { wch: 22 },
+        { wch: 18 },
+        { wch: 35 },
+    ];
+
+    const wb =
+        XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(
+        wb,
+        ws,
+        "Recibos"
+    );
+
+    const horaArchivo = new Date()
+        .toISOString()
+        .replaceAll(":", "-")
+        .slice(0, 19);
+
+    Swal.fire(
+        "Excel generado",
+        (
+            `Se exportaron ` +
+            `${recibosFiltrados.length} ` +
+            `recibo(s).`
+        ),
+        "success"
+    );
+
+    XLSX.writeFile(
+        wb,
+        (
+            `recibos_` +
+            `${fechaReciboDesde || "inicio"}_` +
+            `${fechaReciboHasta || "fin"}_` +
+            `${horaArchivo}.xlsx`
+        )
+    );
+};
 
     const imprimirPorEdades = () => {
         const datosAImprimir = datosPorEdad;
@@ -637,109 +769,363 @@ function ReportesPages() {
         ventanaImpresion.document.close();
     };
 
-    const imprimirPorFechas = () => {
+    const exportarPorFechasWord = async () => {
         const filtrados = datosPorFecha;
 
         if (filtrados.length === 0) {
-            Swal.fire("Sin registros", "No se encontraron registros en este rango de fechas.", "info");
-            return;
-        }
-
-        const ventanaImpresion = window.open("", "_blank");
-
-        if (!ventanaImpresion) {
             Swal.fire(
-                "Ventana bloqueada",
-                (
-                    "El navegador bloqueó la ventana de impresión. "
-                    + "Permita las ventanas emergentes e inténtelo nuevamente."
-                ),
-                "warning"
+                "Sin registros",
+                "No se encontraron registros en este rango de fechas.",
+                "info"
             );
             return;
         }
 
-        ventanaImpresion.document.write(`
-            <html>
-                <head>
-                    <title>Reporte de Matrículas por Fechas</title>
-                    <style>
-                        body { font-family: Arial, sans-serif; margin: 20px; color: #111; }
-                        h1 { text-align: center; margin-bottom: 5px; }
-                        .subtitulo { text-align: center; color: #555; margin-bottom: 25px; }
-                        .datos { margin-bottom: 20px; font-size: 14px; }
-                        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 13px; }
-                        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-                        th { background-color: #2563eb; color: white; }
-                        .total { margin-top: 20px; font-weight: bold; text-align: right; }
-                    </style>
-                </head>
+        try {
+            const bordes = {
+                top: {
+                    style: BorderStyle.SINGLE,
+                    size: 4,
+                    color: "B8C4D6",
+                },
+                bottom: {
+                    style: BorderStyle.SINGLE,
+                    size: 4,
+                    color: "B8C4D6",
+                },
+                left: {
+                    style: BorderStyle.SINGLE,
+                    size: 4,
+                    color: "B8C4D6",
+                },
+                right: {
+                    style: BorderStyle.SINGLE,
+                    size: 4,
+                    color: "B8C4D6",
+                },
+            };
 
-                <body>
-                    <h1>Reporte de Matrículas</h1>
-                    <div class="subtitulo">Reporte filtrado por rango de fechas</div>
+            const crearCelda = (
+                texto,
+                ancho,
+                encabezado = false,
+                alineacion = AlignmentType.LEFT
+            ) => {
+                return new TableCell({
+                    width: {
+                        size: ancho,
+                        type: WidthType.DXA,
+                    },
+                    borders: bordes,
+                    shading: encabezado
+                        ? { fill: "2563EB" }
+                        : undefined,
+                    verticalAlign: VerticalAlign.CENTER,
+                    margins: {
+                        top: 90,
+                        bottom: 90,
+                        left: 100,
+                        right: 100,
+                    },
+                    children: [
+                        new Paragraph({
+                            alignment: alineacion,
+                            spacing: {
+                                before: 0,
+                                after: 0,
+                            },
+                            children: [
+                                new TextRun({
+                                    text: String(texto ?? ""),
+                                    bold: encabezado,
+                                    color: encabezado
+                                        ? "FFFFFF"
+                                        : "111827",
+                                    font: "Arial",
+                                    size: encabezado ? 18 : 17,
+                                }),
+                            ],
+                        }),
+                    ],
+                });
+            };
 
-                    <div class="datos">
-                        <p>
-                            <strong>Desde:</strong>
-                            ${escaparHtml(fechaDesde || "Inicio")}
-                            &nbsp;&nbsp;
-                            <strong>Hasta:</strong>
-                            ${escaparHtml(fechaHasta || "Fin")}
-                        </p>
+            const anchos = [
+                1300,
+                2500,
+                1700,
+                700,
+                1700,
+                1400,
+                1500,
+            ];
 
-                        <p><strong>Fecha de generación:</strong> ${new Date().toLocaleString()}</p>
-                        <p><strong>Total de registros:</strong> ${filtrados.length}</p>
-                    </div>
+            const encabezados = [
+                "Fecha Matrícula",
+                "Nombre",
+                "Cédula",
+                "Edad",
+                "Categoría",
+                "Curso",
+                "Estado",
+            ];
 
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Fecha Matrícula</th>
-                                <th>Nombre</th>
-                                <th>Cédula</th>
-                                <th>Edad</th>
-                                <th>Categoría</th>
-                                <th>Curso</th>
-                                <th>Estado</th>
-                            </tr>
-                        </thead>
+            const filasTabla = [
+                new TableRow({
+                    tableHeader: true,
+                    children: encabezados.map(
+                        (encabezado, indice) =>
+                            crearCelda(
+                                encabezado,
+                                anchos[indice],
+                                true,
+                                AlignmentType.CENTER
+                            )
+                    ),
+                }),
 
-                        <tbody>
-                            ${filtrados
-                                .map(
-                                    (item) => `
-                                    <tr>
-                                        <td>${escaparHtml(getFechaMatricula(item))}</td>
-                                        <td>${escaparHtml(getNombre(item))}</td>
-                                        <td>${escaparHtml(getCedula(item))}</td>
-                                        <td>${escaparHtml(getEdad(item))}</td>
-                                        <td>${escaparHtml(getCategoria(item))}</td>
-                                        <td>${escaparHtml(getCurso(item))}</td>
-                                        <td>${escaparHtml(getEstadoMatricula(item))}</td>
-                                    </tr>
-                                `
+                ...filtrados.map((item) => {
+                    const valores = [
+                        formatearFecha(
+                            getFechaMatricula(item)
+                        ),
+                        getNombre(item),
+                        getCedula(item),
+                        getEdad(item),
+                        getCategoria(item),
+                        getCurso(item),
+                        getEstadoMatricula(item),
+                    ];
+
+                    return new TableRow({
+                        cantSplit: true,
+                        children: valores.map(
+                            (valor, indice) =>
+                                crearCelda(
+                                    valor,
+                                    anchos[indice],
+                                    false,
+                                    indice === 1
+                                        ? AlignmentType.LEFT
+                                        : AlignmentType.CENTER
                                 )
-                                .join("")}
-                        </tbody>
-                    </table>
+                        ),
+                    });
+                }),
+            ];
 
-                    <p class="total">Total: ${filtrados.length} registros</p>
+            const documento = new Document({
+                creator: "CACIQUE ADIACT",
+                title: "Reporte de Matrículas por Fechas",
+                description:
+                    "Reporte de matrículas filtrado por rango de fechas",
+                sections: [
+                    {
+                        properties: {
+                            page: {
+                                margin: {
+                                    top: 650,
+                                    right: 540,
+                                    bottom: 720,
+                                    left: 540,
+                                },
+                            },
+                        },
 
-                    <script>
-                        window.onload = function() {
-                            setTimeout(() => {
-                                window.print();
-                            }, 500);
-                        };
-                    </script>
-                </body>
-            </html>
-        `);
+                        footers: {
+                            default: new Footer({
+                                children: [
+                                    new Paragraph({
+                                        alignment:
+                                            AlignmentType.CENTER,
+                                        children: [
+                                            new TextRun({
+                                                text:
+                                                    "CACIQUE ADIACT — Página ",
+                                                font: "Arial",
+                                                size: 16,
+                                                color: "64748B",
+                                            }),
+                                            PageNumber.CURRENT,
+                                        ],
+                                    }),
+                                ],
+                            }),
+                        },
 
-        ventanaImpresion.document.close();
+                        children: [
+                            new Paragraph({
+                                alignment:
+                                    AlignmentType.CENTER,
+                                spacing: {
+                                    after: 80,
+                                },
+                                children: [
+                                    new TextRun({
+                                        text:
+                                            "REPORTE DE MATRÍCULAS",
+                                        bold: true,
+                                        font: "Arial",
+                                        size: 30,
+                                        color: "1E3A8A",
+                                    }),
+                                ],
+                            }),
+
+                            new Paragraph({
+                                alignment:
+                                    AlignmentType.CENTER,
+                                spacing: {
+                                    after: 280,
+                                },
+                                children: [
+                                    new TextRun({
+                                        text:
+                                            "Reporte filtrado por rango de fechas",
+                                        font: "Arial",
+                                        size: 20,
+                                        color: "475569",
+                                    }),
+                                ],
+                            }),
+
+                            new Paragraph({
+                                spacing: {
+                                    after: 80,
+                                },
+                                children: [
+                                    new TextRun({
+                                        text: "Desde: ",
+                                        bold: true,
+                                        font: "Arial",
+                                        size: 20,
+                                    }),
+                                    new TextRun({
+                                        text: formatearFecha(
+                                            fechaDesde
+                                        ),
+                                        font: "Arial",
+                                        size: 20,
+                                    }),
+                                    new TextRun({
+                                        text: "    Hasta: ",
+                                        bold: true,
+                                        font: "Arial",
+                                        size: 20,
+                                    }),
+                                    new TextRun({
+                                        text: formatearFecha(
+                                            fechaHasta
+                                        ),
+                                        font: "Arial",
+                                        size: 20,
+                                    }),
+                                ],
+                            }),
+
+                            new Paragraph({
+                                spacing: {
+                                    after: 80,
+                                },
+                                children: [
+                                    new TextRun({
+                                        text:
+                                            "Fecha de generación: ",
+                                        bold: true,
+                                        font: "Arial",
+                                        size: 20,
+                                    }),
+                                    new TextRun({
+                                        text:
+                                            new Date().toLocaleString(
+                                                "es-NI"
+                                            ),
+                                        font: "Arial",
+                                        size: 20,
+                                    }),
+                                ],
+                            }),
+
+                            new Paragraph({
+                                spacing: {
+                                    after: 220,
+                                },
+                                children: [
+                                    new TextRun({
+                                        text:
+                                            "Total de registros: ",
+                                        bold: true,
+                                        font: "Arial",
+                                        size: 20,
+                                    }),
+                                    new TextRun({
+                                        text: String(
+                                            filtrados.length
+                                        ),
+                                        font: "Arial",
+                                        size: 20,
+                                    }),
+                                ],
+                            }),
+
+                            new Table({
+                                width: {
+                                    size: 10800,
+                                    type: WidthType.DXA,
+                                },
+                                columnWidths: anchos,
+                                rows: filasTabla,
+                            }),
+
+                            new Paragraph({
+                                alignment:
+                                    AlignmentType.RIGHT,
+                                spacing: {
+                                    before: 220,
+                                },
+                                children: [
+                                    new TextRun({
+                                        text:
+                                            `Total: ${filtrados.length} registros`,
+                                        bold: true,
+                                        font: "Arial",
+                                        size: 20,
+                                        color: "1E3A8A",
+                                    }),
+                                ],
+                            }),
+                        ],
+                    },
+                ],
+            });
+
+            const archivoWord = await Packer.toBlob(
+                documento
+            );
+
+            saveAs(
+                archivoWord,
+                `reporte_matriculas_${fechaDesde || "inicio"}_${fechaHasta || "fin"}.docx`
+            );
+
+            Swal.fire(
+                "Word generado",
+                `Se exportaron ${filtrados.length} matrícula(s) correctamente.`,
+                "success"
+            );
+        } catch (error) {
+            console.error(
+                "Error generando Word de matrículas:",
+                error
+            );
+
+            Swal.fire(
+                "Error",
+                "No se pudo generar el documento Word.",
+                "error"
+            );
+        }
     };
-
     const exportarReporteInstructoresPolicial = async () => {
         try {
             const params = new URLSearchParams();
@@ -803,7 +1189,7 @@ function ReportesPages() {
         }
     };
 
-    const imprimirReporteInduccionInstructores = async () => {
+    const exportarReporteInduccionWord = async () => {
         try {
             if (!instructorSeleccionado) {
                 Swal.fire(
@@ -814,27 +1200,34 @@ function ReportesPages() {
                 return;
             }
 
-            const baseUrl = window.location.origin;
-
             const params = new URLSearchParams();
 
             if (fechaInduccionDesde) {
-                params.append("desde", fechaInduccionDesde);
+                params.append(
+                    "desde",
+                    fechaInduccionDesde
+                );
             }
 
             if (fechaInduccionHasta) {
-                params.append("hasta", fechaInduccionHasta);
+                params.append(
+                    "hasta",
+                    fechaInduccionHasta
+                );
             }
 
-            params.append("instructor", instructorSeleccionado);
+            params.append(
+                "instructor",
+                instructorSeleccionado
+            );
 
             const response = await api.get(
                 `/reporte-induccion-instructores/?${params.toString()}`
             );
 
-            const data = response.data;
+            const reporte = response.data;
 
-            if (!data.estudiantes || data.estudiantes.length === 0) {
+            if (!reporte.estudiantes?.length) {
                 Swal.fire(
                     "Sin datos",
                     "No hay estudiantes para ese instructor en el rango seleccionado.",
@@ -843,340 +1236,703 @@ function ReportesPages() {
                 return;
             }
 
-            const filas = data.estudiantes.map((item, index) => `
-                <tr>
-                    <td>${index + 1}</td>
-                    <td>${escaparHtml(item.estudiante || "")}</td>
-                    <td>
-                        ${escaparHtml(item.fecha_matricula || "")}
-                    </td>
-                    <td>
-                        ${escaparHtml(item.fecha_finalizacion || "")}
-                    </td>
-                    <td>${escaparHtml(item.numero_recibo || "")}</td>
-                    <td>
-                        C$ ${Number(item.cobro || 0).toLocaleString()}
-                    </td>
-                    <td>${escaparHtml(item.observaciones || "")}</td>
-                </tr>
-            `).join("");
-
-            const ventana = window.open("", "_blank");
-
-            if (!ventana) {
-                Swal.fire(
-                    "Ventana bloqueada",
-                    (
-                        "El navegador bloqueó la ventana de impresión. "
-                        + "Permita las ventanas emergentes e inténtelo nuevamente."
+            const [logoEsesa, logoAdiact] =
+                await Promise.all([
+                    cargarImagenWord(
+                        `${window.location.origin}/Logo_esesa.png`
                     ),
-                    "warning"
+                    cargarImagenWord(
+                        `${window.location.origin}/Logo.png`
+                    ),
+                ]);
+
+            const crearTexto = (
+                texto,
+                opciones = {}
+            ) => {
+                return new TextRun({
+                    text: String(texto ?? ""),
+                    font: "Arial",
+                    size: 20,
+                    ...opciones,
+                });
+            };
+
+            const crearParrafo = (
+                children,
+                opciones = {}
+            ) => {
+                return new Paragraph({
+                    children,
+                    spacing: {
+                        before: 0,
+                        after: 100,
+                        ...(opciones.spacing || {}),
+                    },
+                    ...opciones,
+                });
+            };
+
+            const imagenLogo = (imagen) => {
+                if (!imagen) {
+                    return [];
+                }
+
+                return [
+                    new ImageRun({
+                        data: imagen,
+                        type: "png",
+                        transformation: {
+                            width: 55,
+                            height: 55,
+                        },
+                    }),
+                ];
+            };
+
+            const crearCeldaEncabezado = ({
+                children,
+                ancho,
+                alineacion,
+            }) => {
+                return new TableCell({
+                    width: {
+                        size: ancho,
+                        type: WidthType.DXA,
+                    },
+                    borders: {
+                        ...sinBordesWord,
+                        bottom: {
+                            style: BorderStyle.SINGLE,
+                            size: 12,
+                            color: "222222",
+                        },
+                    },
+                    verticalAlign:
+                        VerticalAlign.CENTER,
+                    children: [
+                        new Paragraph({
+                            alignment: alineacion,
+                            children,
+                        }),
+                    ],
+                });
+            };
+
+            const encabezadoDocumento =
+                new Header({
+                    children: [
+                        new Table({
+                            width: {
+                                size: 10800,
+                                type: WidthType.DXA,
+                            },
+                            columnWidths: [
+                                1200,
+                                8400,
+                                1200,
+                            ],
+                            rows: [
+                                new TableRow({
+                                    children: [
+                                        crearCeldaEncabezado({
+                                            children:
+                                                imagenLogo(
+                                                    logoEsesa
+                                                ),
+                                            ancho: 1200,
+                                            alineacion:
+                                                AlignmentType.LEFT,
+                                        }),
+
+                                        new TableCell({
+                                            width: {
+                                                size: 8400,
+                                                type:
+                                                    WidthType.DXA,
+                                            },
+                                            borders: {
+                                                ...sinBordesWord,
+                                                bottom: {
+                                                    style:
+                                                        BorderStyle.SINGLE,
+                                                    size: 12,
+                                                    color:
+                                                        "222222",
+                                                },
+                                            },
+                                            verticalAlign:
+                                                VerticalAlign.CENTER,
+                                            children: [
+                                                crearParrafo(
+                                                    [
+                                                        crearTexto(
+                                                            "Instituto de Formación y Capacitación “Adiact”",
+                                                            {
+                                                                bold: true,
+                                                            }
+                                                        ),
+                                                    ],
+                                                    {
+                                                        alignment:
+                                                            AlignmentType.CENTER,
+                                                        spacing: {
+                                                            after: 25,
+                                                        },
+                                                    }
+                                                ),
+
+                                                crearParrafo(
+                                                    [
+                                                        crearTexto(
+                                                            "Somos expertos en Formación y Capacitación del Talento Humano",
+                                                            {
+                                                                italics:
+                                                                    true,
+                                                                size: 16,
+                                                            }
+                                                        ),
+                                                    ],
+                                                    {
+                                                        alignment:
+                                                            AlignmentType.CENTER,
+                                                        spacing: {
+                                                            after: 25,
+                                                        },
+                                                    }
+                                                ),
+
+                                                crearParrafo(
+                                                    [
+                                                        crearTexto(
+                                                            "Ética, Integridad, Dedicación y Solidaridad",
+                                                            {
+                                                                bold: true,
+                                                                size: 17,
+                                                            }
+                                                        ),
+                                                    ],
+                                                    {
+                                                        alignment:
+                                                            AlignmentType.CENTER,
+                                                        spacing: {
+                                                            after: 0,
+                                                        },
+                                                    }
+                                                ),
+                                            ],
+                                        }),
+
+                                        crearCeldaEncabezado({
+                                            children:
+                                                imagenLogo(
+                                                    logoAdiact
+                                                ),
+                                            ancho: 1200,
+                                            alineacion:
+                                                AlignmentType.RIGHT,
+                                        }),
+                                    ],
+                                }),
+                            ],
+                        }),
+                    ],
+                });
+
+            const anchos = [
+                500,
+                2500,
+                1300,
+                1400,
+                1200,
+                1400,
+                2500,
+            ];
+
+            const encabezados = [
+                "N°",
+                "Alumnos atendidos\nNombres y apellidos",
+                "Fecha de\nmatrícula",
+                "Fecha de\nfinalización",
+                "N° de factura",
+                "Cobro por alumno",
+                "Observaciones",
+            ];
+
+            const filasTabla = [
+                new TableRow({
+                    tableHeader: true,
+                    children: encabezados.map(
+                        (texto, indice) =>
+                            crearCeldaInformeWord({
+                                texto,
+                                ancho:
+                                    anchos[indice],
+                                encabezado: true,
+                            })
+                    ),
+                }),
+
+                ...reporte.estudiantes.map(
+                    (item, indice) => {
+                        const cobro = Number(
+                            item.cobro || 0
+                        ).toLocaleString(
+                            "es-NI",
+                            {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                            }
+                        );
+
+                        const valores = [
+                            indice + 1,
+                            item.estudiante || "",
+                            item.fecha_matricula || "",
+                            item.fecha_finalizacion || "",
+                            item.numero_recibo || "",
+                            `C$ ${cobro}`,
+                            item.observaciones || "",
+                        ];
+
+                        return new TableRow({
+                            cantSplit: true,
+                            children: valores.map(
+                                (
+                                    texto,
+                                    columna
+                                ) =>
+                                    crearCeldaInformeWord({
+                                        texto,
+                                        ancho:
+                                            anchos[columna],
+                                        alineacion:
+                                            [
+                                                1,
+                                                6,
+                                            ].includes(
+                                                columna
+                                            )
+                                                ? AlignmentType.LEFT
+                                                : AlignmentType.CENTER,
+                                    })
+                            ),
+                        });
+                    }
+                ),
+            ];
+
+            const crearFirma = (
+                nombre,
+                cargo
+            ) => {
+                return new TableCell({
+                    width: {
+                        size: 4000,
+                        type: WidthType.DXA,
+                    },
+                    borders: {
+                        ...sinBordesWord,
+                        top: {
+                            style:
+                                BorderStyle.SINGLE,
+                            size: 8,
+                            color: "000000",
+                        },
+                    },
+                    children: [
+                        crearParrafo(
+                            [
+                                crearTexto(
+                                    nombre,
+                                    {
+                                        bold: true,
+                                        size: 18,
+                                    }
+                                ),
+                            ],
+                            {
+                                alignment:
+                                    AlignmentType.CENTER,
+                                spacing: {
+                                    after: 25,
+                                },
+                            }
+                        ),
+
+                        crearParrafo(
+                            [
+                                crearTexto(
+                                    cargo,
+                                    {
+                                        bold: true,
+                                        size: 18,
+                                    }
+                                ),
+                            ],
+                            {
+                                alignment:
+                                    AlignmentType.CENTER,
+                                spacing: {
+                                    after: 0,
+                                },
+                            }
+                        ),
+                    ],
+                });
+            };
+
+            const nombreInstructor = String(
+                reporte.instructor?.nombre || ""
+            );
+
+            const total = Number(
+                reporte.total || 0
+            ).toLocaleString(
+                "es-NI",
+                {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                }
+            );
+
+            const documento = new Document({
+                creator: "CACIQUE ADIACT",
+                title:
+                    "Informe de pago a instructores",
+
+                sections: [
+                    {
+                        properties: {
+                            page: {
+                                margin: {
+                                    top: 1450,
+                                    right: 720,
+                                    bottom: 1100,
+                                    left: 720,
+                                    header: 300,
+                                    footer: 300,
+                                },
+                            },
+                        },
+
+                        headers: {
+                            default:
+                                encabezadoDocumento,
+                        },
+
+                        footers: {
+                            default: new Footer({
+                                children: [
+                                    crearParrafo(
+                                        [
+                                            crearTexto(
+                                                "Gasolinera Uno Sutiaba 1 cuadra al norte ½ cuadra al oeste. León, Nicaragua\n"
+                                                + "Teléfonos: 2311-1333 y 8966-3770.\n"
+                                                + "email: institutoadiact@esesa.com.ni    http://www.esesa.com.ni",
+                                                {
+                                                    bold: true,
+                                                    size: 14,
+                                                }
+                                            ),
+                                        ],
+                                        {
+                                            alignment:
+                                                AlignmentType.CENTER,
+                                            border: {
+                                                top: {
+                                                    style:
+                                                        BorderStyle.SINGLE,
+                                                    size: 12,
+                                                    color:
+                                                        "222222",
+                                                },
+                                            },
+                                            spacing: {
+                                                before: 60,
+                                                after: 0,
+                                            },
+                                        }
+                                    ),
+                                ],
+                            }),
+                        },
+
+                        children: [
+                            crearParrafo(
+                                [
+                                    crearTexto(
+                                        `León, ${reporte.fecha_emision || ""}`
+                                    ),
+                                ],
+                                {
+                                    alignment:
+                                        AlignmentType.RIGHT,
+                                    spacing: {
+                                        after: 220,
+                                    },
+                                }
+                            ),
+
+                            crearParrafo([
+                                crearTexto(
+                                    "Licenciado"
+                                ),
+                            ]),
+
+                            crearParrafo([
+                                crearTexto(
+                                    reporte.firmas
+                                        ?.gerente_nombre
+                                    || "",
+                                    {
+                                        bold: true,
+                                    }
+                                ),
+                            ]),
+
+                            crearParrafo([
+                                crearTexto(
+                                    "Gerente General de ESESA."
+                                ),
+                            ]),
+
+                            crearParrafo(
+                                [
+                                    crearTexto(
+                                        "Sus Manos."
+                                    ),
+                                ],
+                                {
+                                    spacing: {
+                                        after: 220,
+                                    },
+                                }
+                            ),
+
+                            crearParrafo(
+                                [
+                                    crearTexto(
+                                        "Estimado Licenciado:",
+                                        {
+                                            bold: true,
+                                        }
+                                    ),
+                                ],
+                                {
+                                    spacing: {
+                                        after: 180,
+                                    },
+                                }
+                            ),
+
+                            crearParrafo(
+                                [
+                                    crearTexto(
+                                        "De la manera más atenta le solicito la autorización para el pago por los servicios de Inducción en la Escuela de Manejo Cacique Adiact, prestados por el instructor "
+                                    ),
+
+                                    crearTexto(
+                                        nombreInstructor,
+                                        {
+                                            bold: true,
+                                        }
+                                    ),
+
+                                    crearTexto(
+                                        ", durante el período comprendido del "
+                                    ),
+
+                                    crearTexto(
+                                        reporte.fecha_desde
+                                        || "inicio",
+                                        {
+                                            bold: true,
+                                        }
+                                    ),
+
+                                    crearTexto(" al "),
+
+                                    crearTexto(
+                                        reporte.fecha_hasta
+                                        || "actual",
+                                        {
+                                            bold: true,
+                                        }
+                                    ),
+
+                                    crearTexto(
+                                        ". La Inducción les fue impartida a los siguientes estudiantes de dicha Escuela:"
+                                    ),
+                                ],
+                                {
+                                    alignment:
+                                        AlignmentType.JUSTIFIED,
+                                    spacing: {
+                                        line: 300,
+                                        after: 220,
+                                    },
+                                }
+                            ),
+
+                            new Table({
+                                width: {
+                                    size: 10800,
+                                    type:
+                                        WidthType.DXA,
+                                },
+                                columnWidths: anchos,
+                                rows: filasTabla,
+                            }),
+
+                            crearParrafo(
+                                [
+                                    crearTexto(
+                                        `TOTAL: C$ ${total}`,
+                                        {
+                                            bold: true,
+                                            size: 21,
+                                        }
+                                    ),
+                                ],
+                                {
+                                    alignment:
+                                        AlignmentType.RIGHT,
+                                    spacing: {
+                                        before: 180,
+                                        after: 320,
+                                    },
+                                }
+                            ),
+
+                            crearParrafo(
+                                [
+                                    crearTexto(
+                                        "Sin más que agradecer su atenta y pronta respuesta, aprovecho para desearle éxitos en sus funciones."
+                                    ),
+                                ],
+                                {
+                                    alignment:
+                                        AlignmentType.JUSTIFIED,
+                                    spacing: {
+                                        line: 300,
+                                        after: 180,
+                                    },
+                                }
+                            ),
+
+                            crearParrafo(
+                                [
+                                    crearTexto(
+                                        "De usted,\nMuy atentamente."
+                                    ),
+                                ],
+                                {
+                                    spacing: {
+                                        after: 700,
+                                    },
+                                }
+                            ),
+
+                            new Table({
+                                width: {
+                                    size: 9000,
+                                    type:
+                                        WidthType.DXA,
+                                },
+                                columnWidths: [
+                                    4000,
+                                    1000,
+                                    4000,
+                                ],
+                                alignment:
+                                    AlignmentType.CENTER,
+                                rows: [
+                                    new TableRow({
+                                        cantSplit: true,
+                                        children: [
+                                            crearFirma(
+                                                nombreInstructor,
+                                                "Instructor de Manejo"
+                                            ),
+
+                                            new TableCell({
+                                                width: {
+                                                    size: 1000,
+                                                    type:
+                                                        WidthType.DXA,
+                                                },
+                                                borders:
+                                                    sinBordesWord,
+                                                children: [
+                                                    new Paragraph(
+                                                        ""
+                                                    ),
+                                                ],
+                                            }),
+
+                                            crearFirma(
+                                                reporte.firmas
+                                                    ?.director_nombre
+                                                || "",
+                                                "Director Inst. Formación y Capacitación"
+                                            ),
+                                        ],
+                                    }),
+                                ],
+                            }),
+                        ],
+                    },
+                ],
+            });
+
+            const archivoWord =
+                await Packer.toBlob(
+                    documento
                 );
-                return;
-            }
 
-            ventana.document.write(`
-                <html>
-                    <head>
-                        <title>Informe de inducción</title>
+            const nombreArchivo =
+                nombreInstructor
+                    .normalize("NFD")
+                    .replace(
+                        /[\u0300-\u036f]/g,
+                        ""
+                    )
+                    .replace(
+                        /[^a-zA-Z0-9]+/g,
+                        "_"
+                    )
+                    .replace(
+                        /^_+|_+$/g,
+                        ""
+                    )
+                || "instructor";
 
-                        <style>
-                            body {
-                                font-family: Arial, sans-serif;
-                                margin: 0;
-                                color: #000;
-                                font-size: 13px;
-                                background: #fff;
-                            }
+            saveAs(
+                archivoWord,
+                (
+                    `pago_instructor_${nombreArchivo}_`
+                    + `${fechaInduccionDesde || "inicio"}_`
+                    + `${fechaInduccionHasta || "fin"}.docx`
+                )
+            );
 
-                            .page {
-                                position: relative;
-                                width: 8.5in;
-                                min-height: 11in;
-                                margin: 0 auto;
-                                padding: 35px 45px 100px 45px;
-                                box-sizing: border-box;
-                                display: flex;
-                                flex-direction: column;
-                            }
-
-                            .header {
-                                display: flex;
-                                align-items: center;
-                                justify-content: space-between;
-                                border-bottom: 2px solid #222;
-                                padding-bottom: 10px;
-                                margin-bottom: 28px;
-                            }
-
-                            .logo-img {
-                                width: 62px;
-                                height: 62px;
-                                object-fit: contain;
-                            }
-
-                            .header-text {
-                                text-align: center;
-                                font-size: 12px;
-                                line-height: 1.35;
-                            }
-
-                            .header-text strong {
-                                font-size: 13px;
-                            }
-
-                            .fecha {
-                                margin-top: 18px;
-                                margin-bottom: 18px;
-                            }
-
-                            .destinatario {
-                                margin-bottom: 18px;
-                                line-height: 1.45;
-                            }
-
-                            .parrafo {
-                                text-align: justify;
-                                line-height: 1.5;
-                                margin-bottom: 18px;
-                            }
-
-                            table {
-                                width: 100%;
-                                border-collapse: collapse;
-                                margin-top: 15px;
-                                font-size: 11px;
-                            }
-
-                            th, td {
-                                border: 1px solid #000;
-                                padding: 6px;
-                                text-align: center;
-                                vertical-align: middle;
-                            }
-
-                            th {
-                                background-color: #d9eaf7;
-                                font-weight: bold;
-                            }
-
-                            .total {
-                                margin-top: 15px;
-                                text-align: right;
-                                font-weight: bold;
-                                font-size: 13px;
-                            }
-
-                            .mensaje-final {
-                                margin-top: 40px;
-                                font-size: 13px;
-                                text-align: justify;
-                                line-height: 1.5;
-                            }
-
-                            .despedida {
-                                margin-top: 15px;
-                                margin-bottom: 60px;
-                                font-size: 13px;
-                            }
-
-                            .firmas {
-                                display: grid;
-                                grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-                                column-gap: 100px;
-                                align-items: start;
-                                margin-top: 45px;
-                                break-inside: avoid;
-                                page-break-inside: avoid;
-                            }
-
-                            .firma {
-                                width: 100%;
-                                text-align: center;
-                                font-size: 12px;
-                                line-height: 1.35;
-                            }
-
-                            .linea-firma {
-                                width: 100%;
-                                margin-bottom: 8px;
-                                border-top: 1.5px solid #000;
-                            }
-
-                            .nombre-firma {
-                                font-weight: bold;
-                            }
-
-                            .cargo-firma {
-                                margin-top: 2px;
-                                font-weight: bold;
-                            }
-
-                            .footer {
-                                position: fixed;
-                                right: 45px;
-                                bottom: 18px;
-                                left: 45px;
-                                border-top: 2px solid #222;
-                                padding-top: 8px;
-                                text-align: center;
-                                font-size: 10px;
-                                line-height: 1.35;
-                                font-weight: bold;
-                                background: #ffffff;
-                            }
-
-                            @media print {
-                                body {
-                                    margin: 0;
-                                }
-
-                                .page {
-                                    width: 8.5in;
-                                    min-height: 11in;
-                                    padding: 30px 40px 95px 40px;
-                                }
-
-                                .footer {
-                                    right: 40px;
-                                    bottom: 15px;
-                                    left: 40px;
-                                }
-                            }
-                        </style>
-                    </head>
-
-                    <body>
-                        <div class="page">
-                            <div class="header">
-                                <img src="${baseUrl}/Logo_esesa.png" class="logo-img" alt="Logo Escuela" />
-
-                                <div class="header-text">
-                                    <strong>Instituto de Formación y Capacitación “Adiact”</strong><br>
-                                    <em>Somos expertos en Formación y Capacitación del Talento Humano</em><br>
-                                    <strong>Ética, Integridad, Dedicación y Solidaridad</strong>
-                                </div>
-
-                                <img src="${baseUrl}/Logo.png" class="logo-img" alt="Logo Adiact" />
-                            </div>
-
-                            <div class="fecha">
-                                León, ${escaparHtml(data.fecha_emision || "")}
-                            </div>
-
-                            <div class="destinatario">
-                                <p>Licenciado</p>
-                                <p><strong>${escaparHtml(data.firmas?.gerente_nombre || "")}
-                                <p>Gerente General de ESESA.</p>
-                                <p>Sus Manos.</p>
-                            </div>
-
-                            <p><strong>Estimado Licenciado:</strong></p>
-
-                            <p class="parrafo">
-                                De la manera más atenta le solicito la autorización para el pago por los servicios 
-                                de Inducción en la Escuela de Manejo Cacique Adiact, prestados por el instructor
-                                <strong>
-                                    ${escaparHtml(data.instructor?.nombre || "")},
-                                </strong> durante el período comprendido
-                                del <strong>
-                                    ${escaparHtml(data.fecha_desde || "inicio")}
-                                </strong> al
-                                <strong>
-                                    ${escaparHtml(data.fecha_hasta || "actual")}.
-                                </strong> La Inducción les fue impartida a los siguientes estudiantes de dicha 
-                                Escuela:
-                            </p>
-
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>N°</th>
-                                        <th>Alumnos Atendidos<br/>Nombres y Apellidos</th>
-                                        <th>Fecha de<br/>Matrícula</th>
-                                        <th>Fecha de<br/>Finalización</th>
-                                        <th>N° de Factura</th>
-                                        <th>Cobro por Alumno</th>
-                                        <th>Observaciones</th>
-                                    </tr>
-                                </thead>
-
-                                <tbody>
-                                    ${filas}
-                                </tbody>
-                            </table>
-
-                            <div class="total">
-                                TOTAL: C$ ${Number(data.total || 0).toLocaleString()}
-                            </div>
-
-                            <p class="mensaje-final">
-                                Sin más que agradecer su atenta y pronta respuesta, aprovecho para desearle
-                                éxitos en sus funciones.
-                            </p>
-
-                            <br/>
-                            <p class="despedida">
-                                De usted, 
-                                
-                                Muy atentamente.
-                            </p>
-
-                            <br/><br/><br/>
-                            <div class="firmas">
-                                <div class="firma">
-                                    <div class="linea-firma"></div>
-
-                                    <div class="nombre-firma">
-                                        ${escaparHtml(data.instructor?.nombre || "")}
-                                    </div>
-
-                                    <div class="cargo-firma">
-                                        Instructor de Manejo
-                                    </div>
-                                </div>
-
-                                <div class="firma">
-                                    <div class="linea-firma"></div>
-
-                                    <div class="nombre-firma">
-                                        ${escaparHtml(data.firmas?.director_nombre || "")}
-                                    </div>
-
-                                    <div class="cargo-firma">
-                                        Director Inst. Formación y Capacitación
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="footer">
-                                Gasolinera Uno Sutiaba 1 cuadra al norte ½ cuadra al oeste. León, Nicaragua<br>
-                                Teléfonos: 2311-1333 y 8966-3770.<br>
-                                email: institutoadiact@esesa.com.ni &nbsp;&nbsp;&nbsp; http://www.esesa.com.ni
-                            </div>
-                        </div>
-
-                        <script>
-                            window.onload = function() {
-                                setTimeout(() => {
-                                    window.focus();
-                                    window.print();
-                                }, 500);
-                            };
-
-                            window.onafterprint = function() {
-                                window.close();
-                            };
-                        </script>
-                    </body>
-                </html>
-            `);
-
-            ventana.document.close();
-
+            Swal.fire(
+                "Word generado",
+                "El informe de pago al instructor fue descargado correctamente.",
+                "success"
+            );
         } catch (error) {
-            console.error(error);
-            Swal.fire("Error", "Error generando el informe de inducción.", "error");
+            console.error(
+                "Error generando informe Word:",
+                error
+            );
+
+            Swal.fire(
+                "Error",
+                "Error generando el informe de pago al instructor.",
+                "error"
+            );
         }
     };
 
@@ -1642,7 +2398,7 @@ function ReportesPages() {
                                 </div>
 
                                 <button
-                                    onClick={imprimirPorFechas}
+                                    onClick={exportarPorFechasWord}
                                     className="w-full h-12 rounded-2xl bg-blue-600 text-white font-bold flex items-center justify-center gap-2 hover:bg-blue-700 transition cursor-pointer"
                                 >
                                     <FiPrinter />
@@ -1848,7 +2604,7 @@ function ReportesPages() {
                                 </div>
 
                                 <button
-                                    onClick={imprimirReporteInduccionInstructores}
+                                    onClick={exportarReporteInduccionWord}
                                     className="w-full h-12 rounded-2xl bg-orange-600 text-white font-bold flex items-center justify-center gap-2 hover:bg-orange-700 transition cursor-pointer"
                                 >
                                     <FiPrinter />
