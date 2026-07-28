@@ -275,7 +275,7 @@ function UsuariosPage() {
     const fetchMatriculas = async () => {
         try {
             const response = await api.get(
-                "/matricula/?estado=matriculado"
+                "/matricula/?solo_activos=true"
             );
 
             const data = response.data;

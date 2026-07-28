@@ -156,7 +156,7 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
 
   const estudiantesFiltrados = useMemo(() => {
       const matriculasValidas = matriculas.filter(
-          (mat) => String(mat.estado || "").toLowerCase() === "matriculado"
+        (mat) => String(mat.estado || "").toLowerCase() !== "finalizado"
       );
 
       if (!busquedaEstudiante.trim()) return matriculasValidas;
@@ -215,9 +215,9 @@ export default function CalendarioForm({ abierto, onClose, onCreada }) {
   };
 
   const seleccionarEstudiante = (matricula) => {
-      if (String(matricula.estado || "").toLowerCase() !== "matriculado") {
-          setError("Solo se pueden asignar clases a estudiantes con matrícula pagada.");
-          return;
+      if (String(matricula.estado || "").toLowerCase() === "finalizado") {
+        setError("No se pueden asignar clases a una matrícula finalizada.");
+        return;
       }
 
       setEstudianteSeleccionado(matricula);

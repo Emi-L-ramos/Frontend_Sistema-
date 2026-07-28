@@ -31,10 +31,10 @@ export const listarInstructores = async () => {
   }
 };
 
-// ============ MATRÍCULAS (Estudiantes aprobados para calendario) ============
+// ============ MATRÍCULAS ACTIVAS (con pago completo o pendiente) ============
 export const listarMatriculas = async () => {
   try {
-    const response = await fetch(`${API_URL}/matricula/?estado=matriculado`, {
+    const response = await fetch(`${API_URL}/matricula/?solo_activos=true`, {
       headers: getHeaders()
     });
     
