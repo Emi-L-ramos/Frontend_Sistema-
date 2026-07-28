@@ -283,63 +283,211 @@ function ReportesPages() {
     })();
 
     const exportarRecibosExcel = () => {
-        const recibosFiltrados = recibosFiltradosPorFecha;
+        const recibosFiltrados =
+            recibosFiltradosPorFecha;
 
         if (recibosFiltrados.length === 0) {
-            Swal.fire("Sin datos", "No hay recibos para exportar en ese rango.", "info");
+            Swal.fire(
+                "Sin datos",
+                "No hay recibos para exportar en ese rango.",
+                "info"
+            );
             return;
         }
 
-        const datosExcel = recibosFiltrados.map((recibo) => ({
-            "N° Recibo/Factura": recibo.numero_recibo || "N/A",
-            Fecha: formatearFecha(getFechaRecibo(recibo)),
-            Estudiante:
-                recibo.estudiante_nombre ||
-                recibo.matricula_data?.estudiante_nombre ||
-                "N/A",
-            Cédula:
-                recibo.estudiante_cedula ||
-                recibo.matricula_data?.estudiante_cedula ||
-                "N/A",
-            "Tipo de Pago": obtenerEstado(recibo),
-            "Monto (C$)": Number(
-                recibo.monto_pagado ??
-                recibo.monto_cordobas ??
+        const datosExcel = recibosFiltrados.map(
+            (recibo) => {
+                const esBeneficio =
+                    String(
+                        recibo.tipo_pago || ""
+                    ).toLowerCase() === "beneficio";
+
+                const montoPagado = Number(
+                    recibo.monto_pagado ??
+                    recibo.monto_cordobas ??
+                    0
+                );
+
+                const porPagar = esBeneficio
+                    ? 0
+                    : Number(recibo.por_pagar ?? 0);
+
+                const totalCurso = Number(
+                    recibo.monto_total_curso ?? 0
+                );
+
+                return {
+                    "N° Recibo/Factura":
+                        recibo.numero_recibo || "N/A",
+
+                    Fecha:
+                        formatearFecha(
+                            getFechaRecibo(recibo)
+                        ),
+
+                    Estudiante:
+                        recibo.estudiante_nombre ||
+                        recibo.matricula_data
+                            ?.estudiante_nombre ||
+                        "N/A",
+
+                    Cédula:
+                        recibo.estudiante_cedula ||
+                        recibo.matricula_data
+                            ?.estudiante_cedula ||
+                        "N/A",
+
+                    "Tipo de Pago":
+                        obtenerEstado(recibo),
+
+                    "Monto (C$)":
+                        montoPagado,
+
+                    "Por Pagar (C$)":
+                        porPagar,
+
+                    "Total del curso (C$)":
+                        totalCurso,
+
+                    "Método de Pago":
+                        recibo.metodo_pago ||
+                        "Efectivo",
+
+                    Observaciones:
+                        recibo.observaciones || "",
+                };
+            }
+        );
+
+        const cantidadRecibos =
+            datosExcel.length;
+
+        const totalesMoneda = {
+            F: datosExcel.reduce(
+                (total, fila) => (
+                    total +
+                    Number(
+                        fila["Monto (C$)"] || 0
+                    )
+                ),
                 0
             ),
-            "Método de Pago": recibo.metodo_pago || "Efectivo",
-            Observaciones: recibo.observaciones || "",
-        }));
 
-        const ws = XLSX.utils.json_to_sheet(datosExcel);
+            G: datosExcel.reduce(
+                (total, fila) => (
+                    total +
+                    Number(
+                        fila["Por Pagar (C$)"] || 0
+                    )
+                ),
+                0
+            ),
 
-        const rangoHoja = XLSX.utils.decode_range(
-            ws["!ref"]
+            H: datosExcel.reduce(
+                (total, fila) => (
+                    total +
+                    Number(
+                        fila[
+                            "Total del curso (C$)"
+                        ] || 0
+                    )
+                ),
+                0
+            ),
+        };
+
+        datosExcel.push({
+            "N° Recibo/Factura": "TOTALES",
+            Fecha: "",
+            Estudiante: "",
+            Cédula: "",
+            "Tipo de Pago": "",
+            "Monto (C$)": totalesMoneda.F,
+            "Por Pagar (C$)": totalesMoneda.G,
+            "Total del curso (C$)":
+                totalesMoneda.H,
+            "Método de Pago": "",
+            Observaciones: "",
+        });
+
+        const ws =
+            XLSX.utils.json_to_sheet(
+                datosExcel
+            );
+
+        const filaTotalExcel =
+            cantidadRecibos + 2;
+
+        const ultimaFilaDatos =
+            cantidadRecibos + 1;
+
+        ["F", "G", "H"].forEach(
+            (columna) => {
+                ws[
+                    `${columna}${filaTotalExcel}`
+                ] = {
+                    t: "n",
+                    f: (
+                        `SUM(${columna}2:` +
+                        `${columna}${ultimaFilaDatos})`
+                    ),
+                    v: totalesMoneda[columna],
+                    z: '"C$" #,##0.00',
+                };
+            }
         );
+
+        const rangoHoja =
+            XLSX.utils.decode_range(
+                ws["!ref"]
+            );
 
         for (
             let fila = 1;
             fila <= rangoHoja.e.r;
             fila += 1
         ) {
-            const referenciaMonto = (
-                XLSX.utils.encode_cell({
-                    r: fila,
-                    c: 5,
-                })
+            [5, 6, 7].forEach(
+                (columna) => {
+                    const referencia =
+                        XLSX.utils.encode_cell({
+                            r: fila,
+                            c: columna,
+                        });
+
+                    const celda =
+                        ws[referencia];
+
+                    if (celda) {
+                        celda.t = "n";
+                        celda.z =
+                            '"C$" #,##0.00';
+                    }
+                }
             );
-
-            const celdaMonto = ws[referenciaMonto];
-
-            if (celdaMonto) {
-                celdaMonto.t = "n";
-                celdaMonto.z = '"C$" #,##0.00';
-            }
         }
 
-        const wb = XLSX.utils.book_new();
+        ws["!cols"] = [
+            { wch: 20 },
+            { wch: 14 },
+            { wch: 38 },
+            { wch: 22 },
+            { wch: 17 },
+            { wch: 16 },
+            { wch: 18 },
+            { wch: 22 },
+            { wch: 18 },
+            { wch: 35 },
+        ];
 
-        XLSX.utils.book_append_sheet(wb, ws, "Recibos");
+        const wb =
+            XLSX.utils.book_new();
+
+        XLSX.utils.book_append_sheet(
+            wb,
+            ws,
+            "Recibos"
+        );
 
         const horaArchivo = new Date()
             .toISOString()
@@ -348,15 +496,25 @@ function ReportesPages() {
 
         Swal.fire(
             "Excel generado",
-            `Se exportaron ${recibosFiltrados.length} recibo(s).`,
+            (
+                `Se exportaron ` +
+                `${recibosFiltrados.length} ` +
+                `recibo(s).`
+            ),
             "success"
         );
 
         XLSX.writeFile(
             wb,
-            `recibos_${fechaReciboDesde || "inicio"}_${fechaReciboHasta || "fin"}_${horaArchivo}.xlsx`
+            (
+                `recibos_` +
+                `${fechaReciboDesde || "inicio"}_` +
+                `${fechaReciboHasta || "fin"}_` +
+                `${horaArchivo}.xlsx`
+            )
         );
     };
+
     const imprimirPorEdades = () => {
         const datosAImprimir = datosPorEdad;
 
