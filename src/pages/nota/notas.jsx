@@ -18,6 +18,7 @@ import {
   CheckCircle2,
   LoaderCircle,
 } from "lucide-react";
+import Swal from "sweetalert2";
 import axios from "../../api/axios";
 import Paginacion from "../../components/Paginacion";
 
@@ -43,6 +44,10 @@ function NotasPages({ userRole }) {
   const [pagina, setPagina] = useState(1);
   const [totalRegistros, setTotalRegistros] = useState(0);
   const [cargando, setCargando] = useState(false);
+  const [
+    matriculaFinalizando,
+    setMatriculaFinalizando,
+  ] = useState(null);
   const [resumen, setResumen] = useState(RESUMEN_INICIAL);
   const solicitudActual = useRef(0);
 
@@ -130,6 +135,95 @@ function NotasPages({ userRole }) {
 
     return () => controlador.abort();
   }, [obtenerNotas]);
+
+  const finalizarConNotaActual = useCallback(
+    async (nota) => {
+      const notaTeorica = Number(
+        nota.nota_teorica
+      );
+
+      const confirmacion = await Swal.fire({
+        title: "¿Finalizar con esta nota?",
+        text: (
+          `El estudiante conservará la nota teórica `
+          + `${notaTeorica.toFixed(2)}. La matrícula `
+          + `será finalizada y ya no se podrán `
+          + `habilitar nuevos intentos.`
+        ),
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Sí, finalizar",
+        cancelButtonText: "Cancelar",
+        confirmButtonColor: "#dc2626",
+        cancelButtonColor: "#64748b",
+        reverseButtons: true,
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+      });
+
+      if (!confirmacion.isConfirmed) {
+        return;
+      }
+
+      setMatriculaFinalizando(
+        nota.matricula
+      );
+
+      try {
+        const response = await axios.post(
+          "/notas/finalizar-con-nota-actual/",
+          {
+            matricula_id: nota.matricula,
+          }
+        );
+
+        await Swal.fire({
+          title: "Matrícula finalizada",
+          text: (
+            response.data?.message
+            || (
+              "La matrícula fue finalizada "
+              + "con la nota teórica actual."
+            )
+          ),
+          icon: "success",
+          confirmButtonText: "Aceptar",
+          confirmButtonColor: "#2563eb",
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+        });
+
+        await obtenerNotas();
+      } catch (error) {
+        console.error(
+          "Error finalizando matrícula:",
+          error
+        );
+
+        const datosError =
+          error?.response?.data;
+
+        const mensaje =
+          datosError?.error
+          || datosError?.detail
+          || (
+            "No fue posible finalizar "
+            + "la matrícula."
+          );
+
+        await Swal.fire({
+          title: "No se pudo finalizar",
+          text: mensaje,
+          icon: "error",
+          confirmButtonText: "Aceptar",
+          confirmButtonColor: "#dc2626",
+        });
+      } finally {
+        setMatriculaFinalizando(null);
+      }
+    },
+    [obtenerNotas]
+  );
 
   return (
     <div className="min-h-screen bg-[#f7f9fd] px-4 py-5 md:px-6 lg:px-8">
@@ -226,11 +320,19 @@ function NotasPages({ userRole }) {
         ) : (
           <>
             {rol === "admin" && (
-              <TablaAdmin notas={notas} />
+              <TablaAdmin
+                notas={notas}
+                onFinalizar={finalizarConNotaActual}
+                matriculaFinalizando={matriculaFinalizando}
+              />
             )}
 
             {rol === "instructor" && (
-              <TablaInstructor notas={notas} />
+              <TablaInstructor
+                notas={notas}
+                onFinalizar={finalizarConNotaActual}
+                matriculaFinalizando={matriculaFinalizando}
+              />
             )}
 
             {rol === "estudiante" && (
@@ -457,10 +559,14 @@ function TarjetaResumen({ variante, icono, titulo, valor, descripcion }) {
   );
 }
 
-function TablaAdmin({ notas }) {
+function TablaAdmin({
+  notas,
+  onFinalizar,
+  matriculaFinalizando,
+}) {
   return (
     <ContenedorTabla>
-      <table className="w-full min-w-[1200px]">
+      <table className="w-full min-w-[1380px]">
         <thead>
           <tr className="border-b border-slate-200">
             <Th>Estudiante</Th>
@@ -473,12 +579,22 @@ function TablaAdmin({ notas }) {
             <Th>Nota teórica</Th>
             <Th>Resultado teórico</Th>
             <Th>Comentario</Th>
+            <Th>Acción</Th>
           </tr>
         </thead>
 
         <tbody>
           {notas.map((nota) => (
-            <FilaNota key={nota.matricula} nota={nota} mostrarEstudiante />
+            <FilaNota
+              key={nota.matricula}
+              nota={nota}
+              mostrarEstudiante
+              mostrarAccion
+              onFinalizar={onFinalizar}
+              matriculaFinalizando={
+                matriculaFinalizando
+              }
+            />
           ))}
         </tbody>
       </table>
@@ -488,10 +604,14 @@ function TablaAdmin({ notas }) {
   );
 }
 
-function TablaInstructor({ notas }) {
+function TablaInstructor({
+  notas,
+  onFinalizar,
+  matriculaFinalizando,
+}) {
   return (
     <ContenedorTabla>
-      <table className="w-full min-w-[1100px]">
+      <table className="w-full min-w-[1380px]">
         <thead>
           <tr className="border-b border-slate-200">
             <Th>Estudiante</Th>
@@ -504,12 +624,22 @@ function TablaInstructor({ notas }) {
             <Th>Nota teórica</Th>
             <Th>Resultado teórico</Th>
             <Th>Comentario</Th>
+            <Th>Acción</Th>
           </tr>
         </thead>
 
         <tbody>
           {notas.map((nota) => (
-            <FilaNota key={nota.matricula} nota={nota} mostrarEstudiante />
+            <FilaNota
+              key={nota.matricula}
+              nota={nota}
+              mostrarEstudiante
+              mostrarAccion
+              onFinalizar={onFinalizar}
+              matriculaFinalizando={
+                matriculaFinalizando
+              }
+            />
           ))}
         </tbody>
       </table>
@@ -548,12 +678,45 @@ function TablaEstudiante({ notas }) {
   );
 }
 
-function FilaNota({ nota, mostrarEstudiante, mostrarInstructor }) {
+function FilaNota({
+  nota,
+  mostrarEstudiante,
+  mostrarInstructor,
+  mostrarAccion = false,
+  onFinalizar,
+  matriculaFinalizando,
+}) {
   const comentario =
     nota.comentario_practico ||
     nota.comentario_teorico ||
     nota.comentario ||
     "Sin comentario";
+
+  const tieneNotaPractica =
+    nota.nota_practica !== null
+    && nota.nota_practica !== undefined
+    && nota.nota_practica !== "";
+
+  const tieneNotaTeorica =
+    nota.nota_teorica !== null
+    && nota.nota_teorica !== undefined
+    && nota.nota_teorica !== "";
+
+  const valorNotaTeorica = Number(
+    nota.nota_teorica
+  );
+
+  const puedeFinalizar =
+    mostrarAccion
+    && nota.estado_matricula !== "finalizado"
+    && tieneNotaPractica
+    && tieneNotaTeorica
+    && Number.isFinite(valorNotaTeorica)
+    && valorNotaTeorica < 80;
+
+  const estaFinalizando =
+    matriculaFinalizando
+    === nota.matricula;
 
   return (
     <tr className="border-b border-slate-100 transition last:border-b-0 hover:bg-blue-50/30">
@@ -601,6 +764,45 @@ function FilaNota({ nota, mostrarEstudiante, mostrarInstructor }) {
           {comentario}
         </span>
       </Td>
+
+      {mostrarAccion && (
+        <Td>
+          {nota.estado_matricula === "finalizado" ? (
+            <Badge color="green">
+              Finalizada
+            </Badge>
+          ) : puedeFinalizar ? (
+            <button
+              type="button"
+              onClick={() => {
+                onFinalizar(nota);
+              }}
+              disabled={estaFinalizando}
+              className="inline-flex min-w-[145px] items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-black text-white shadow-sm transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {estaFinalizando ? (
+                <>
+                  <LoaderCircle
+                    size={17}
+                    className="animate-spin"
+                  />
+
+                  Finalizando...
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 size={17} />
+                  Finalizar con esta nota
+                </>
+              )}
+            </button>
+          ) : (
+            <span className="text-sm font-semibold text-slate-400">
+              No disponible
+            </span>
+          )}
+        </Td>
+      )}
     </tr>
   );
 }
